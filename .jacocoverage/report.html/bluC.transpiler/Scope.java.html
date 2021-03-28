@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>Scope.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;BluC&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.source.html" class="el_package">bluC.transpiler</a> &gt; <span class="el_source">Scope.java</span></div><h1>Scope.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2021 John Schneider.
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package bluC.transpiler;
+
+import bluC.transpiler.Statement.ClassDef;
+import bluC.transpiler.Statement.Function;
+import bluC.transpiler.Statement.StructDef;
+import java.util.ArrayList;
+import java.util.Objects;
+
+/**
+ *
+ * @author John Schneider
+ */
+public class Scope
+{
+<span class="fc" id="L31">    public static final Scope       NO_PARENT      = null;</span>
+<span class="fc" id="L32">    public static final Statement   NO_SCOPE_TYPE  = null;</span>
+    
+    private static final String     ROOT_SCOPE_TO_STRING = &quot;ROOT_SCOPE&quot;;
+            
+    private final Statement scopeType;
+    private final Scope     parent;
+    private final ArrayList&lt;Statement.VarDeclaration&gt;
+                            variablesInThisScope;
+            
+    public Scope(Scope parent, Statement scopeType)
+<span class="fc" id="L42">    {</span>
+<span class="fc" id="L43">        this.parent             = parent;</span>
+<span class="fc" id="L44">        this.scopeType          = scopeType;</span>
+<span class="fc" id="L45">        variablesInThisScope    = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L46">    }</span>
+    
+    public Statement getScopeType()
+    {
+<span class="fc" id="L50">        return scopeType;</span>
+    }
+    
+    public Scope getParent()
+    {
+<span class="fc" id="L55">        return parent;</span>
+    }
+    
+    public ArrayList&lt;Statement.VarDeclaration&gt; getVariablesInThisScope()
+    {
+<span class="fc" id="L60">        return variablesInThisScope;</span>
+    }
+    
+    public void addVariableToScope(Statement.VarDeclaration variable)
+    {
+<span class="fc" id="L65">        variablesInThisScope.add(variable);</span>
+<span class="fc" id="L66">    }</span>
+    
+    public String getPrettyScopeName()
+    {
+<span class="fc" id="L70">        Statement type = getScopeType();</span>
+        
+<span class="fc bfc" id="L72" title="All 2 branches covered.">        if (type == NO_SCOPE_TYPE)</span>
+        {
+<span class="pc bpc" id="L74" title="1 of 2 branches missed.">            if (parent == NO_PARENT)</span>
+            {
+<span class="fc" id="L76">                return ROOT_SCOPE_TO_STRING;</span>
+            }
+            else
+            {
+<span class="nc" id="L80">                new IllegalArgumentException(&quot;Tried to print the state of an &quot; +</span>
+                    &quot;invalid scope (type == NO_SCOPE_TYPE but the parent &quot; + 
+                    &quot;isn't NO_PARENT, indicating that this scope is not &quot; +
+<span class="nc" id="L83">                    &quot;supposed to be a ROOT scope).&quot;).printStackTrace();</span>
+                
+                /**
+                 * I am pretty sure the JVM will terminate execution once a new
+                 *  exception is created (even without throwing it) but return
+                 *  this just in case we are able to continue and parse more
+                 *  errors
+                 */
+<span class="nc" id="L91">                return &quot;(?invalid child of \&quot;&quot; + parent.getPrettyScopeName() + </span>
+                    &quot;\&quot;?)&quot;;
+            }
+        }
+<span class="pc bpc" id="L95" title="1 of 2 branches missed.">        else if (type instanceof Function)</span>
+        {
+<span class="fc" id="L97">            return ((Function) type).getNameText();</span>
+        }
+<span class="nc bnc" id="L99" title="All 2 branches missed.">        else if (type instanceof ClassDef)</span>
+        {
+<span class="nc" id="L101">            return ((ClassDef) type).getClassNameText();</span>
+        }
+<span class="nc bnc" id="L103" title="All 2 branches missed.">        else if (type instanceof StructDef)</span>
+        {
+<span class="nc" id="L105">            new UnsupportedOperationException(&quot;getPrettyScopeName not &quot; +</span>
+<span class="nc" id="L106">                &quot;implemented for StructDef's yet&quot;).printStackTrace();</span>
+<span class="nc" id="L107">            return &quot;(StructDef)&quot;;</span>
+        }
+        else
+        {
+<span class="nc" id="L111">            return &quot;(&quot; + type.getClass().getName().replace(&quot;.&quot;, &quot;_&quot;) + &quot;)&quot;;</span>
+        }
+    }
+    
+    @Override
+    public String toString()
+    {
+        Scope       curParentNode;
+        String      curScopeName;
+        String      output;
+        
+<span class="fc" id="L122">        curParentNode = parent;</span>
+        
+<span class="fc bfc" id="L124" title="All 2 branches covered.">        if (parent == NO_PARENT)</span>
+        {
+            // root scope
+<span class="fc" id="L127">            return ROOT_SCOPE_TO_STRING;</span>
+        }
+        
+<span class="fc" id="L130">        curScopeName    = getPrettyScopeName();</span>
+<span class="fc" id="L131">        output          = curScopeName + &quot;.\n&quot;;</span>
+        
+<span class="fc bfc" id="L133" title="All 2 branches covered.">        while (curParentNode != NO_PARENT)</span>
+        {
+<span class="fc" id="L135">            curScopeName    = curParentNode.getPrettyScopeName();</span>
+            
+<span class="fc" id="L137">            output          = curScopeName + &quot;.\n&quot; + output;</span>
+<span class="fc" id="L138">            curParentNode   = curParentNode.getParent();</span>
+        }
+        
+<span class="fc" id="L141">        return output;</span>
+    }
+
+    @Override
+    public int hashCode()
+    {
+<span class="nc" id="L147">        int hash = 7;</span>
+<span class="nc" id="L148">        hash = 59 * hash + Objects.hashCode(this.scopeType);</span>
+<span class="nc" id="L149">        hash = 59 * hash + Objects.hashCode(this.parent);</span>
+<span class="nc" id="L150">        hash = 59 * hash + Objects.hashCode(this.variablesInThisScope);</span>
+<span class="nc" id="L151">        return hash;</span>
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+<span class="fc bfc" id="L157" title="All 2 branches covered.">        if (this == obj)</span>
+        {
+<span class="fc" id="L159">            return true;</span>
+        }
+<span class="pc bpc" id="L161" title="1 of 2 branches missed.">        if (obj == null)</span>
+        {
+<span class="nc" id="L163">            return false;</span>
+        }
+<span class="pc bpc" id="L165" title="1 of 2 branches missed.">        if (getClass() != obj.getClass())</span>
+        {
+<span class="nc" id="L167">            return false;</span>
+        }
+<span class="fc" id="L169">        final Scope other = (Scope) obj;</span>
+<span class="pc bpc" id="L170" title="1 of 2 branches missed.">        if (!Objects.equals(this.scopeType, other.scopeType))</span>
+        {
+<span class="nc" id="L172">            return false;</span>
+        }
+<span class="pc bpc" id="L174" title="1 of 2 branches missed.">        if (!Objects.equals(this.parent, other.parent))</span>
+        {
+<span class="nc" id="L176">            return false;</span>
+        }
+<span class="pc bpc" id="L178" title="1 of 2 branches missed.">        if (!Objects.equals(this.variablesInThisScope, other.variablesInThisScope))</span>
+        {
+<span class="nc" id="L180">            return false;</span>
+        }
+<span class="fc" id="L182">        return true;</span>
+    }
+    
+    
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

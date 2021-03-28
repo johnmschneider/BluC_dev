@@ -1,0 +1,6 @@
+char realCharTest = 'x';
+long int x = 0;
+long long b;
+int main ( int argc , char * * argv ) { while ( x < 70000 ) { long int y = x;
+x = x + 1;
+} } ___bluC_eof

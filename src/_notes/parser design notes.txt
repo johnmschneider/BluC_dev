@@ -1,0 +1,8 @@
+1) statement handler notes
+    1) ending token
+        1) statement handlers *must* end their function
+            such that the "current token" of the parser is the last
+            token of the statement.
+        2) for example, when a function handler returns, the
+            parser's current token should be the ending curly
+            brace (the "}")

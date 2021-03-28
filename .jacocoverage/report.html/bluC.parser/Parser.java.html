@@ -1,0 +1,457 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>Parser.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;BluC&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.source.html" class="el_package">bluC.parser</a> &gt; <span class="el_source">Parser.java</span></div><h1>Parser.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2021 John Schneider.
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package bluC.parser;
+
+import bluC.Flags;
+import java.util.ArrayList;
+import bluC.Logger;
+import bluC.Utils;
+import bluC.transpiler.AstPrinter;
+import bluC.transpiler.Scope;
+import bluC.transpiler.Statement;
+import bluC.transpiler.Token;
+import bluC.parser.handlers.statement.StatementHandler;
+import java.util.Objects;
+
+/**
+ *
+ * @author John Schneider
+ */
+<span class="pc bpc" id="L34" title="1 of 2 branches missed.">public class Parser</span>
+{
+    private final ArrayList&lt;Token&gt;      lexedTokens;
+    private final ArrayList&lt;Statement&gt;  abstractSyntaxTree;
+    private int     curTokIndex;
+    private Token   curToken;
+    private String  curTokText;
+    private Scope   currentScope;
+    
+    /**
+     * Whether or not this is the topmost parser (the root of all other 
+     *  parser classes). Currently only used if -time flag is set, to
+     *  measure only the parse time as a whole, and not that of each parser.
+     */
+<span class="fc" id="L48">    private static  boolean isFirstParserInitialized = false;</span>
+    private final   boolean thisInstanceIsFirstParser;
+    
+    private final StatementHandler handler;
+    
+    public Parser(ArrayList&lt;Token&gt; lexedTokens)
+<span class="fc" id="L54">    {</span>
+<span class="fc" id="L55">        this.lexedTokens    = lexedTokens;</span>
+<span class="fc" id="L56">        abstractSyntaxTree  = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L57">        curTokIndex         = -1;</span>
+<span class="fc" id="L58">        currentScope        = new Scope(Scope.NO_PARENT, Scope.NO_SCOPE_TYPE);</span>
+<span class="fc" id="L59">        handler             = new StatementHandler(this);</span>
+        
+<span class="fc bfc" id="L61" title="All 2 branches covered.">        if (isFirstParserInitialized == false)</span>
+        {
+<span class="fc" id="L63">            thisInstanceIsFirstParser   = true;</span>
+<span class="fc" id="L64">            isFirstParserInitialized    = true;</span>
+        }
+        else
+        {
+<span class="fc" id="L68">            thisInstanceIsFirstParser = false;</span>
+        }
+<span class="fc" id="L70">    }</span>
+    
+    
+    public ArrayList&lt;Statement&gt; parse()
+    {
+<span class="pc bpc" id="L75" title="1 of 2 branches missed.">        if (doesParseTimeNeedTracked()) </span>
+        {
+<span class="nc" id="L77">            return parseWhileTrackingTime();</span>
+        }
+        else
+        {
+<span class="fc" id="L81">            return parseWithoutTrackingTime();</span>
+        }
+    }
+    
+    private boolean doesParseTimeNeedTracked()
+    {
+<span class="pc bpc" id="L87" title="1 of 4 branches missed.">        return thisInstanceIsFirstParser &amp;&amp; (Flags.get(&quot;time&quot;) != null);</span>
+    }
+    
+    private ArrayList&lt;Statement&gt; parseWhileTrackingTime()
+    {
+<span class="nc" id="L92">        long                    parserStartTime = System.currentTimeMillis();</span>
+        ArrayList&lt;Statement&gt;    statements;
+        
+<span class="nc" id="L95">        statements = parseWithoutTrackingTime();</span>
+<span class="nc" id="L96">        outputParseTime(parserStartTime);</span>
+        
+<span class="nc" id="L98">        return statements;</span>
+    }
+    
+    private ArrayList&lt;Statement&gt; parseWithoutTrackingTime()
+    {
+        // as of right now each Parser object should only be used once, so if we
+        //  try to parse an empty file it's most likely an error in the compiler
+        //  code
+<span class="pc bpc" id="L106" title="2 of 4 branches missed.">        assert(!lexedTokens.isEmpty());</span>
+        
+<span class="fc" id="L108">        boolean eof = atEOF();</span>
+
+<span class="fc bfc" id="L110" title="All 2 branches covered.">        while (!eof)</span>
+        {
+            try
+            { 
+<span class="fc" id="L114">                abstractSyntaxTree.add(handler.handleStatement(true));</span>
+            }
+<span class="nc" id="L116">            catch (Exception ex)</span>
+            {
+<span class="nc" id="L118">                Logger.err(curToken, &quot;Fatal parse error resulted in uncaught &quot; +</span>
+<span class="nc" id="L119">                    &quot;java.lang.Exception:\n&quot; + ex.getMessage() + </span>
+<span class="nc" id="L120">                    &quot;\n\nDumping parse tree below:\n\n&quot; + dumpAstToString());</span>
+            }
+<span class="nc" id="L122">            catch (Error err)</span>
+            {
+<span class="nc" id="L124">                Logger.err(curToken, &quot;Fatal parse error resulted in uncaught &quot; +</span>
+<span class="nc" id="L125">                    &quot;java.lang.Throwable.Error:\n&quot; + err.getMessage() + </span>
+<span class="nc" id="L126">                    &quot;\n\nDumping parse tree below:\n\n&quot; + dumpAstToString());</span>
+            }
+<span class="nc" id="L128">            catch (Throwable t)</span>
+            {
+                // as of the current java spec of the compiler, the compiler
+                //  SHOULD only be throwing exceptions or errors (since no
+                //  classes simply derive Throwable in this project)
+<span class="nc" id="L133">                Logger.err(curToken, &quot;Fatal parse error resulted in uncaught &quot; +</span>
+                    &quot;java.lang.Throwable which is neither an Exception or &quot; +
+<span class="nc" id="L135">                    &quot;Error:\n&quot; + &quot;class == &quot; + t.getClass().getTypeName() +</span>
+<span class="nc" id="L136">                    &quot;\n&quot; + t.getMessage() + &quot;\n\n&quot; + dumpAstToString());</span>
+<span class="pc" id="L137">            }</span>
+            
+<span class="fc" id="L139">            eof = atEOF();</span>
+        }
+        
+<span class="fc" id="L142">        return abstractSyntaxTree;</span>
+    }
+    
+    public String dumpAstToString()
+    {
+<span class="nc" id="L147">        AstPrinter  printer     = new AstPrinter();</span>
+<span class="nc" id="L148">        String      dumpedAst   = &quot;Dumping parse tree below:\n\n&quot; ;</span>
+        
+<span class="nc bnc" id="L150" title="All 2 branches missed.">        if (abstractSyntaxTree.isEmpty())</span>
+        {
+<span class="nc" id="L152">            dumpedAst += &quot;&lt;no elements in parse tree&gt;&quot;;</span>
+        }
+        else
+        {
+<span class="nc" id="L156">            dumpedAst += printer.printToString(</span>
+<span class="nc" id="L157">                abstractSyntaxTree.get(0)) + &quot;\n&quot;;</span>
+
+<span class="nc bnc" id="L159" title="All 2 branches missed.">            for (int i = 1; i &lt; abstractSyntaxTree.size(); i++)</span>
+            {
+<span class="nc" id="L161">                dumpedAst += printer.printToString(abstractSyntaxTree.get(i)) +</span>
+                    &quot;\n&quot;;
+            }
+        }
+        
+<span class="nc" id="L166">        return dumpedAst;</span>
+    }
+    
+    public void dumpAstToStdout()
+    {
+<span class="nc" id="L171">        System.out.println(dumpAstToString());</span>
+<span class="nc" id="L172">    }</span>
+    
+    private void outputParseTime(long parserStartTime)
+    {
+<span class="nc" id="L176">        long parserEndTime  = System.currentTimeMillis();</span>
+<span class="nc" id="L177">        long elapsedTime    = parserEndTime - parserStartTime;</span>
+        
+<span class="nc" id="L179">        System.out.println(&quot;Parsing done in &quot; + elapsedTime + &quot;ms.&quot;);</span>
+<span class="nc" id="L180">    }</span>
+    
+    public boolean peekMatches(String... textToMatch)
+    {
+<span class="fc" id="L184">        Token t = peek();</span>
+
+<span class="fc bfc" id="L186" title="All 2 branches covered.">        for (String s : textToMatch)</span>
+        {
+<span class="fc bfc" id="L188" title="All 2 branches covered.">            if (t.getTextContent().equals(s))</span>
+            {
+<span class="fc" id="L190">                return true;</span>
+            }
+        }
+        
+<span class="fc" id="L194">        return false;</span>
+    }
+    
+    public boolean peekMatches(int howManyTokensAhead, String... textToMatch)
+    {
+<span class="fc" id="L199">        Token t = peek(howManyTokensAhead);</span>
+
+<span class="fc bfc" id="L201" title="All 2 branches covered.">        for (String s : textToMatch)</span>
+        {
+<span class="pc bpc" id="L203" title="1 of 2 branches missed.">            if (t.getTextContent().equals(s))</span>
+            {
+<span class="nc" id="L205">                return true;</span>
+            }
+        }
+        
+<span class="fc" id="L209">        return false;</span>
+    }
+    
+    public Token peek()
+    {
+<span class="pc bpc" id="L214" title="1 of 2 branches missed.">        if (curTokIndex &lt; lexedTokens.size() - 1)</span>
+        {
+<span class="fc" id="L216">            return lexedTokens.get(curTokIndex + 1);</span>
+        }
+        else
+        {
+<span class="nc" id="L220">            return lexedTokens.get(lexedTokens.size() - 1);</span>
+        }
+    }
+    
+    public Token peek(int howManyTokensAhead)
+    {
+<span class="pc bpc" id="L226" title="1 of 2 branches missed.">        if (curTokIndex + howManyTokensAhead &lt; lexedTokens.size() - 1)</span>
+        {
+<span class="fc" id="L228">            return lexedTokens.get(curTokIndex + howManyTokensAhead);</span>
+        }
+        else
+        {
+<span class="nc" id="L232">            return lexedTokens.get(lexedTokens.size() - 1);</span>
+        }
+    }
+    
+    public boolean atEOF()
+    {
+<span class="fc" id="L238">        return peekMatches(Token.EOF);</span>
+    }
+    
+    public void nextToken()
+    {
+<span class="pc bpc" id="L243" title="1 of 2 branches missed.">        if (curTokIndex &lt; lexedTokens.size() - 1)</span>
+        {
+<span class="fc" id="L245">            curTokIndex ++;</span>
+        }
+        
+<span class="fc" id="L248">        curToken    = lexedTokens.get(curTokIndex);</span>
+<span class="fc" id="L249">        curTokText  = curToken.getTextContent();</span>
+<span class="fc" id="L250">    }</span>
+    
+    public void setToken(int tokenIndex)
+    {
+<span class="nc bnc" id="L254" title="All 2 branches missed.">        if (tokenIndex &gt; 0)</span>
+        {
+<span class="nc" id="L256">            curToken    = lexedTokens.get(tokenIndex);</span>
+<span class="nc" id="L257">            curTokText  = curToken.getTextContent();</span>
+        }
+        
+<span class="nc" id="L260">        curTokIndex = tokenIndex;</span>
+<span class="nc" id="L261">    }</span>
+    
+    public void prevToken()
+    {
+<span class="pc bpc" id="L265" title="1 of 2 branches missed.">        if (curTokIndex &gt; 0)</span>
+        {
+<span class="fc" id="L267">            curTokIndex --;</span>
+        }
+        
+<span class="fc" id="L270">        curToken    = lexedTokens.get(curTokIndex);</span>
+<span class="fc" id="L271">        curTokText  = curToken.getTextContent();</span>
+<span class="fc" id="L272">    }</span>
+    
+    public Token getCurToken()
+    {
+<span class="fc" id="L276">        return curToken;</span>
+    }
+    
+    public String getCurTokText()
+    {
+<span class="fc" id="L281">        return curTokText;</span>
+    }
+    
+    /**
+     * Returns the index of the current token in the LEXED TOKENS ArrayList.
+     */
+    public int getCurTokIndex()
+    {
+<span class="fc" id="L289">        return curTokIndex;</span>
+    }
+    
+    /**
+     * Returns the line index (line in sourcecode - 1) of the current token.
+     */
+    public long getCurTokLineIndex()
+    {
+<span class="fc" id="L297">        return curToken.getLineIndex();</span>
+    }
+    
+    public void addToken(Token token, int index)
+    {
+<span class="nc bnc" id="L302" title="All 2 branches missed.">        if (index &lt; lexedTokens.size())</span>
+        {
+<span class="nc" id="L304">            lexedTokens.add(index, token);</span>
+        }
+        else
+        {
+<span class="nc" id="L308">            lexedTokens.add(token);</span>
+        }
+<span class="nc" id="L310">    }</span>
+    
+    public void gotoEndOfStatement()
+    {
+<span class="nc bnc" id="L314" title="All 4 branches missed.">        while (!peekMatches(&quot;;&quot;) &amp;&amp; !atEOF())</span>
+        {
+<span class="nc" id="L316">            nextToken();</span>
+        }
+<span class="nc" id="L318">    }</span>
+    
+    public boolean isInAClass()
+    {
+<span class="nc" id="L322">        Scope currentSearchScope = currentScope;</span>
+        
+<span class="nc bnc" id="L324" title="All 2 branches missed.">        while (currentSearchScope != null)</span>
+        {
+<span class="nc bnc" id="L326" title="All 2 branches missed.">            if (currentSearchScope.getScopeType() instanceof Statement.ClassDef)</span>
+            {
+<span class="nc" id="L328">                return true;</span>
+            }
+            
+<span class="nc" id="L331">            currentSearchScope = currentSearchScope.getParent();</span>
+        }
+        
+<span class="nc" id="L334">        return false;</span>
+    }
+    
+    public Scope getCurrentScope()
+    {
+<span class="fc" id="L339">        return currentScope;</span>
+    }
+    
+    public void pushScope(Scope newScope)
+    {
+<span class="nc" id="L344">        currentScope = newScope;</span>
+<span class="nc" id="L345">    }</span>
+    
+    public void popScope(Token causeOfPop)
+    {
+<span class="nc" id="L349">        Scope parent = currentScope.getParent();</span>
+        
+<span class="nc bnc" id="L351" title="All 2 branches missed.">        if (parent != null)</span>
+        {
+<span class="nc" id="L353">            currentScope = parent;</span>
+        }
+        else
+        {
+            //this should never happen so it is an error if it does
+            
+            /**
+             * Upon further inspection of Java exceptions it appears to be
+             *  calling terminate/some sort of exit method when the exception
+             *  is either thrown or printStackTrace'd
+             */
+            // TODO - change this from an exception to some other error recovery
+            //  mechanism
+            
+            //this *should* keep parsing (for further errors) but will stop the 
+            //  compile to C IR.
+<span class="nc" id="L369">            Logger.err(causeOfPop, &quot;Fatal parse error&quot;);</span>
+            
+            //printStackTrace an exception so we get the stack frame in question
+<span class="nc" id="L372">            new Exception(&quot;Compiler error: popScope called on global &quot; +</span>
+                &quot;scope. Previous scope type == &quot; + 
+<span class="nc" id="L374">                currentScope.getScopeType()).printStackTrace();</span>
+        }
+<span class="nc" id="L376">    }</span>
+    
+    public int indexOf(Token indexOfThis)
+    {
+<span class="nc" id="L380">        return lexedTokens.indexOf(indexOfThis);</span>
+    }
+    
+    /**
+     * For use by a debugger.
+     */
+    @Override
+    public String toString()
+    {
+<span class="nc" id="L389">        return &quot;Parser current token:\n&quot; + curToken.toString() + </span>
+<span class="nc" id="L390">            &quot;\n\nParser current scope:\n&quot; + currentScope.toString();</span>
+    }
+    
+    @Override
+    public boolean equals(Object other)
+    {
+<span class="pc bpc" id="L396" title="1 of 2 branches missed.">        if (other instanceof Parser)</span>
+        {
+<span class="fc" id="L398">            Parser otherParser = (Parser) other;</span>
+            
+<span class="fc" id="L400">            return</span>
+<span class="pc bpc" id="L401" title="1 of 2 branches missed.">                abstractSyntaxTree.equals(otherParser.abstractSyntaxTree) &amp;&amp;</span>
+<span class="pc bpc" id="L402" title="1 of 2 branches missed.">                getCurTokIndex() == otherParser.getCurTokIndex() &amp;&amp; </span>
+<span class="pc bpc" id="L403" title="1 of 2 branches missed.">                curTokTextEquals(otherParser) &amp;&amp;</span>
+<span class="pc bpc" id="L404" title="1 of 2 branches missed.">                curTokEquals(otherParser) &amp;&amp;</span>
+<span class="pc bpc" id="L405" title="1 of 2 branches missed.">                curScopeEquals(otherParser) &amp;&amp; </span>
+<span class="pc bpc" id="L406" title="1 of 2 branches missed.">                lexedTokEquals(otherParser);</span>
+        }
+        else
+        {
+<span class="nc" id="L410">            return false;</span>
+        }
+    }
+
+    @Override
+    public int hashCode()
+    {
+<span class="nc" id="L417">        int hash = 7;</span>
+<span class="nc" id="L418">        hash = 13 * hash + Objects.hashCode(this.lexedTokens);</span>
+<span class="nc" id="L419">        hash = 13 * hash + Objects.hashCode(this.abstractSyntaxTree);</span>
+<span class="nc" id="L420">        hash = 13 * hash + this.curTokIndex;</span>
+<span class="nc" id="L421">        hash = 13 * hash + Objects.hashCode(this.curToken);</span>
+<span class="nc" id="L422">        hash = 13 * hash + Objects.hashCode(this.curTokText);</span>
+<span class="nc" id="L423">        hash = 13 * hash + Objects.hashCode(this.currentScope);</span>
+<span class="nc" id="L424">        return hash;</span>
+    }
+    
+    private boolean curTokTextEquals(Parser other)
+    {
+<span class="fc" id="L429">        String curText = getCurTokText();</span>
+        
+<span class="fc" id="L431">        return Utils.&lt;Parser, String&gt; nullSafeEquals(</span>
+<span class="fc" id="L432">            this, curText, other, other.getCurTokText());</span>
+    }
+    
+    private boolean curTokEquals(Parser other)
+    {
+<span class="fc" id="L437">        Token curTok = getCurToken();</span>
+        
+<span class="fc" id="L439">        return Utils.&lt;Parser, Token&gt; nullSafeEquals(</span>
+<span class="fc" id="L440">            this, curTok, other, other.getCurToken());</span>
+    }
+    
+    private boolean curScopeEquals(Parser other)
+    {
+<span class="fc" id="L445">        Scope curScope = getCurrentScope();</span>
+        
+<span class="fc" id="L447">        return Utils.&lt;Parser, Scope&gt; nullSafeEquals(</span>
+<span class="fc" id="L448">            this, curScope, other, other.getCurrentScope());</span>
+    }
+    
+    private boolean lexedTokEquals(Parser other)
+    {
+<span class="fc" id="L453">        return Utils.&lt;Parser, ArrayList&lt;Token&gt;&gt; nullSafeEquals(</span>
+            this, lexedTokens, other, other.lexedTokens);
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

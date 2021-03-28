@@ -1,0 +1,1263 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>Statement.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;BluC&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.source.html" class="el_package">bluC.transpiler</a> &gt; <span class="el_source">Statement.java</span></div><h1>Statement.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2021 John Schneider.
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package bluC.transpiler;
+
+import bluC.Utils;
+import java.util.ArrayList;
+import bluC.transpiler.Statement.VarDeclaration.Sign;
+import bluC.transpiler.Statement.VarDeclaration.SimplifiedType;
+import bluC.parser.Parser;
+import java.util.Objects;
+
+/**
+ * @author John Schneider
+ */
+public abstract class Statement
+{
+<span class="fc" id="L31">    public static long NO_STARTING_LINE_INDEX = -1;</span>
+<span class="fc" id="L32">    public static long NO_ENDING_LINE_INDEX   = -1;</span>
+    
+<span class="fc" id="L34">    private long startingLineIndex  = NO_STARTING_LINE_INDEX;</span>
+<span class="fc" id="L35">    private long endingLineIndex    = NO_ENDING_LINE_INDEX;</span>
+    
+    public static interface Visitor&lt;T&gt;
+    {
+        //blocks
+        T visitBlock        (Statement.Block statement);
+        
+        T visitFunction     (Statement.Function statement);
+        T visitMethod       (Statement.Method statement);
+        T visitParameterList(Statement.ParameterList statement);
+                    
+        T visitIf           (Statement.If statement);
+        T visitClassDef     (Statement.ClassDef statement);
+        T visitStructDef    (Statement.StructDef statement);
+        T visitWhile        (Statement.While statement);
+        
+        //misc
+        T visitReturn               (Statement.Return statement);
+        T visitExpressionStatement  (Statement.ExpressionStatement statement);
+        T visitPackage              (Statement.Package statement);
+        
+        //vars
+        T visitVarDeclaration       (Statement.VarDeclaration statement);
+    }
+    
+    public static class Block extends Statement
+    {
+        private ArrayList&lt;Statement&gt; body;
+        
+        public Block(long startingLineIndex)
+        {
+<span class="fc" id="L66">            super(startingLineIndex);</span>
+<span class="fc" id="L67">            this.body = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L68">        }</span>
+        
+        @Override
+        &lt;T&gt; T accept(Visitor&lt;T&gt; visitor)
+        {
+<span class="nc" id="L73">            return visitor.visitBlock(this);</span>
+        }
+        
+        public final &lt;T&gt; T acceptBlock(Visitor&lt;T&gt; visitor)
+        {
+<span class="nc" id="L78">            return visitor.visitBlock(this);</span>
+        }
+        
+        public ArrayList&lt;Statement&gt; getBody()
+        {
+<span class="nc" id="L83">            return body;</span>
+        }
+        
+        public void addStatement(Statement statement)
+        {
+<span class="nc" id="L88">            body.add(statement);</span>
+<span class="nc" id="L89">        }</span>
+        
+        @Override
+        public boolean needsSemicolon()
+        {
+<span class="nc" id="L94">            return false;</span>
+        }
+        
+        public boolean needsExtraSpace()
+        {
+<span class="nc" id="L99">            return true;</span>
+        }
+
+        @Override
+        public int hashCode()
+        {
+<span class="nc" id="L105">            int hash = 3;</span>
+<span class="nc" id="L106">            hash = 79 * hash + Objects.hashCode(this.body);</span>
+<span class="nc" id="L107">            hash = 79 * hash + (int) (this.getStartingLineIndex() ^</span>
+<span class="nc" id="L108">                (this.getStartingLineIndex() &gt;&gt;&gt; 32));</span>
+<span class="nc" id="L109">            hash = 79 * hash + (int) (this.getEndingLineIndex() ^ </span>
+<span class="nc" id="L110">                (this.getEndingLineIndex() &gt;&gt;&gt; 32));</span>
+<span class="nc" id="L111">            return hash;</span>
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+<span class="pc bpc" id="L117" title="1 of 2 branches missed.">            if (this == obj)</span>
+            {
+<span class="nc" id="L119">                return true;</span>
+            }
+<span class="pc bpc" id="L121" title="1 of 2 branches missed.">            if (obj == null)</span>
+            {
+<span class="nc" id="L123">                return false;</span>
+            }
+<span class="pc bpc" id="L125" title="1 of 2 branches missed.">            if (getClass() != obj.getClass())</span>
+            {
+<span class="nc" id="L127">                return false;</span>
+            }
+<span class="pc bpc" id="L129" title="1 of 2 branches missed.">            if (!super.equals(obj))</span>
+            {
+<span class="nc" id="L131">                return false;</span>
+            }
+            
+<span class="fc" id="L134">            final Block other = (Block) obj;</span>
+<span class="pc bpc" id="L135" title="1 of 2 branches missed.">            if (!Objects.equals(this.body, other.body))</span>
+            {
+<span class="nc" id="L137">                return false;</span>
+            }
+<span class="fc" id="L139">            return true;</span>
+        }
+        
+        
+    }
+    
+    public static class Function extends Block
+    {
+        private Statement.VarDeclaration
+                        returnType;
+        private Statement.ParameterList
+                        parameterList;
+        private Token   functionName;
+        
+        public Function(Statement.VarDeclaration returnType, Token functionName,
+            long startingLineIndex)
+        {
+<span class="fc" id="L156">            super(startingLineIndex);</span>
+            
+<span class="fc" id="L158">            this.returnType = returnType;</span>
+<span class="fc" id="L159">            this.functionName = functionName;</span>
+<span class="fc" id="L160">        }</span>
+        
+        public Statement.VarDeclaration getReturnType()
+        {
+<span class="nc" id="L164">            return returnType;</span>
+        }
+        
+        public boolean hasValidName()
+        {
+<span class="nc" id="L169">            return functionName.isValidName(); </span>
+        }
+        
+        public Token getNameToken()
+        {
+<span class="nc" id="L174">            return functionName;</span>
+        }
+        
+        public String getNameText()
+        {
+<span class="fc" id="L179">            return functionName.getTextContent();</span>
+        }
+        
+        public void setName(Token newName)
+        {
+<span class="nc" id="L184">            functionName = newName;</span>
+<span class="nc" id="L185">        }</span>
+        
+        public void setParameters(ParameterList parameters)
+        {
+<span class="fc" id="L189">            parameterList = parameters;</span>
+<span class="fc" id="L190">        }</span>
+        
+        public Statement.ParameterList getParameters()
+        {
+<span class="nc" id="L194">            return parameterList;</span>
+        }
+
+        @Override
+        public int hashCode()
+        {
+<span class="nc" id="L200">            int hash = 3;</span>
+<span class="nc" id="L201">            hash = 37 * hash + Objects.hashCode(this.returnType);</span>
+<span class="nc" id="L202">            hash = 37 * hash + Objects.hashCode(this.parameterList);</span>
+<span class="nc" id="L203">            hash = 37 * hash + Objects.hashCode(this.functionName);</span>
+<span class="nc" id="L204">            hash = 37 * hash + (int) (this.getStartingLineIndex() ^ </span>
+<span class="nc" id="L205">                (this.getStartingLineIndex() &gt;&gt;&gt; 32));</span>
+<span class="nc" id="L206">            hash = 37 * hash + (int) (this.getEndingLineIndex() ^ </span>
+<span class="nc" id="L207">                (this.getEndingLineIndex() &gt;&gt;&gt; 32));</span>
+<span class="nc" id="L208">            return hash;</span>
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+<span class="pc bpc" id="L214" title="1 of 2 branches missed.">            if (this == obj)</span>
+            {
+<span class="nc" id="L216">                return true;</span>
+            }
+<span class="pc bpc" id="L218" title="1 of 2 branches missed.">            if (obj == null)</span>
+            {
+<span class="nc" id="L220">                return false;</span>
+            }
+<span class="pc bpc" id="L222" title="1 of 2 branches missed.">            if (getClass() != obj.getClass())</span>
+            {
+<span class="nc" id="L224">                return false;</span>
+            }
+<span class="pc bpc" id="L226" title="1 of 2 branches missed.">            if (!super.equals(obj))</span>
+            {
+<span class="nc" id="L228">                return false;</span>
+            }
+            
+<span class="fc" id="L231">            final Function other = (Function) obj;</span>
+<span class="pc bpc" id="L232" title="1 of 2 branches missed.">            if (!Objects.equals(this.returnType, other.returnType))</span>
+            {
+<span class="nc" id="L234">                return false;</span>
+            }
+<span class="pc bpc" id="L236" title="1 of 2 branches missed.">            if (!Objects.equals(this.parameterList, other.parameterList))</span>
+            {
+<span class="nc" id="L238">                return false;</span>
+            }
+<span class="pc bpc" id="L240" title="1 of 2 branches missed.">            if (!Objects.equals(this.functionName, other.functionName))</span>
+            {
+<span class="nc" id="L242">                return false;</span>
+            }
+<span class="fc" id="L244">            return true;</span>
+        }
+        
+        
+        @Override
+        &lt;T&gt; T accept(Visitor&lt;T&gt; visitor)
+        {
+<span class="nc" id="L251">            return visitor.visitFunction(this);</span>
+        }
+    }
+    
+    public static class ParameterList extends Statement
+    {
+        private final ArrayList&lt;Statement.VarDeclaration&gt; parameters;
+        
+        public ParameterList(long startingLineIndex)
+        {
+<span class="fc" id="L261">            super(startingLineIndex);</span>
+<span class="fc" id="L262">            this.parameters = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L263">        }</span>
+        
+        public void addParameter(Statement.VarDeclaration param)
+        {
+<span class="fc" id="L267">            parameters.add(param);</span>
+<span class="fc" id="L268">        }</span>
+        
+        public ArrayList&lt;Statement.VarDeclaration&gt; getParameters()
+        {
+<span class="nc" id="L272">            return parameters;</span>
+        }
+
+        @Override
+        public int hashCode()
+        {
+<span class="nc" id="L278">            int hash = 3;</span>
+<span class="nc" id="L279">            hash = 13 * hash + Objects.hashCode(this.parameters);</span>
+<span class="nc" id="L280">            hash = 13 * hash + (int) (this.getStartingLineIndex() ^ </span>
+<span class="nc" id="L281">                (this.getStartingLineIndex() &gt;&gt;&gt; 32));</span>
+<span class="nc" id="L282">            hash = 13 * hash + (int) (this.getEndingLineIndex() ^ </span>
+<span class="nc" id="L283">                (this.getEndingLineIndex() &gt;&gt;&gt; 32));</span>
+<span class="nc" id="L284">            return hash;</span>
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+<span class="pc bpc" id="L290" title="1 of 2 branches missed.">            if (this == obj)</span>
+            {
+<span class="fc" id="L292">                return true;</span>
+            }
+<span class="nc bnc" id="L294" title="All 2 branches missed.">            if (obj == null)</span>
+            {
+<span class="nc" id="L296">                return false;</span>
+            }
+<span class="nc bnc" id="L298" title="All 2 branches missed.">            if (getClass() != obj.getClass())</span>
+            {
+<span class="nc" id="L300">                return false;</span>
+            }
+<span class="nc bnc" id="L302" title="All 2 branches missed.">            if (!super.equals(obj))</span>
+            {
+<span class="nc" id="L304">                return false;</span>
+            }
+            
+<span class="nc" id="L307">            final ParameterList other = (ParameterList) obj;</span>
+<span class="nc bnc" id="L308" title="All 2 branches missed.">            if (!Objects.equals(this.parameters, other.parameters))</span>
+            {
+<span class="nc" id="L310">                return false;</span>
+            }
+<span class="nc" id="L312">            return true;</span>
+        }
+        
+        @Override
+        &lt;T&gt; T accept(Visitor&lt;T&gt; visitor)
+        {
+<span class="nc" id="L318">            return visitor.visitParameterList(this);</span>
+        }
+    }
+    
+    public static class Method extends Function
+    {
+        private final Statement.ClassDef class_;
+        private final String mangledName;
+        private final Parser parser;
+            
+        public Method(Statement.ClassDef class_, VarDeclaration returnVar,
+            Token methodName, String mangledName, Parser parser,
+            long startingLineIndex)
+        {
+<span class="nc" id="L332">            super(returnVar, methodName, startingLineIndex);</span>
+<span class="nc" id="L333">            this.class_         = class_;</span>
+<span class="nc" id="L334">            this.mangledName    = mangledName;</span>
+<span class="nc" id="L335">            this.parser         = parser;</span>
+<span class="nc" id="L336">        }</span>
+        
+        @Override
+        public void setParameters(ParameterList parameters)
+        {
+            long                                startingLineIndex;
+            ParameterList                       listWithThis;
+            ArrayList&lt;Statement.VarDeclaration&gt; rawParameters;
+            
+<span class="nc" id="L345">            startingLineIndex    = parameters.getStartingLineIndex();</span>
+<span class="nc" id="L346">            listWithThis    = new ParameterList(startingLineIndex);</span>
+<span class="nc" id="L347">            rawParameters   = parameters.getParameters();</span>
+            
+            // to determine what file and line the &quot;this&quot; is on
+            Token tokenBeforeTheThisKeyword; 
+            
+<span class="nc bnc" id="L352" title="All 2 branches missed.">            if (rawParameters.isEmpty())</span>
+            {
+                // the &quot;(&quot; token
+<span class="nc" id="L355">                tokenBeforeTheThisKeyword = parser.getCurToken();</span>
+            }
+            else
+            {
+<span class="nc" id="L359">                tokenBeforeTheThisKeyword = rawParameters.get(0).getName();</span>
+            }
+            
+<span class="nc" id="L362">            VarDeclaration this_ = new VarDeclaration(Sign.UNSPECIFIED, </span>
+                SimplifiedType.CLASS, 1,
+                
+                new Token(
+                   new TokenInfo(&quot;this&quot;, false),
+                        
+<span class="nc" id="L368">                   new TokenFileInfo(tokenBeforeTheThisKeyword.getFilepath(), </span>
+<span class="nc" id="L369">                       tokenBeforeTheThisKeyword.getLineIndex())</span>
+                ), 
+                    
+<span class="nc" id="L372">                null, null, tokenBeforeTheThisKeyword.getLineIndex());</span>
+            
+<span class="nc" id="L374">            this_.setClassID(class_.getClassID());</span>
+<span class="nc" id="L375">            parser.getCurrentScope().addVariableToScope(this_);</span>
+                    
+<span class="nc" id="L377">            listWithThis.addParameter(this_);</span>
+            
+<span class="nc bnc" id="L379" title="All 2 branches missed.">            for (VarDeclaration parameter : parameters.getParameters())</span>
+            {
+<span class="nc" id="L381">                listWithThis.addParameter(parameter);</span>
+<span class="nc" id="L382">            }</span>
+            
+<span class="nc" id="L384">            super.setParameters(listWithThis);</span>
+<span class="nc" id="L385">        }</span>
+        
+        public Statement.ClassDef getClass_()
+        {
+<span class="nc" id="L389">            return class_;</span>
+        }
+        
+        public String getMangledName()
+        {
+<span class="nc" id="L394">            return mangledName;</span>
+        }
+
+        @Override
+        public int hashCode()
+        {
+<span class="nc" id="L400">            int hash = 7;</span>
+<span class="nc" id="L401">            hash = 53 * hash + Objects.hashCode(this.class_);</span>
+<span class="nc" id="L402">            hash = 53 * hash + Objects.hashCode(this.mangledName);</span>
+<span class="nc" id="L403">            hash = 53 * hash + Objects.hashCode(this.parser);</span>
+<span class="nc" id="L404">            hash = 53 * hash + Objects.hashCode(this.getReturnType());</span>
+<span class="nc" id="L405">            hash = 53 * hash + Objects.hashCode(this.getParameters());</span>
+<span class="nc" id="L406">            hash = 53 * hash + Objects.hashCode(this.getNameToken());</span>
+<span class="nc" id="L407">            hash = 53 * hash + (int) (this.getStartingLineIndex() ^ </span>
+<span class="nc" id="L408">                (this.getStartingLineIndex() &gt;&gt;&gt; 32));</span>
+<span class="nc" id="L409">            hash = 53 * hash + (int) (this.getEndingLineIndex() ^ </span>
+<span class="nc" id="L410">                (this.getEndingLineIndex() &gt;&gt;&gt; 32));</span>
+<span class="nc" id="L411">            hash = 53 * hash + Objects.hashCode(this.getBody());</span>
+<span class="nc" id="L412">            return hash;</span>
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+<span class="nc bnc" id="L418" title="All 2 branches missed.">            if (this == obj)</span>
+            {
+<span class="nc" id="L420">                return true;</span>
+            }
+<span class="nc bnc" id="L422" title="All 2 branches missed.">            if (obj == null)</span>
+            {
+<span class="nc" id="L424">                return false;</span>
+            }
+<span class="nc bnc" id="L426" title="All 2 branches missed.">            if (getClass() != obj.getClass())</span>
+            {
+<span class="nc" id="L428">                return false;</span>
+            }
+<span class="nc bnc" id="L430" title="All 2 branches missed.">            if (!super.equals(obj))</span>
+            {
+<span class="nc" id="L432">                return false;</span>
+            }
+            
+<span class="nc" id="L435">            final Method other = (Method) obj;</span>
+<span class="nc bnc" id="L436" title="All 2 branches missed.">            if (!Objects.equals(this.mangledName, other.mangledName))</span>
+            {
+<span class="nc" id="L438">                return false;</span>
+            }
+<span class="nc bnc" id="L440" title="All 2 branches missed.">            if (!Objects.equals(this.class_, other.class_))</span>
+            {
+<span class="nc" id="L442">                return false;</span>
+            }
+<span class="nc bnc" id="L444" title="All 2 branches missed.">            if (!Objects.equals(this.parser, other.parser))</span>
+            {
+<span class="nc" id="L446">                return false;</span>
+            }
+<span class="nc" id="L448">            return true;</span>
+        }
+        
+        
+        @Override
+        &lt;T&gt; T accept(Visitor&lt;T&gt; visitor)
+        {
+<span class="nc" id="L455">            return visitor.visitMethod(this);</span>
+        }
+    }
+    
+    public static class If extends Block
+    {
+        public static class ElseIf extends Block
+        {
+            private Expression condition;
+            
+            public ElseIf(Expression condition, long startingLineIndex)
+            {
+<span class="nc" id="L467">                super(startingLineIndex);</span>
+<span class="nc" id="L468">                this.condition = condition;</span>
+<span class="nc" id="L469">            }</span>
+            
+            public Expression getCondition()
+            {
+<span class="nc" id="L473">                return condition;</span>
+            }
+            
+            @Override
+            public boolean needsExtraSpace()
+            {
+<span class="nc" id="L479">                return false;</span>
+            }
+
+            @Override
+            public int hashCode()
+            {
+<span class="nc" id="L485">                int hash = 5;</span>
+<span class="nc" id="L486">                hash = 59 * hash + Objects.hashCode(this.condition);</span>
+<span class="nc" id="L487">                hash = 59 * hash + (int) (this.getStartingLineIndex() ^ </span>
+<span class="nc" id="L488">                    (this.getStartingLineIndex() &gt;&gt;&gt; 32));</span>
+<span class="nc" id="L489">                hash = 59 * hash + (int) (this.getEndingLineIndex() ^ </span>
+<span class="nc" id="L490">                    (this.getEndingLineIndex() &gt;&gt;&gt; 32));</span>
+<span class="nc" id="L491">                hash = 59 * hash + Objects.hashCode(this.getBody());</span>
+<span class="nc" id="L492">                return hash;</span>
+            }
+
+            @Override
+            public boolean equals(Object obj)
+            {
+<span class="nc bnc" id="L498" title="All 2 branches missed.">                if (this == obj)</span>
+                {
+<span class="nc" id="L500">                    return true;</span>
+                }
+<span class="nc bnc" id="L502" title="All 2 branches missed.">                if (obj == null)</span>
+                {
+<span class="nc" id="L504">                    return false;</span>
+                }
+<span class="nc bnc" id="L506" title="All 2 branches missed.">                if (getClass() != obj.getClass())</span>
+                {
+<span class="nc" id="L508">                    return false;</span>
+                }
+<span class="nc bnc" id="L510" title="All 2 branches missed.">                if (!super.equals(obj))</span>
+                {
+<span class="nc" id="L512">                    return false;</span>
+                }
+                
+<span class="nc" id="L515">                final ElseIf other = (ElseIf) obj;</span>
+<span class="nc bnc" id="L516" title="All 2 branches missed.">                if (!Objects.equals(this.condition, other.condition))</span>
+                {
+<span class="nc" id="L518">                    return false;</span>
+                }
+<span class="nc" id="L520">                return true;</span>
+            }
+        }
+        
+        public static class Else extends Block
+        {
+            public Else(long startingLineIndex)
+            {
+<span class="nc" id="L528">                super(startingLineIndex);</span>
+<span class="nc" id="L529">            }</span>
+            
+            @Override
+            public boolean needsExtraSpace()
+            {
+                // the visitIf itself adds extra whitespace
+<span class="nc" id="L535">                return false;</span>
+            }
+            
+            //.equals and .hashCode from Block should still work for this class
+        }
+        
+        private Expression condition;
+        private ArrayList&lt;ElseIf&gt; elseIfs;
+        private Else else_;
+        
+        public If(Expression condition, long startingLineIndex)
+        {
+<span class="fc" id="L547">            super(startingLineIndex);</span>
+<span class="fc" id="L548">            this.condition = condition;</span>
+<span class="fc" id="L549">            elseIfs = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L550">            else_ = null;</span>
+<span class="fc" id="L551">        }</span>
+        
+        public Expression getCondition()
+        {
+<span class="nc" id="L555">            return condition;</span>
+        }
+        
+        public void addElseIf(ElseIf elseIf)
+        {
+<span class="nc" id="L560">            elseIfs.add(elseIf);</span>
+<span class="nc" id="L561">        }</span>
+        
+        public ArrayList&lt;ElseIf&gt; getElseIfs()
+        {
+<span class="nc" id="L565">            return elseIfs;</span>
+        }
+        
+        public void setElse(Else else_)
+        {
+<span class="nc" id="L570">            this.else_ = else_;</span>
+<span class="nc" id="L571">        }</span>
+        
+        public Statement.Block getElse()
+        {
+<span class="nc" id="L575">            return else_;</span>
+        }
+
+        @Override
+        public int hashCode()
+        {
+<span class="nc" id="L581">            int hash = 3;</span>
+<span class="nc" id="L582">            hash = 53 * hash + (int) (this.getStartingLineIndex() ^ </span>
+<span class="nc" id="L583">                (this.getStartingLineIndex() &gt;&gt;&gt; 32));</span>
+<span class="nc" id="L584">            hash = 53 * hash + (int) (this.getEndingLineIndex() ^ </span>
+<span class="nc" id="L585">                (this.getEndingLineIndex() &gt;&gt;&gt; 32));</span>
+<span class="nc" id="L586">            hash = 53 * hash + Objects.hashCode(this.getBody());</span>
+<span class="nc" id="L587">            hash = 53 * hash + Objects.hashCode(this.condition);</span>
+<span class="nc" id="L588">            hash = 53 * hash + Objects.hashCode(this.elseIfs);</span>
+<span class="nc" id="L589">            hash = 53 * hash + Objects.hashCode(this.else_);</span>
+<span class="nc" id="L590">            return hash;</span>
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+<span class="nc bnc" id="L596" title="All 2 branches missed.">            if (this == obj)</span>
+            {
+<span class="nc" id="L598">                return true;</span>
+            }
+<span class="nc bnc" id="L600" title="All 2 branches missed.">            if (obj == null)</span>
+            {
+<span class="nc" id="L602">                return false;</span>
+            }
+<span class="nc bnc" id="L604" title="All 2 branches missed.">            if (getClass() != obj.getClass())</span>
+            {
+<span class="nc" id="L606">                return false;</span>
+            }
+<span class="nc bnc" id="L608" title="All 2 branches missed.">            if (!super.equals(obj))</span>
+            {
+<span class="nc" id="L610">                return false;</span>
+            }
+            
+<span class="nc" id="L613">            final If other = (If) obj;</span>
+<span class="nc bnc" id="L614" title="All 2 branches missed.">            if (!Objects.equals(this.condition, other.condition))</span>
+            {
+<span class="nc" id="L616">                return false;</span>
+            }
+<span class="nc bnc" id="L618" title="All 2 branches missed.">            if (!Objects.equals(this.elseIfs, other.elseIfs))</span>
+            {
+<span class="nc" id="L620">                return false;</span>
+            }
+<span class="nc bnc" id="L622" title="All 2 branches missed.">            if (!Objects.equals(this.else_, other.else_))</span>
+            {
+<span class="nc" id="L624">                return false;</span>
+            }
+<span class="nc" id="L626">            return true;</span>
+        }
+        
+        @Override
+        &lt;T&gt; T accept(Visitor&lt;T&gt; visitor)
+        {
+<span class="nc" id="L632">            return visitor.visitIf(this);</span>
+        }
+        
+        @Override
+        public boolean needsExtraSpace()
+        {
+            // the visitIf itself adds extra whitespace
+<span class="nc" id="L639">            return false;</span>
+        }
+    }
+    
+    public static class ClassDef extends Block
+    {
+        private Token className;
+        private Token baseClass;
+        private long classID;
+<span class="nc" id="L648">        private static long nextClassID = Long.MIN_VALUE;</span>
+<span class="nc" id="L649">        public static final ClassDef objectBaseClass = new ClassDef(&quot;Object&quot;, </span>
+            &quot;bluc.lang&quot;, Statement.NO_STARTING_LINE_INDEX);
+        
+        /**
+         * Helper constructor for other constructors.
+         */
+        private ClassDef(long startingLineIndex) 
+        {
+<span class="nc" id="L657">            super(startingLineIndex);</span>
+            
+<span class="nc" id="L659">            this.baseClass = null;</span>
+<span class="nc" id="L660">            this.classID = nextClassID;</span>
+            
+<span class="nc" id="L662">            nextClassID++;</span>
+<span class="nc" id="L663">        }</span>
+        
+        private ClassDef(String className, String package_, long startingLineIndex)
+        {
+<span class="nc" id="L667">            this(startingLineIndex);</span>
+            
+<span class="nc" id="L669">            this.className = new Token(</span>
+                new TokenInfo(className, true),
+                    
+                new TokenFileInfo(&quot;Statement.java&quot;, -1),
+                package_);
+<span class="nc" id="L674">        }</span>
+        
+        public ClassDef(Token className, long startingLineIndex) 
+        {
+<span class="nc" id="L678">            this(startingLineIndex);</span>
+            
+<span class="nc" id="L680">            this.className = className;</span>
+<span class="nc" id="L681">        }</span>
+        
+        public Token getClassName()
+        {
+<span class="nc" id="L685">            return className;</span>
+        }
+        
+        public String getClassNameText()
+        {
+<span class="nc" id="L690">            return className.getTextContent();</span>
+        }
+        
+        public void setBaseClass(Token baseClass) 
+        {
+<span class="nc" id="L695">            this.baseClass = baseClass;</span>
+<span class="nc" id="L696">        }</span>
+        
+        public long getClassID()
+        {
+<span class="nc" id="L700">            return classID;</span>
+        }
+        
+        @Override
+        &lt;T&gt; T accept(Visitor&lt;T&gt; visitor)
+        {
+<span class="nc" id="L706">            return visitor.visitClassDef(this);</span>
+        }
+
+        @Override
+        public int hashCode()
+        {
+<span class="nc" id="L712">            int hash = 5;</span>
+<span class="nc" id="L713">            hash = 53 * hash + Objects.hashCode(this.className);</span>
+<span class="nc" id="L714">            hash = 53 * hash + Objects.hashCode(this.baseClass);</span>
+<span class="nc" id="L715">            hash = 53 * hash + (int) (this.classID ^ (this.classID &gt;&gt;&gt; 32));</span>
+<span class="nc" id="L716">            hash = 53 * hash + (int) (this.getStartingLineIndex() ^ </span>
+<span class="nc" id="L717">                (this.getStartingLineIndex() &gt;&gt;&gt; 32));</span>
+<span class="nc" id="L718">            hash = 53 * hash + (int) (this.getEndingLineIndex() ^ </span>
+<span class="nc" id="L719">                (this.getEndingLineIndex() &gt;&gt;&gt; 32));</span>
+<span class="nc" id="L720">            return hash;</span>
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+<span class="nc bnc" id="L726" title="All 2 branches missed.">            if (this == obj)</span>
+            {
+<span class="nc" id="L728">                return true;</span>
+            }
+<span class="nc bnc" id="L730" title="All 2 branches missed.">            if (obj == null)</span>
+            {
+<span class="nc" id="L732">                return false;</span>
+            }
+<span class="nc bnc" id="L734" title="All 2 branches missed.">            if (getClass() != obj.getClass())</span>
+            {
+<span class="nc" id="L736">                return false;</span>
+            }
+<span class="nc bnc" id="L738" title="All 2 branches missed.">            if (!super.equals(obj))</span>
+            {
+<span class="nc" id="L740">                return false;</span>
+            }
+            
+<span class="nc" id="L743">            final ClassDef other = (ClassDef) obj;</span>
+<span class="nc bnc" id="L744" title="All 2 branches missed.">            if (this.classID != other.classID)</span>
+            {
+<span class="nc" id="L746">                return false;</span>
+            }
+<span class="nc bnc" id="L748" title="All 2 branches missed.">            if (!Objects.equals(this.className, other.className))</span>
+            {
+<span class="nc" id="L750">                return false;</span>
+            }
+<span class="nc bnc" id="L752" title="All 2 branches missed.">            if (!Objects.equals(this.baseClass, other.baseClass))</span>
+            {
+<span class="nc" id="L754">                return false;</span>
+            }
+<span class="nc" id="L756">            return true;</span>
+        }
+    }
+    
+    public static class StructDef extends Block
+    {
+        public StructDef(long startingLineIndex)
+        {
+<span class="nc" id="L764">            super(startingLineIndex);</span>
+<span class="nc" id="L765">        }</span>
+        
+        @Override
+        &lt;T&gt; T accept(Visitor&lt;T&gt; visitor)
+        {
+<span class="nc" id="L770">            return visitor.visitStructDef(this);</span>
+        }
+        
+        @Override
+        public boolean needsSemicolon()
+        {
+<span class="nc" id="L776">            return true;</span>
+        }
+        
+        // .equals and .hashCode from Block should be fine for this class
+    }
+    
+    public static class While extends Block
+    {
+        public While(long startingLineIndex)
+        {
+<span class="nc" id="L786">            super(startingLineIndex);</span>
+<span class="nc" id="L787">        }</span>
+        
+        @Override
+        &lt;T&gt; T accept(Visitor&lt;T&gt; visitor)
+        {
+<span class="nc" id="L792">            return visitor.visitWhile(this);</span>
+        }
+        
+        // .equals and .hashCode from Block should be fine for this class
+    }
+    
+    public static class Return extends Statement
+    {
+        private Statement returnedStatement;
+        
+        public Return(Statement returnedStatement, long startingLineIndex)
+        {
+<span class="nc" id="L804">            super(startingLineIndex);</span>
+<span class="nc" id="L805">            this.returnedStatement = returnedStatement;</span>
+<span class="nc" id="L806">        }</span>
+        
+        public Statement getReturnedStatement()
+        {
+<span class="nc" id="L810">            return returnedStatement;</span>
+        }
+
+        @Override
+        public int hashCode()
+        {
+<span class="nc" id="L816">            int hash = 3;</span>
+<span class="nc" id="L817">            hash = 79 * hash + Objects.hashCode(this.returnedStatement);</span>
+<span class="nc" id="L818">            hash = 79 * hash + (int) (this.getStartingLineIndex() ^ </span>
+<span class="nc" id="L819">                (this.getStartingLineIndex() &gt;&gt;&gt; 32));</span>
+<span class="nc" id="L820">            hash = 79 * hash + (int) (this.getEndingLineIndex() ^ </span>
+<span class="nc" id="L821">                (this.getEndingLineIndex() &gt;&gt;&gt; 32));</span>
+<span class="nc" id="L822">            return hash;</span>
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+<span class="nc bnc" id="L828" title="All 2 branches missed.">            if (this == obj)</span>
+            {
+<span class="nc" id="L830">                return true;</span>
+            }
+<span class="nc bnc" id="L832" title="All 2 branches missed.">            if (obj == null)</span>
+            {
+<span class="nc" id="L834">                return false;</span>
+            }
+<span class="nc bnc" id="L836" title="All 2 branches missed.">            if (getClass() != obj.getClass())</span>
+            {
+<span class="nc" id="L838">                return false;</span>
+            }
+<span class="nc bnc" id="L840" title="All 2 branches missed.">            if (!super.equals(obj))</span>
+            {
+<span class="nc" id="L842">                return false;</span>
+            }
+            
+<span class="nc" id="L845">            final Return other = (Return) obj;</span>
+<span class="nc bnc" id="L846" title="All 2 branches missed.">            if (!Objects.equals(this.returnedStatement, other.returnedStatement))</span>
+            {
+<span class="nc" id="L848">                return false;</span>
+            }
+<span class="nc" id="L850">            return true;</span>
+        }
+        
+        @Override
+        &lt;T&gt; T accept(Visitor&lt;T&gt; visitor)
+        {
+<span class="nc" id="L856">            return visitor.visitReturn(this);</span>
+        }
+    }
+    
+    public static class ExpressionStatement extends Statement
+    {
+        private final Expression expression;
+        
+        public ExpressionStatement(Expression expression, long startingLineIndex)
+        {
+<span class="nc" id="L866">            super(startingLineIndex);</span>
+<span class="nc" id="L867">            this.expression = expression;</span>
+<span class="nc" id="L868">        }</span>
+        
+        @Override
+        &lt;T&gt; T accept(Visitor&lt;T&gt; visitor)
+        {
+<span class="nc" id="L873">            return visitor.visitExpressionStatement(this);</span>
+        }
+        
+        public Expression getExpression()
+        {
+<span class="nc" id="L878">            return expression;</span>
+        }
+
+        @Override
+        public int hashCode()
+        {
+<span class="nc" id="L884">            int hash = 3;</span>
+<span class="nc" id="L885">            hash = 89 * hash + Objects.hashCode(this.expression);</span>
+<span class="nc" id="L886">            hash = 89 * hash + (int) (this.getStartingLineIndex() ^ </span>
+<span class="nc" id="L887">                (this.getStartingLineIndex() &gt;&gt;&gt; 32));</span>
+<span class="nc" id="L888">            hash = 89 * hash + (int) (this.getEndingLineIndex() ^ </span>
+<span class="nc" id="L889">                (this.getEndingLineIndex() &gt;&gt;&gt; 32));</span>
+<span class="nc" id="L890">            return hash;</span>
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+<span class="nc bnc" id="L896" title="All 2 branches missed.">            if (this == obj)</span>
+            {
+<span class="nc" id="L898">                return true;</span>
+            }
+<span class="nc bnc" id="L900" title="All 2 branches missed.">            if (obj == null)</span>
+            {
+<span class="nc" id="L902">                return false;</span>
+            }
+<span class="nc bnc" id="L904" title="All 2 branches missed.">            if (getClass() != obj.getClass())</span>
+            {
+<span class="nc" id="L906">                return false;</span>
+            }
+<span class="nc bnc" id="L908" title="All 2 branches missed.">            if (!super.equals(obj))</span>
+            {
+<span class="nc" id="L910">                return false;</span>
+            }
+            
+<span class="nc" id="L913">            final ExpressionStatement other = (ExpressionStatement) obj;</span>
+<span class="nc bnc" id="L914" title="All 2 branches missed.">            if (!Objects.equals(this.expression, other.expression))</span>
+            {
+<span class="nc" id="L916">                return false;</span>
+            }
+<span class="nc" id="L918">            return true;</span>
+        }
+    }
+    
+    public static class VarDeclaration extends Statement
+    {
+<span class="pc" id="L924">        public static enum Sign</span>
+        {
+<span class="fc" id="L926">            SIGNED,</span>
+<span class="fc" id="L927">            UNSIGNED,</span>
+<span class="fc" id="L928">            UNSPECIFIED</span>
+        }
+        
+<span class="pc" id="L931">        public static enum SizeModifier</span>
+        {
+<span class="fc" id="L933">            SHORT,</span>
+<span class="fc" id="L934">            LONG,</span>
+<span class="fc" id="L935">            LONG_LONG,</span>
+<span class="fc" id="L936">            UNSPECIFIED;</span>
+            
+            public String getActualModifierText()
+            {
+<span class="nc" id="L940">                return name().toLowerCase().replace(&quot;_&quot;, &quot; &quot;);</span>
+            }
+        }
+        
+<span class="pc" id="L944">        public static enum SimplifiedType</span>
+        {
+<span class="fc" id="L946">            CHAR,</span>
+<span class="fc" id="L947">            SHORT,</span>
+<span class="fc" id="L948">            INT,</span>
+<span class="fc" id="L949">            LONG,</span>
+<span class="fc" id="L950">            LONG_LONG,</span>
+<span class="fc" id="L951">            FLOAT,</span>
+<span class="fc" id="L952">            DOUBLE,</span>
+<span class="fc" id="L953">            LONG_DOUBLE,</span>
+<span class="fc" id="L954">            VOID,</span>
+<span class="fc" id="L955">            STRUCT,</span>
+<span class="fc" id="L956">            CLASS</span>
+        }
+        
+<span class="fc" id="L959">        public static final Token       NO_ASSIGNMENT   = null;</span>
+<span class="fc" id="L960">        public static final Expression  NO_VALUE        = null;</span>
+        
+        /**
+         * The ID of a variable that holds plain-old-data. 
+         */
+        public static final long        NOT_A_CLASS     = Long.MIN_VALUE;
+        
+        public static final String      RETURN_VAR_NAME = &quot;&quot;;
+        
+        /**
+         * How many indirections (asterisks) are declared for this variable
+         */
+        private final int               pointerLevel;
+        private final Sign              sign;
+        private final SimplifiedType    simplifiedType;
+        private final Token             varName;
+        private final Token             assignmentOperator;
+        private final Expression        value;
+        
+        /**
+         * If the SimplifiedType is CLASS, then this is set to the classID, 
+         *  otherwise it's Long.MIN_VALUE.
+         */
+<span class="fc" id="L983">        private long classID = NOT_A_CLASS;</span>
+        
+        public VarDeclaration(Sign sign, SimplifiedType simplifiedType, 
+            int pointerLevel, Token varName, Token assignmentOperator, 
+            Expression value, long startingLineIndex)
+        {
+<span class="fc" id="L989">            super(startingLineIndex);</span>
+<span class="fc" id="L990">            this.sign               = sign;</span>
+<span class="fc" id="L991">            this.simplifiedType     = simplifiedType;</span>
+<span class="fc" id="L992">            this.pointerLevel       = pointerLevel;</span>
+<span class="fc" id="L993">            this.varName            = varName;</span>
+<span class="fc" id="L994">            this.value              = value;</span>
+<span class="fc" id="L995">            this.assignmentOperator = assignmentOperator;</span>
+<span class="fc" id="L996">        }</span>
+        
+        public Sign getSign()
+        {
+<span class="nc" id="L1000">            return sign;</span>
+        }
+        
+        public SimplifiedType getSimplifiedType()
+        {
+<span class="nc" id="L1005">            return simplifiedType;</span>
+        }
+        
+        public int getPointerLevel()
+        {
+<span class="nc" id="L1010">            return pointerLevel;</span>
+        }
+        
+        public Token getName()
+        {
+<span class="fc" id="L1015">            return varName;</span>
+        }
+        
+        public String getNameText()
+        {
+<span class="nc" id="L1020">            return varName.getTextContent();</span>
+        }
+        
+        public Expression getValue()
+        {
+<span class="nc" id="L1025">            return value;</span>
+        }
+        
+        public Token getAssignmentOperator()
+        {
+<span class="nc" id="L1030">            return assignmentOperator;</span>
+        }
+        
+        public boolean isReturnVar()
+        {
+<span class="nc" id="L1035">            return getNameText().equals(RETURN_VAR_NAME);</span>
+        }
+        
+        public void setClassID(long classID)
+        {
+<span class="nc" id="L1040">            this.classID = classID;</span>
+<span class="nc" id="L1041">        }</span>
+
+        public long getClassID()
+        {
+<span class="nc" id="L1045">            return classID;</span>
+        }
+
+        @Override
+        public int hashCode()
+        {
+<span class="nc" id="L1051">            int hash = 7;</span>
+<span class="nc" id="L1052">            hash = 29 * hash + (int) (this.getStartingLineIndex() ^ </span>
+<span class="nc" id="L1053">                (this.getStartingLineIndex() &gt;&gt;&gt; 32));</span>
+<span class="nc" id="L1054">            hash = 29 * hash + (int) (this.getEndingLineIndex() ^ </span>
+<span class="nc" id="L1055">                (this.getEndingLineIndex() &gt;&gt;&gt; 32));</span>
+<span class="nc" id="L1056">            hash = 29 * hash + this.pointerLevel;</span>
+<span class="nc" id="L1057">            hash = 29 * hash + Objects.hashCode(this.sign);</span>
+<span class="nc" id="L1058">            hash = 29 * hash + Objects.hashCode(this.simplifiedType);</span>
+<span class="nc" id="L1059">            hash = 29 * hash + Objects.hashCode(this.varName);</span>
+<span class="nc" id="L1060">            hash = 29 * hash + Objects.hashCode(this.assignmentOperator);</span>
+<span class="nc" id="L1061">            hash = 29 * hash + Objects.hashCode(this.value);</span>
+<span class="nc" id="L1062">            hash = 29 * hash + (int) (this.classID ^ (this.classID &gt;&gt;&gt; 32));</span>
+<span class="nc" id="L1063">            return hash;</span>
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+<span class="fc bfc" id="L1069" title="All 2 branches covered.">            if (this == obj)</span>
+            {
+<span class="fc" id="L1071">                return true;</span>
+            }
+<span class="pc bpc" id="L1073" title="1 of 2 branches missed.">            if (obj == null)</span>
+            {
+<span class="nc" id="L1075">                return false;</span>
+            }
+<span class="pc bpc" id="L1077" title="1 of 2 branches missed.">            if (getClass() != obj.getClass())</span>
+            {
+<span class="nc" id="L1079">                return false;</span>
+            }
+<span class="pc bpc" id="L1081" title="1 of 2 branches missed.">            if (!super.equals(obj))</span>
+            {
+<span class="nc" id="L1083">                return false;</span>
+            }
+            
+<span class="fc" id="L1086">            final VarDeclaration other = (VarDeclaration) obj;</span>
+<span class="pc bpc" id="L1087" title="1 of 2 branches missed.">            if (this.pointerLevel != other.pointerLevel)</span>
+            {
+<span class="nc" id="L1089">                return false;</span>
+            }
+<span class="pc bpc" id="L1091" title="1 of 2 branches missed.">            if (this.classID != other.classID)</span>
+            {
+<span class="nc" id="L1093">                return false;</span>
+            }
+<span class="pc bpc" id="L1095" title="1 of 2 branches missed.">            if (this.sign != other.sign)</span>
+            {
+<span class="nc" id="L1097">                return false;</span>
+            }
+<span class="pc bpc" id="L1099" title="1 of 2 branches missed.">            if (this.simplifiedType != other.simplifiedType)</span>
+            {
+<span class="nc" id="L1101">                return false;</span>
+            }
+<span class="pc bpc" id="L1103" title="1 of 2 branches missed.">            if (!Objects.equals(this.varName, other.varName))</span>
+            {
+<span class="nc" id="L1105">                return false;</span>
+            }
+<span class="pc bpc" id="L1107" title="1 of 2 branches missed.">            if (!Objects.equals(this.assignmentOperator, other.assignmentOperator))</span>
+            {
+<span class="nc" id="L1109">                return false;</span>
+            }
+<span class="pc bpc" id="L1111" title="1 of 2 branches missed.">            if (!Objects.equals(this.value, other.value))</span>
+            {
+<span class="nc" id="L1113">                return false;</span>
+            }
+<span class="fc" id="L1115">            return true;</span>
+        }
+        
+        @Override
+        &lt;T&gt; T accept(Visitor&lt;T&gt; visitor)
+        {
+<span class="nc" id="L1121">            return visitor.visitVarDeclaration(this);</span>
+        }
+    }
+    
+    public static class Package extends Statement
+    {
+<span class="fc" id="L1127">        public static final String  NO_PACKAGE = null;</span>
+        
+        /**
+         * JS 3/24/2021 : I don't think this is used anywhere but I'm leaving it
+         *  in until the package class has been implemented, just in case this
+         *  was a planned future refactoring.
+         */
+        //public static final int     NO_LINE_INDEX = -1;
+        
+        private String fullyQualifiedPackageName;
+        
+        public Package(String fullyQualifiedPackageName, long startingLineIndex)
+        {
+<span class="nc" id="L1140">            super(startingLineIndex);</span>
+<span class="nc" id="L1141">            this.fullyQualifiedPackageName = fullyQualifiedPackageName;</span>
+<span class="nc" id="L1142">        }</span>
+        
+        public String getFullyQualifiedPackageName()
+        {
+<span class="nc" id="L1146">            return fullyQualifiedPackageName;</span>
+        }
+
+        @Override
+        public int hashCode()
+        {
+<span class="nc" id="L1152">            int hash = 3;</span>
+<span class="nc" id="L1153">            hash = 41 * hash + Objects.hashCode(this.fullyQualifiedPackageName);</span>
+<span class="nc" id="L1154">            hash = 41 * hash + (int) (this.getStartingLineIndex() ^ </span>
+<span class="nc" id="L1155">                (this.getStartingLineIndex() &gt;&gt;&gt; 32));</span>
+<span class="nc" id="L1156">            hash = 41 * hash + (int) (this.getEndingLineIndex() ^ </span>
+<span class="nc" id="L1157">                (this.getEndingLineIndex() &gt;&gt;&gt; 32));</span>
+<span class="nc" id="L1158">            return hash;</span>
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+<span class="nc bnc" id="L1164" title="All 2 branches missed.">            if (this == obj)</span>
+            {
+<span class="nc" id="L1166">                return true;</span>
+            }
+<span class="nc bnc" id="L1168" title="All 2 branches missed.">            if (obj == null)</span>
+            {
+<span class="nc" id="L1170">                return false;</span>
+            }
+<span class="nc bnc" id="L1172" title="All 2 branches missed.">            if (getClass() != obj.getClass())</span>
+            {
+<span class="nc" id="L1174">                return false;</span>
+            }
+<span class="nc bnc" id="L1176" title="All 2 branches missed.">            if (!super.equals(obj))</span>
+            {
+<span class="nc" id="L1178">                return false;</span>
+            }
+            
+<span class="nc" id="L1181">            final Package other = (Package) obj;</span>
+<span class="nc bnc" id="L1182" title="All 2 branches missed.">            if (!Objects.equals(this.fullyQualifiedPackageName, </span>
+                other.fullyQualifiedPackageName))
+            {
+<span class="nc" id="L1185">                return false;</span>
+            }
+<span class="nc" id="L1187">            return true;</span>
+        }
+        
+        @Override
+        &lt;T&gt; T accept(Visitor&lt;T&gt; visitor)
+        {
+<span class="nc" id="L1193">            return visitor.visitPackage(this);</span>
+        }
+    }
+    
+    public Statement(long startingLineIndex)
+<span class="fc" id="L1198">    {</span>
+<span class="fc" id="L1199">        this.startingLineIndex = startingLineIndex;</span>
+<span class="fc" id="L1200">    }</span>
+    
+    
+    abstract &lt;T&gt; T accept(Visitor&lt;T&gt; visitor);
+    
+    public boolean needsSemicolon()
+    {
+<span class="nc" id="L1207">        return true;</span>
+    }
+    
+    /**
+     * Returns the line the statement started on.
+     */
+    public long getStartingLineIndex()
+    {
+<span class="fc" id="L1215">        return startingLineIndex;</span>
+    }
+    
+    public void setStartingLineIndex(long startingLineIndex)
+    {
+<span class="nc" id="L1220">        this.startingLineIndex = startingLineIndex;</span>
+<span class="nc" id="L1221">    }</span>
+    
+    /**
+     * Returns the line the statement ended on.
+     */
+    public long getEndingLineIndex()
+    {
+<span class="fc" id="L1228">        return endingLineIndex;</span>
+    }
+    
+    public void setEndingLineIndex(long endingLineIndex)
+    {
+<span class="nc" id="L1233">        this.endingLineIndex = endingLineIndex;</span>
+<span class="nc" id="L1234">    }</span>
+    
+    @Override
+    public boolean equals(Object other)
+    {
+<span class="pc bpc" id="L1239" title="1 of 2 branches missed.">        if (other instanceof Statement)</span>
+        {
+<span class="fc" id="L1241">            Statement otherStmt = (Statement) other;</span>
+<span class="fc" id="L1242">            return </span>
+<span class="pc bpc" id="L1243" title="1 of 2 branches missed.">                getStartingLineIndex() == otherStmt.getStartingLineIndex() &amp;&amp;</span>
+<span class="pc bpc" id="L1244" title="1 of 2 branches missed.">                getEndingLineIndex() == otherStmt.getEndingLineIndex();</span>
+        }
+        else
+        {
+<span class="nc" id="L1248">            return false;</span>
+        }
+    }
+
+    @Override
+    public int hashCode()
+    {
+<span class="nc" id="L1255">        int hash = 7;</span>
+<span class="nc" id="L1256">        hash = 83 * hash + (int) (this.startingLineIndex ^ </span>
+            (this.startingLineIndex &gt;&gt;&gt; 32));
+<span class="nc" id="L1258">        hash = 83 * hash + (int) (this.endingLineIndex ^ </span>
+            (this.endingLineIndex &gt;&gt;&gt; 32));
+<span class="nc" id="L1260">        return hash;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

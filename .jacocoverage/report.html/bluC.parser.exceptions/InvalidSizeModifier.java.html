@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>InvalidSizeModifier.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;BluC&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.source.html" class="el_package">bluC.parser.exceptions</a> &gt; <span class="el_source">InvalidSizeModifier.java</span></div><h1>InvalidSizeModifier.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2021 John Schneider.
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package bluC.parser.exceptions;
+
+import bluC.transpiler.Token;
+
+/**
+ *
+ * @author John Schneider
+ */
+public class InvalidSizeModifier extends Exception
+{
+    private Token sizeMod1;
+    private Token sizeMod2;
+    private Token typeAttemptedToModify;
+    
+    public InvalidSizeModifier(Token sizeMod1, Token typeAttemptedToModify)
+    {
+<span class="nc" id="L33">        super(&quot;Attempted to use size modifier \&quot;&quot; + </span>
+<span class="nc" id="L34">            sizeMod1.getTextContent() + &quot;\&quot; which is invalid for type \&quot;&quot; +</span>
+<span class="nc" id="L35">            typeAttemptedToModify.getTextContent() + &quot;\&quot;&quot;);</span>
+        
+<span class="nc" id="L37">        this.sizeMod1 = sizeMod1;</span>
+<span class="nc" id="L38">        this.sizeMod2 = null;</span>
+<span class="nc" id="L39">        this.typeAttemptedToModify = typeAttemptedToModify;</span>
+<span class="nc" id="L40">    }</span>
+    
+    public InvalidSizeModifier(Token sizeMod1, Token sizeMod2,
+        Token typeAttemptedToModify)
+    {
+<span class="nc" id="L45">        super(&quot;Attempted to use size modifier \&quot;&quot; + </span>
+<span class="nc" id="L46">            sizeMod1.getTextContent() + &quot; &quot; + sizeMod2.getTextContent() +</span>
+            &quot;\&quot; which is invalid for type \&quot;&quot; +
+<span class="nc" id="L48">            typeAttemptedToModify.getTextContent() + &quot;\&quot;&quot;);</span>
+        
+<span class="nc" id="L50">        this.sizeMod1 = sizeMod1;</span>
+<span class="nc" id="L51">        this.sizeMod2 = sizeMod2;</span>
+<span class="nc" id="L52">        this.typeAttemptedToModify = typeAttemptedToModify;</span>
+<span class="nc" id="L53">    }</span>
+    
+    
+    public Token getSizeMod1()
+    {
+<span class="nc" id="L58">        return sizeMod1;</span>
+    }
+    
+    public Token getSizeMod2()
+    {
+<span class="nc" id="L63">        return sizeMod2;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

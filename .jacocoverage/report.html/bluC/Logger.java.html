@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>Logger.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;BluC&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.source.html" class="el_package">bluC</a> &gt; <span class="el_source">Logger.java</span></div><h1>Logger.java</h1><pre class="source lang-java linenums">/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package bluC;
+
+import bluC.transpiler.Token;
+import java.io.IOException;
+import java.io.OutputStream;
+
+/**
+ *
+ * @author John Schneider
+ */
+<span class="nc" id="L16">public class Logger</span>
+{
+<span class="nc" id="L18">    private static boolean      hasLoggedError          = false;</span>
+<span class="nc" id="L19">    private static OutputStream lastStreamWroteTo       = System.out;</span>
+    
+    /**
+     * The number of milliseconds we wait for the current buffer to flush
+     *  output, have the console read that, and then swap to the new
+     *  OutputStream.
+     */
+<span class="nc" id="L26">    private static long         bufferSwapTimeMillis    = 200;</span>
+    
+    public static void warn(Token errAt, String message)
+    {
+<span class="nc" id="L30">        System.out.println(&quot;[&quot; + errAt.getFilepath() + &quot;, line &quot; + </span>
+<span class="nc" id="L31">            (errAt.getLineIndex() + 1) + &quot;] &quot; + &quot;Warning: On token \&quot;&quot; + </span>
+<span class="nc" id="L32">            errAt.getTextContent() + &quot;\&quot;\n\t&quot; + message);</span>
+        
+<span class="nc" id="L34">        ensureBufferSynchronization(System.out);</span>
+<span class="nc" id="L35">    }</span>
+    
+    public static void err(Token errAt, String message)
+    {
+<span class="nc" id="L39">        hasLoggedError = true;</span>
+        
+<span class="nc" id="L41">        System.err.println(&quot;[&quot; + errAt.getFilepath() + &quot;, line &quot; + </span>
+<span class="nc" id="L42">            (errAt.getLineIndex() + 1) + &quot;] &quot; + &quot;Error: On token \&quot;&quot; + </span>
+<span class="nc" id="L43">            errAt.getTextContent() + &quot;\&quot;\n\t&quot; + message);</span>
+        
+<span class="nc" id="L45">        ensureBufferSynchronization(System.err);</span>
+<span class="nc" id="L46">    }</span>
+    
+    public static boolean hasLoggedError()
+    {
+<span class="nc" id="L50">        return hasLoggedError;</span>
+    }
+    
+    private static void ensureBufferSynchronization(OutputStream currentBuffer)
+    {
+<span class="nc bnc" id="L55" title="All 2 branches missed.">        if (currentBuffer != lastStreamWroteTo)</span>
+        {
+<span class="nc" id="L57">            swapAndSynchronizeBuffers(currentBuffer);</span>
+<span class="nc" id="L58">            lastStreamWroteTo = currentBuffer;</span>
+        }
+<span class="nc" id="L60">    }</span>
+    
+    private static void swapAndSynchronizeBuffers(OutputStream newBuffer)
+    {
+        try
+        {
+<span class="nc" id="L66">            lastStreamWroteTo.flush();</span>
+<span class="nc" id="L67">            Thread.sleep(bufferSwapTimeMillis);</span>
+<span class="nc" id="L68">        } catch (IOException | InterruptedException ex)</span>
+        {
+<span class="nc" id="L70">            System.err.println(&quot;[&quot; + Logger.class.getTypeName() + &quot;] Fatal &quot; +</span>
+                &quot;logging error resulted in failed buffer swap:\n&quot;);
+<span class="nc" id="L72">            ex.printStackTrace();</span>
+<span class="nc" id="L73">        }</span>
+<span class="nc" id="L74">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

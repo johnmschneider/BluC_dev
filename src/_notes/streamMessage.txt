@@ -1,0 +1,2 @@
+Welcome to The Joy of Unit Testing (Netbeans on Java technique)     let's implement loops shall we?
+Aka Lovecraftian horrors in Netbeans        ping in disc if you need me (I can't see notifications)

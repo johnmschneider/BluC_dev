@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>BluC.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;BluC&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.source.html" class="el_package">bluC</a> &gt; <span class="el_source">BluC.java</span></div><h1>BluC.java</h1><pre class="source lang-java linenums">package bluC;
+
+import bluC.transpiler.Transpiler;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import bluC.transpiler.Token;
+import bluC.transpiler.TokenFileInfo;
+import bluC.transpiler.TokenInfo;
+
+/**
+ *
+ * @author John Schneider
+ */
+<span class="nc" id="L20">public class BluC</span>
+{
+    public static final String  BLU_C_NAMESPACE_PREFIX  = &quot;___bluC&quot;;
+    private static Transpiler   transpiler;
+<span class="nc" id="L24">    private static long         transpileStartTime      = -1;</span>
+<span class="nc" id="L25">    private static long         transpileEndTime        = -1;</span>
+<span class="nc" id="L26">    private static long         compileEndTime          = -1;</span>
+    
+    private static Token getNullTokenWithFilePath(String filePath)
+    {
+<span class="nc" id="L30">        return new Token(</span>
+            new TokenInfo(Token.NO_TEXT_CONTENT, true),
+
+            new TokenFileInfo(filePath, 
+                TokenFileInfo.NO_LINE_INDEX));
+    }
+    
+    public static ArrayList&lt;String&gt; readFile(File theFile)
+    {
+<span class="nc" id="L39">        ArrayList&lt;String&gt; returnee = new ArrayList&lt;&gt;();</span>
+        
+        try
+        {
+<span class="nc" id="L43">            BufferedReader br = new BufferedReader(new FileReader(theFile));</span>
+<span class="nc" id="L44">            String line = br.readLine();</span>
+            
+<span class="nc bnc" id="L46" title="All 2 branches missed.">            while (line != null)</span>
+            {
+<span class="nc" id="L48">                returnee.add(line);</span>
+<span class="nc" id="L49">                line = br.readLine();</span>
+            }
+            
+<span class="nc" id="L52">            br.close();</span>
+<span class="nc" id="L53">        } catch (IOException e)</span>
+        {
+<span class="nc" id="L55">            e.printStackTrace();</span>
+<span class="nc" id="L56">        }</span>
+        
+<span class="nc" id="L58">        return returnee;</span>
+    }
+    
+    public static void writeFile(String fileName, ArrayList&lt;String&gt; contents)
+    {
+        try
+        {
+<span class="nc" id="L65">            BufferedWriter bw = new BufferedWriter(new FileWriter(new File(</span>
+                fileName)));
+            
+<span class="nc bnc" id="L68" title="All 2 branches missed.">            for (int i = 0; i &lt; contents.size(); i++)</span>
+            {
+<span class="nc" id="L70">                bw.append(contents.get(i) + &quot;\n&quot;);</span>
+            }
+            
+<span class="nc" id="L73">            bw.close();</span>
+<span class="nc" id="L74">        } catch (IOException e)</span>
+        {
+<span class="nc" id="L76">            e.printStackTrace();</span>
+<span class="nc" id="L77">        }</span>
+        
+<span class="nc" id="L79">    }</span>
+    
+    private static void printfile(
+        String prefix, ArrayList&lt;String&gt; rawFileContents)
+    {
+<span class="nc" id="L84">        System.out.println(prefix);</span>
+        
+<span class="nc bnc" id="L86" title="All 2 branches missed.">        for (String s: rawFileContents)</span>
+        {
+<span class="nc" id="L88">            System.out.println(&quot;\t&quot; + s);</span>
+<span class="nc" id="L89">        }</span>
+        
+<span class="nc" id="L91">        System.out.println();</span>
+<span class="nc" id="L92">    }</span>
+    
+    private static void compileExistingFile(
+        String[] args, File f)
+    {   
+<span class="nc" id="L97">        ArrayList&lt;String&gt; rawFileContents = readFile(f);</span>
+        
+        try
+        {
+<span class="nc" id="L101">            transpiler  = new Transpiler(f.getCanonicalPath(), rawFileContents);</span>
+<span class="nc" id="L102">            rawFileContents</span>
+<span class="nc" id="L103">                        = transpiler.transpile();</span>
+            
+<span class="nc bnc" id="L105" title="All 2 branches missed.">            if (Flags.get(&quot;time&quot;) != null)</span>
+            {
+<span class="nc" id="L107">                transpileEndTime = System.currentTimeMillis();</span>
+            }
+
+<span class="nc bnc" id="L110" title="All 2 branches missed.">            if (!Logger.hasLoggedError())</span>
+            {
+<span class="nc" id="L112">                String filePathWithoutExtension = args[0].substring(0, </span>
+<span class="nc" id="L113">                args[0].indexOf(&quot;.&quot;));</span>
+<span class="nc" id="L114">                String fileNameWithoutExtension = filePathWithoutExtension.</span>
+<span class="nc" id="L115">                    substring(filePathWithoutExtension.lastIndexOf(&quot;/&quot;) + 1, </span>
+<span class="nc" id="L116">                    filePathWithoutExtension.length());</span>
+<span class="nc" id="L117">                String outputCFileName = filePathWithoutExtension + &quot;.c&quot;;</span>
+
+<span class="nc" id="L119">                writeFile(outputCFileName, rawFileContents);</span>
+            
+<span class="nc bnc" id="L121" title="All 4 branches missed.">                if (Flags.get(&quot;c&quot;) == null || Flags.get(&quot;exe&quot;) != null)</span>
+                {
+                    try
+                    {
+                        Process p;
+<span class="nc" id="L126">                        p = Runtime.getRuntime().exec(new String[]{&quot;gcc&quot;, </span>
+                            outputCFileName, &quot;-o&quot;, fileNameWithoutExtension});
+
+                        try
+                        {
+<span class="nc" id="L131">                            p.waitFor();</span>
+<span class="nc" id="L132">                        } catch (InterruptedException ex)</span>
+                        {
+<span class="nc" id="L134">                            ex.printStackTrace();</span>
+<span class="nc" id="L135">                        }</span>
+
+<span class="nc" id="L137">                        compileEndTime = System.currentTimeMillis();</span>
+
+<span class="nc" id="L139">                        Debug.out.println(&quot;[BluC.main]: ran &quot; + &quot;gcc \&quot;&quot; + </span>
+                            outputCFileName + &quot;\&quot; -o &quot; + 
+                            fileNameWithoutExtension);
+
+<span class="nc" id="L143">                        BufferedReader input = new BufferedReader(new </span>
+<span class="nc" id="L144">                            InputStreamReader(p.getInputStream()));</span>
+<span class="nc" id="L145">                        BufferedReader err = new BufferedReader(new </span>
+<span class="nc" id="L146">                            InputStreamReader(p.getErrorStream()));</span>
+
+                        try 
+                        {
+                            String line;
+
+<span class="nc" id="L152">                            System.out.println(&quot;\n\ngcc output:&quot;);</span>
+<span class="nc" id="L153">                            line = input.readLine();</span>
+<span class="nc bnc" id="L154" title="All 2 branches missed.">                            while (line != null)</span>
+                            {
+<span class="nc" id="L156">                                System.out.println(line);</span>
+<span class="nc" id="L157">                                line = input.readLine();</span>
+                            }
+<span class="nc" id="L159">                            input.close();</span>
+
+<span class="nc" id="L161">                            line = err.readLine();</span>
+<span class="nc bnc" id="L162" title="All 2 branches missed.">                            while (line != null)</span>
+                            {
+<span class="nc" id="L164">                                System.out.println(line);</span>
+<span class="nc" id="L165">                                line = err.readLine();</span>
+                            }
+<span class="nc" id="L167">                            err.close();</span>
+
+<span class="nc bnc" id="L169" title="All 2 branches missed.">                            if (Flags.get(&quot;c&quot;) == null)</span>
+                            {
+<span class="nc" id="L171">                                File outputCFile = new File(outputCFileName);</span>
+<span class="nc" id="L172">                                outputCFile.delete();</span>
+                            }
+<span class="nc" id="L174">                        } catch (IOException e) </span>
+                        {
+<span class="nc" id="L176">                            e.printStackTrace();</span>
+<span class="nc" id="L177">                        }</span>
+
+<span class="nc" id="L179">                    } catch (IOException ex)</span>
+                    {
+<span class="nc" id="L181">                        ex.printStackTrace();</span>
+<span class="nc" id="L182">                    }</span>
+                }
+            }
+<span class="nc" id="L185">        } catch (IOException ex)</span>
+        {
+<span class="nc" id="L187">            Logger.err(</span>
+<span class="nc" id="L188">                getNullTokenWithFilePath(f.getAbsolutePath()),</span>
+                &quot;FATAL: Cannot resolve canonical path: &quot;);
+            
+<span class="nc" id="L191">            ex.printStackTrace();</span>
+<span class="nc" id="L192">        }</span>
+<span class="nc" id="L193">    }</span>
+    
+    private static void letJVMSpinUp()
+    {
+        try 
+        {
+            // let the JVM spin up so we get a more accurate measurement
+
+<span class="nc" id="L201">            System.out.println(&quot;Letting the JVM spin-up so more accurate &quot; +</span>
+                &quot;timing can be recorded.&quot;);
+            
+<span class="nc bnc" id="L204" title="All 2 branches missed.">            for (int i = 3; i &gt; 0; i--)</span>
+            {
+<span class="nc" id="L206">                System.out.println(i);</span>
+<span class="nc" id="L207">                Thread.sleep(1000);</span>
+            }
+<span class="nc" id="L209">            System.out.println(&quot;Spinup done.\n&quot;);</span>
+            
+<span class="nc" id="L211">        } catch (InterruptedException ex)</span>
+        {
+<span class="nc" id="L213">            ex.printStackTrace();</span>
+<span class="nc" id="L214">        }</span>
+<span class="nc" id="L215">    }</span>
+    
+    public static void compile(String[] args)
+    {
+<span class="nc bnc" id="L219" title="All 2 branches missed.">        if (Flags.get(&quot;time&quot;) != null)</span>
+        {
+<span class="nc" id="L221">            letJVMSpinUp();</span>
+<span class="nc" id="L222">            transpileStartTime = System.currentTimeMillis();</span>
+        }
+        
+<span class="nc" id="L225">        File f = new File(args[0]);</span>
+        
+<span class="nc bnc" id="L227" title="All 2 branches missed.">        if (f.exists())</span>
+        {
+<span class="nc" id="L229">            compileExistingFile(args, f);</span>
+        }
+        else
+        {
+            try
+            {
+<span class="nc" id="L235">                Logger.err(</span>
+<span class="nc" id="L236">                    getNullTokenWithFilePath(f.getCanonicalPath()),</span>
+                    &quot;FATAL: file `&quot; + args[0] + &quot;` not found&quot;);
+<span class="nc" id="L238">            } catch (IOException ex)</span>
+            {
+<span class="nc" id="L240">                Token filePath = getNullTokenWithFilePath(f.getAbsolutePath());</span>
+<span class="nc" id="L241">                Logger.err(filePath, &quot;FATAL: file `&quot; + args[0] + &quot;` not found&quot;);</span>
+                
+<span class="nc" id="L243">                Logger.err(filePath, &quot;FATAL: Cannot resolve canonical path: &quot;);</span>
+<span class="nc" id="L244">                ex.printStackTrace();</span>
+<span class="nc" id="L245">            }</span>
+        }
+        
+<span class="nc bnc" id="L248" title="All 4 branches missed.">        if (Flags.get(&quot;time&quot;) != null &amp;&amp; !Logger.hasLoggedError())</span>
+        {
+<span class="nc" id="L250">            System.out.println(&quot;\n\nTranspilation done in &quot; + </span>
+                (transpileEndTime - transpileStartTime) + &quot; ms.&quot;);
+        }
+<span class="nc" id="L253">    }</span>
+    
+    private static void printHelp()
+    {
+<span class="nc" id="L257">        System.out.println(&quot;This program compiles a BluC file. The first &quot; +</span>
+            &quot;argument *must* be the file path with the extension of the BluC &quot; +
+            &quot;source file. If no arguments are provided, this help message is &quot; +
+            &quot;displayed.&quot; +
+                
+            &quot;\n\nUSAGE:\n&quot; +
+            &quot;    bluc filePathHere.extension -aFlagHere -aSecondFlag&quot; +
+                
+            &quot;\n\nFLAGS:\n&quot; +
+            &quot;    -parseTree : outputs the parse tree of the file\n&quot; +
+            &quot;    -c : outputs the transpiled c file instead of compiling to &quot; +
+            &quot;an exe\n&quot; +
+            &quot;    -exe : used in conjunction with -c flag to output both a .c &quot; +
+            &quot;and exe file&quot; +
+            &quot;    -time : outputs the number of milliseconds compilation took&quot;);
+<span class="nc" id="L272">    }</span>
+    
+    public static void main(String[] args)
+    {
+<span class="nc bnc" id="L276" title="All 2 branches missed.">        for (int i = 0; i &lt; args.length; i++)</span>
+        {
+<span class="nc" id="L278">            String s = args[i].toLowerCase();</span>
+            
+<span class="nc bnc" id="L280" title="All 2 branches missed.">            if (s.equals(&quot;-parsetree&quot;))</span>
+            {
+<span class="nc" id="L282">                Flags.set(&quot;parseTree&quot;, &quot;true&quot;);</span>
+            }
+<span class="nc bnc" id="L284" title="All 2 branches missed.">            else if (s.equals(&quot;-c&quot;))</span>
+            {
+<span class="nc" id="L286">                Flags.set(&quot;c&quot;, &quot;true&quot;);</span>
+            }
+<span class="nc bnc" id="L288" title="All 2 branches missed.">            else if (s.equals(&quot;-exe&quot;))</span>
+            {
+<span class="nc" id="L290">                Flags.set(&quot;exe&quot;, &quot;true&quot;);</span>
+            }
+<span class="nc bnc" id="L292" title="All 2 branches missed.">            else if (s.equals(&quot;-time&quot;))</span>
+            {
+<span class="nc" id="L294">                Flags.set(&quot;time&quot;, &quot;true&quot;);</span>
+            }
+        }
+        
+<span class="nc bnc" id="L298" title="All 2 branches missed.">        if (args.length == 0)</span>
+        {
+<span class="nc" id="L300">            printHelp();</span>
+        }
+        else
+        {
+            //else just track transpile time
+<span class="nc bnc" id="L305" title="All 2 branches missed.">            if (Flags.get(&quot;time&quot;) != null &amp;&amp; </span>
+<span class="nc bnc" id="L306" title="All 4 branches missed.">                (Flags.get(&quot;c&quot;) == null || Flags.get(&quot;exe&quot;) != null))</span>
+            {
+<span class="nc" id="L308">                compile(args);</span>
+                
+<span class="nc bnc" id="L310" title="All 2 branches missed.">                if (!Logger.hasLoggedError())</span>
+                {
+<span class="nc" id="L312">                    System.out.println(&quot;Compilation done in &quot; + </span>
+                        (compileEndTime - transpileEndTime) + &quot; ms&quot;);
+<span class="nc" id="L314">                    System.out.println(&quot;Total time elapsed is &quot; + </span>
+                        (compileEndTime - transpileStartTime) + &quot; ms&quot;);
+                }
+            }
+            else
+            {
+<span class="nc" id="L320">                compile(args);</span>
+            }
+        }
+        
+<span class="nc bnc" id="L324" title="All 2 branches missed.">        if (Logger.hasLoggedError())</span>
+        {
+            // return error code
+<span class="nc" id="L327">            System.exit(1);</span>
+        }
+<span class="nc" id="L329">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>
