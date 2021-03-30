@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>WhileHandler.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;BluC&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.source.html" class="el_package">bluC.parser.handlers.statement</a> &gt; <span class="el_source">WhileHandler.java</span></div><h1>WhileHandler.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2021 John Schneider.
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package bluC.parser.handlers.statement;
+
+import bluC.Logger;
+import bluC.parser.Parser;
+import bluC.transpiler.Statement;
+import bluC.transpiler.Statement.While;
+
+/**
+ *
+ * @author John Schneider
+ */
+public class WhileHandler
+{
+    private final Parser            parser;
+    private final StatementHandler  statementHandler;
+    private final LoopHandlerUtils  loopUtils;
+<span class="fc" id="L32">    private final String            nameOfLoopType = &quot;while&quot;;</span>
+    
+    public WhileHandler(Parser parser, StatementHandler statementHandler)
+<span class="fc" id="L35">    {</span>
+<span class="fc" id="L36">        this.parser             = parser;</span>
+<span class="fc" id="L37">        this.statementHandler   = statementHandler;</span>
+<span class="fc" id="L38">        loopUtils               = new LoopHandlerUtils(parser);</span>
+<span class="fc" id="L39">        loopUtils.setNameOfLoopType(nameOfLoopType);</span>
+<span class="fc" id="L40">    }</span>
+    
+    /**
+     * Leaves parser on the end of the loop (either the closing brace &quot;}&quot; 
+     *  or &quot;;&quot; for single-statement loops)
+     */
+    public Statement handleWhileOrHigher()
+    {
+<span class="nc" id="L48">        int startIndex = parser.getCurTokIndex();</span>
+        
+<span class="nc bnc" id="L50" title="All 2 branches missed.">        if (parser.peekMatches(&quot;while&quot;))</span>
+        {
+<span class="nc" id="L52">            return handleWhileLoop();</span>
+        }
+        
+<span class="nc" id="L55">        parser.setToken(startIndex);</span>
+<span class="nc" id="L56">        return statementHandler.handlePackage();</span>
+    }
+    
+    /**
+     * Leaves parser on the end of the while loop (either the closing brace &quot;}&quot; 
+     *  or &quot;;&quot; for single-statement loops)
+     */
+    private Statement handleWhileLoop()
+    {
+        // consume &quot;while&quot; token
+<span class="nc" id="L66">        parser.nextToken();</span>
+        
+<span class="nc bnc" id="L68" title="All 2 branches missed.">        if (parser.peekMatches(&quot;(&quot;))</span>
+        {
+<span class="nc" id="L70">            return handleValidConditionStart();</span>
+        }
+        else
+        {
+<span class="nc" id="L74">            return handleMalformedConditionStart();</span>
+        }
+    }
+    
+    private Statement handleMalformedConditionStart()
+    {
+        While result;
+        
+<span class="nc" id="L82">        result = new While(parser.getCurTokLineIndex());</span>
+        
+<span class="nc" id="L84">        Logger.err(parser.peek(), &quot;Expected \&quot;(\&quot; to open condition for &quot; +</span>
+            &quot;while loop&quot;);
+<span class="nc" id="L86">        loopUtils.synchronizeParserFromBadCondition();</span>
+        
+<span class="nc" id="L88">        return result;</span>
+    }
+    
+    private Statement handleValidConditionStart()
+    {
+        // TODO - implement this, only created it for the kotlin upgrade
+<span class="nc" id="L94">        new UnsupportedOperationException().printStackTrace();</span>
+<span class="nc" id="L95">        return new While(parser.getCurTokLineIndex());</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

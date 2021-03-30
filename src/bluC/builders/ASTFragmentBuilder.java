@@ -15,8 +15,7 @@
  */
 
 /*
- * Builds a part (fragment) of an AST. Currently only expected to be used by
- *  unit tests.
+ * Builds a part (fragment) of an AST.
  */
 package bluC.builders;
 
@@ -29,7 +28,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- *
+ * 
  * @author John Schneider
  */
 public class ASTFragmentBuilder
@@ -48,7 +47,10 @@ public class ASTFragmentBuilder
      * The BluC source code, each line separated by a newline character ("\n")
      */
     private String  fileContents;
-            
+    
+    private ArrayList<Statement>
+                    abstractSyntaxTree;
+    
     public String getFilePath()
     {
         return filePath;
@@ -87,8 +89,6 @@ public class ASTFragmentBuilder
                     contentsAsArrayList;
         ArrayList<Token>
                     lexedTokens;
-        ArrayList<Statement>
-                    abstractSyntaxTree;
         
         contentsAsArray = fileContents.split("\n");
         contentsAsList  = Arrays.asList(contentsAsArray);
@@ -105,6 +105,12 @@ public class ASTFragmentBuilder
         return abstractSyntaxTree;
     }
     
+    public void injectCurrentASTIntoAnother(
+        int injectionStartIndex, ArrayList<Statement> otherAst)
+    {
+        otherAst.addAll(injectionStartIndex, abstractSyntaxTree);
+    }
+    
     public Lexer getLexer()
     {
         return lexer;
@@ -114,5 +120,5 @@ public class ASTFragmentBuilder
     {
         return parser;
     }
-
+    
 }

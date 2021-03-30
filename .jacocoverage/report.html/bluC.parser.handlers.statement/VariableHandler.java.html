@@ -35,11 +35,12 @@ import bluC.parser.handlers.expression.ExpressionHandler;
  */
 public class VariableHandler
 {
-    private final Parser parser;
-    private final StatementHandler statementHandler;
-    private FunctionHandler funcHandler;
-    private ExpressionHandler expressionHandler;
-<span class="fc" id="L42">    private static long unresolvedVariableNamesCount = Long.MIN_VALUE;</span>
+    private final Parser            parser;
+    private final StatementHandler  statementHandler;
+    private FunctionHandler         funcHandler;
+    private ExpressionHandler       expressionHandler;
+<span class="fc" id="L42">    private static long             unresolvedVariableNamesCount = </span>
+        Long.MIN_VALUE;
     
     public class TypeAndClassID
     {
@@ -47,34 +48,34 @@ public class VariableHandler
         private final long classID;
         
         public TypeAndClassID(SimplifiedType type, long classID)
-<span class="fc" id="L50">        {</span>
-<span class="fc" id="L51">            this.type = type;</span>
-<span class="fc" id="L52">            this.classID = classID;</span>
-<span class="fc" id="L53">        }</span>
+<span class="fc" id="L51">        {</span>
+<span class="fc" id="L52">            this.type = type;</span>
+<span class="fc" id="L53">            this.classID = classID;</span>
+<span class="fc" id="L54">        }</span>
         
         public SimplifiedType getType()
         {
-<span class="fc" id="L57">            return type;</span>
+<span class="fc" id="L58">            return type;</span>
         }
         
         public long getClassID()
         {
-<span class="fc" id="L62">            return classID;</span>
+<span class="fc" id="L63">            return classID;</span>
         }
     }
     
     public VariableHandler(Parser parser, StatementHandler statementHandler)
-<span class="fc" id="L67">    {</span>
-<span class="fc" id="L68">        this.parser = parser;</span>
-<span class="fc" id="L69">        this.statementHandler = statementHandler;</span>
-<span class="fc" id="L70">    }</span>
+<span class="fc" id="L68">    {</span>
+<span class="fc" id="L69">        this.parser = parser;</span>
+<span class="fc" id="L70">        this.statementHandler = statementHandler;</span>
+<span class="fc" id="L71">    }</span>
             
     
     public void initHandlers()
     {
-<span class="fc" id="L75">        funcHandler = statementHandler.getFuncHandler();</span>
-<span class="fc" id="L76">        expressionHandler = statementHandler.getExpressionHandler();</span>
-<span class="fc" id="L77">    }</span>
+<span class="fc" id="L76">        funcHandler = statementHandler.getFuncHandler();</span>
+<span class="fc" id="L77">        expressionHandler = statementHandler.getExpressionHandler();</span>
+<span class="fc" id="L78">    }</span>
     
     /**
      * Handles a variable declaration or higher.
@@ -84,29 +85,29 @@ public class VariableHandler
      */
     public Statement handleVarDeclarationOrHigher()
     {
-<span class="fc" id="L87">        Token   startToken          = parser.getCurToken();</span>
-<span class="fc" id="L88">        int     startTokenIndex     = parser.getCurTokIndex();</span>
+<span class="fc" id="L88">        Token   startToken          = parser.getCurToken();</span>
+<span class="fc" id="L89">        int     startTokenIndex     = parser.getCurTokIndex();</span>
         VarDeclaration.Sign
-<span class="fc" id="L90">                sign                = getSign();</span>
+<span class="fc" id="L91">                sign                = getSign();</span>
         TypeAndClassID 
-<span class="fc" id="L92">                typeAndClassID      = getTypeAndClassID();</span>
+<span class="fc" id="L93">                typeAndClassID      = getTypeAndClassID();</span>
         
-<span class="pc bpc" id="L94" title="1 of 2 branches missed.">        if (typeAndClassID != null)</span>
+<span class="pc bpc" id="L95" title="1 of 2 branches missed.">        if (typeAndClassID != null)</span>
         {
-<span class="pc bpc" id="L96" title="1 of 2 branches missed.">            if (parser.peekMatches(2, &quot;(&quot;))</span>
+<span class="pc bpc" id="L97" title="1 of 2 branches missed.">            if (parser.peekMatches(2, &quot;(&quot;))</span>
             {
-<span class="nc" id="L98">                return funcHandler.handleFunctionOrMethod(sign,</span>
-<span class="nc" id="L99">                    typeAndClassID.getType());</span>
+<span class="nc" id="L99">                return funcHandler.handleFunctionOrMethod(sign,</span>
+<span class="nc" id="L100">                    typeAndClassID.getType());</span>
             }
-            else 
+            else
             {
-<span class="fc" id="L103">                return handleVarDeclarationWithValidType(sign, </span>
-<span class="fc" id="L104">                    typeAndClassID.getType(), typeAndClassID.getClassID());</span>
+<span class="fc" id="L104">                return handleVarDeclarationWithValidType(sign, </span>
+<span class="fc" id="L105">                    typeAndClassID.getType(), typeAndClassID.getClassID());</span>
             }
         }
         
-<span class="nc" id="L108">        parser.setToken(startTokenIndex);</span>
-<span class="nc" id="L109">        return statementHandler.handleBlockStatementOrHigher();</span>
+<span class="nc" id="L109">        parser.setToken(startTokenIndex);</span>
+<span class="nc" id="L110">        return statementHandler.handleBlockStatementOrHigher();</span>
     }
     
     /**
@@ -126,23 +127,23 @@ public class VariableHandler
         long classID)
     {
         Token   varName;
-<span class="fc" id="L129">        int     pointerLevel = getPointerLevel();</span>
+<span class="fc" id="L130">        int     pointerLevel = getPointerLevel();</span>
         
         // curToken *must* now be the variable's name or it is a syntax error
-<span class="fc" id="L132">        parser.nextToken();</span>
-<span class="fc" id="L133">        varName = parser.getCurToken();</span>
+<span class="fc" id="L133">        parser.nextToken();</span>
+<span class="fc" id="L134">        varName = parser.getCurToken();</span>
 
-<span class="fc" id="L135">        Token   nextToken       = parser.peek();</span>
-<span class="fc" id="L136">        String  nextTokenText   = nextToken.getTextContent();</span>
+<span class="fc" id="L136">        Token   nextToken       = parser.peek();</span>
+<span class="fc" id="L137">        String  nextTokenText   = nextToken.getTextContent();</span>
 
-<span class="pc bpc" id="L138" title="1 of 2 branches missed.">        if (varName.isValidName())</span>
+<span class="pc bpc" id="L139" title="1 of 2 branches missed.">        if (varName.isValidName())</span>
         {
-<span class="fc" id="L140">            return handleVarDeclarationWithValidTypeAndName(sign, type, </span>
+<span class="fc" id="L141">            return handleVarDeclarationWithValidTypeAndName(sign, type, </span>
                 pointerLevel, varName, nextTokenText, classID);
         }
         else
         {
-<span class="nc" id="L145">            return handleBadVarName(sign, type, pointerLevel, varName);</span>
+<span class="nc" id="L146">            return handleBadVarName(sign, type, pointerLevel, varName);</span>
         }
     }
     
@@ -156,45 +157,45 @@ public class VariableHandler
      */
     public int getPointerLevel()
     {
-<span class="fc" id="L159">        int pointerLevel = 0;</span>
+<span class="fc" id="L160">        int pointerLevel = 0;</span>
         
-<span class="fc" id="L161">        String peekText = parser.peek().getTextContent();</span>
+<span class="fc" id="L162">        String peekText = parser.peek().getTextContent();</span>
         
-<span class="pc bpc" id="L163" title="2 of 4 branches missed.">        while(!parser.atEOF() &amp;&amp; peekText.equals(&quot;*&quot;))</span>
+<span class="pc bpc" id="L164" title="2 of 4 branches missed.">        while(!parser.atEOF() &amp;&amp; peekText.equals(&quot;*&quot;))</span>
         {
-<span class="nc" id="L165">            pointerLevel++;</span>
-<span class="nc" id="L166">            parser.nextToken();</span>
-<span class="nc" id="L167">            peekText = parser.peek().getTextContent();</span>
+<span class="nc" id="L166">            pointerLevel++;</span>
+<span class="nc" id="L167">            parser.nextToken();</span>
+<span class="nc" id="L168">            peekText = parser.peek().getTextContent();</span>
         }
         
-<span class="fc" id="L170">        return pointerLevel;</span>
+<span class="fc" id="L171">        return pointerLevel;</span>
     }
     
     private Statement handleVarDeclarationWithValidTypeAndName(
         VarDeclaration.Sign sign, VarDeclaration.SimplifiedType type, 
         int pointerLevel, Token varName, String nextTokenText, long classID)
     {
-<span class="pc bpc" id="L177" title="1 of 2 branches missed.">        if (nextTokenText.equals(&quot;=&quot;))</span>
+<span class="pc bpc" id="L178" title="1 of 2 branches missed.">        if (nextTokenText.equals(&quot;=&quot;))</span>
         {
-<span class="fc" id="L179">            return handleVarDeclarationWithAssignment(sign, type, pointerLevel,</span>
+<span class="fc" id="L180">            return handleVarDeclarationWithAssignment(sign, type, pointerLevel,</span>
                 varName, classID);
         }
-<span class="nc bnc" id="L182" title="All 4 branches missed.">        else if (nextTokenText.equals(&quot;;&quot;) || nextTokenText.equals(&quot;,&quot;) ||</span>
-<span class="nc bnc" id="L183" title="All 2 branches missed.">            nextTokenText.equals(&quot;)&quot;))</span>
+<span class="nc bnc" id="L183" title="All 4 branches missed.">        else if (nextTokenText.equals(&quot;;&quot;) || nextTokenText.equals(&quot;,&quot;) ||</span>
+<span class="nc bnc" id="L184" title="All 2 branches missed.">            nextTokenText.equals(&quot;)&quot;))</span>
         {
-<span class="nc" id="L185">            return handleVarDeclarationWithoutAssignment(sign, type, </span>
+<span class="nc" id="L186">            return handleVarDeclarationWithoutAssignment(sign, type, </span>
                 pointerLevel, varName, classID);
         }
         else
         {
-<span class="nc" id="L190">            Token curToken = parser.getCurToken();</span>
+<span class="nc" id="L191">            Token curToken = parser.getCurToken();</span>
             
-<span class="nc" id="L192">            Logger.err(curToken, &quot;Expected assignment operator or semicolon &quot; +</span>
+<span class="nc" id="L193">            Logger.err(curToken, &quot;Expected assignment operator or semicolon &quot; +</span>
                 &quot;after variable declaration&quot;);
 
-<span class="nc" id="L195">            parser.gotoEndOfStatement();</span>
+<span class="nc" id="L196">            parser.gotoEndOfStatement();</span>
 
-<span class="nc" id="L197">            return handleVarDeclarationWithoutAssignment(sign, type, </span>
+<span class="nc" id="L198">            return handleVarDeclarationWithoutAssignment(sign, type, </span>
                 pointerLevel, varName, classID);
         }
     }
@@ -203,40 +204,40 @@ public class VariableHandler
         VarDeclaration.SimplifiedType type,
         int pointerLevel, Token varName)
     {
-<span class="nc" id="L206">        Logger.err(varName, &quot;Expected variable name to follow \&quot;&quot; + </span>
-<span class="nc" id="L207">            type.name().toLowerCase().replace(&quot;_&quot;, &quot; &quot;) + &quot;\&quot; (token \&quot;&quot; + </span>
-<span class="nc" id="L208">            varName.getTextContent() + &quot;\&quot; is an invalid name)&quot;);</span>
+<span class="nc" id="L207">        Logger.err(varName, &quot;Expected variable name to follow \&quot;&quot; + </span>
+<span class="nc" id="L208">            type.name().toLowerCase().replace(&quot;_&quot;, &quot; &quot;) + &quot;\&quot; (token \&quot;&quot; + </span>
+<span class="nc" id="L209">            varName.getTextContent() + &quot;\&quot; is an invalid name)&quot;);</span>
 
         //  synchronize parser
-<span class="nc bnc" id="L211" title="All 2 branches missed.">        if (varName.getTextContent().equals(&quot;;&quot;))</span>
+<span class="nc bnc" id="L212" title="All 2 branches missed.">        if (varName.getTextContent().equals(&quot;;&quot;))</span>
         {
             //name missing
-<span class="nc" id="L214">            parser.prevToken();</span>
+<span class="nc" id="L215">            parser.prevToken();</span>
         }
         else
         {
             //invalid name
-<span class="nc" id="L219">            parser.gotoEndOfStatement();</span>
+<span class="nc" id="L220">            parser.gotoEndOfStatement();</span>
         }
         
-<span class="nc" id="L222">        Token autoGeneratedName = getAutoGeneratedName(varName);</span>
-<span class="nc" id="L223">        Statement returnee =  new VarDeclaration(sign, type, </span>
+<span class="nc" id="L223">        Token autoGeneratedName = getAutoGeneratedName(varName);</span>
+<span class="nc" id="L224">        Statement returnee =  new VarDeclaration(sign, type, </span>
             pointerLevel, autoGeneratedName,
-<span class="nc" id="L225">            null, null, autoGeneratedName.getLineIndex());</span>
-<span class="nc" id="L226">        return returnee;</span>
+<span class="nc" id="L226">            null, null, autoGeneratedName.getLineIndex());</span>
+<span class="nc" id="L227">        return returnee;</span>
     }
     
     private Token getAutoGeneratedName(Token varName)
     {
-<span class="nc" id="L231">        Token returnee = new Token(</span>
+<span class="nc" id="L232">        Token returnee = new Token(</span>
             new TokenInfo(&quot;unresolvedVariableName&quot; + 
-<span class="nc" id="L233">                Long.toUnsignedString(unresolvedVariableNamesCount), true),</span>
+<span class="nc" id="L234">                Long.toUnsignedString(unresolvedVariableNamesCount), true),</span>
                 
-<span class="nc" id="L235">            new TokenFileInfo(varName.getFilepath(), varName.getLineIndex()));</span>
+<span class="nc" id="L236">            new TokenFileInfo(varName.getFilepath(), varName.getLineIndex()));</span>
         
-<span class="nc" id="L237">        unresolvedVariableNamesCount++;</span>
+<span class="nc" id="L238">        unresolvedVariableNamesCount++;</span>
         
-<span class="nc" id="L239">        return returnee;</span>
+<span class="nc" id="L240">        return returnee;</span>
     }
     
     /**
@@ -257,117 +258,117 @@ public class VariableHandler
     {
         VarDeclaration  var;
         boolean         alreadyDeclared;
-<span class="fc" id="L260">        long            startLineIndex = parser.getCurTokLineIndex();</span>
+<span class="fc" id="L261">        long            startLineIndex = parser.getCurTokLineIndex();</span>
         
         // set curToken equal to &quot;=&quot;
-<span class="fc" id="L263">        parser.nextToken();</span>
+<span class="fc" id="L264">        parser.nextToken();</span>
         
-<span class="fc" id="L265">        var = new VarDeclaration(sign, type, pointerLevel, varName, </span>
-<span class="fc" id="L266">            parser.getCurToken(), expressionHandler.handleExpression(),</span>
+<span class="fc" id="L266">        var = new VarDeclaration(sign, type, pointerLevel, varName, </span>
+<span class="fc" id="L267">            parser.getCurToken(), expressionHandler.handleExpression(),</span>
             startLineIndex);
-<span class="fc" id="L268">        alreadyDeclared = isVarAlreadyDeclaredInThisScope(var);</span>
+<span class="fc" id="L269">        alreadyDeclared = isVarAlreadyDeclaredInThisScope(var);</span>
         
-<span class="pc bpc" id="L270" title="1 of 2 branches missed.">        if (alreadyDeclared)</span>
+<span class="pc bpc" id="L271" title="1 of 2 branches missed.">        if (alreadyDeclared)</span>
         {
-<span class="nc" id="L272">            Logger.err(varName, &quot;Variable \&quot;&quot; + varName.getTextContent() + </span>
+<span class="nc" id="L273">            Logger.err(varName, &quot;Variable \&quot;&quot; + varName.getTextContent() + </span>
                 &quot;\&quot; already declared&quot;);
         }
         else
         {
-<span class="pc bpc" id="L277" title="1 of 2 branches missed.">            if (type == SimplifiedType.CLASS)</span>
+<span class="pc bpc" id="L278" title="1 of 2 branches missed.">            if (type == SimplifiedType.CLASS)</span>
             {
-<span class="nc" id="L279">                var.setClassID(classID);</span>
+<span class="nc" id="L280">                var.setClassID(classID);</span>
             }
             
-<span class="fc" id="L282">            parser.getCurrentScope().addVariableToScope(var);</span>
+<span class="fc" id="L283">            parser.getCurrentScope().addVariableToScope(var);</span>
         }
         
-<span class="fc" id="L285">        return var;</span>
+<span class="fc" id="L286">        return var;</span>
     }
     
     private Statement handleVarDeclarationWithoutAssignment(
         VarDeclaration.Sign sign, VarDeclaration.SimplifiedType type, 
         int pointerLevel, Token varName, long classID)
     {
-<span class="nc" id="L292">        VarDeclaration var = new VarDeclaration(sign, type, </span>
-<span class="nc" id="L293">            pointerLevel, varName, null, null, varName.getLineIndex());</span>
-<span class="nc" id="L294">        boolean alreadyDeclared = isVarAlreadyDeclaredInThisScope(var);</span>
+<span class="nc" id="L293">        VarDeclaration var = new VarDeclaration(sign, type, </span>
+<span class="nc" id="L294">            pointerLevel, varName, null, null, varName.getLineIndex());</span>
+<span class="nc" id="L295">        boolean alreadyDeclared = isVarAlreadyDeclaredInThisScope(var);</span>
 
-<span class="nc bnc" id="L296" title="All 2 branches missed.">        if (alreadyDeclared)</span>
+<span class="nc bnc" id="L297" title="All 2 branches missed.">        if (alreadyDeclared)</span>
         {
-<span class="nc" id="L298">            Logger.err(varName, &quot;Variable \&quot;&quot; + varName.getTextContent() + </span>
+<span class="nc" id="L299">            Logger.err(varName, &quot;Variable \&quot;&quot; + varName.getTextContent() + </span>
                 &quot;\&quot; already declared in this scope&quot;);
         }
         else
         {
-<span class="nc bnc" id="L303" title="All 2 branches missed.">            if (type == SimplifiedType.CLASS)</span>
+<span class="nc bnc" id="L304" title="All 2 branches missed.">            if (type == SimplifiedType.CLASS)</span>
             {
-<span class="nc" id="L305">                var.setClassID(classID);</span>
+<span class="nc" id="L306">                var.setClassID(classID);</span>
             }
             
-<span class="nc" id="L308">            parser.getCurrentScope().addVariableToScope(var);</span>
+<span class="nc" id="L309">            parser.getCurrentScope().addVariableToScope(var);</span>
         }
 
-<span class="nc" id="L311">        return var;</span>
+<span class="nc" id="L312">        return var;</span>
     }
     
     public boolean isVarNameTheSame(VarDeclaration var, Token potentialVarName)
     {
-<span class="nc" id="L316">        return var.getNameText().equals(potentialVarName.getTextContent());</span>
+<span class="nc" id="L317">        return var.getNameText().equals(potentialVarName.getTextContent());</span>
     }
     
     private VarDeclaration getVarAlreadyDeclaredInThisScope(Scope scope, 
         Token var)
     {
-<span class="fc" id="L322">        ArrayList&lt;VarDeclaration&gt; variablesInThisScope = </span>
-<span class="fc" id="L323">            scope.getVariablesInThisScope();</span>
+<span class="fc" id="L323">        ArrayList&lt;VarDeclaration&gt; variablesInThisScope = </span>
+<span class="fc" id="L324">            scope.getVariablesInThisScope();</span>
         
-<span class="pc bpc" id="L325" title="1 of 2 branches missed.">        for (VarDeclaration var2 : variablesInThisScope)</span>
+<span class="pc bpc" id="L326" title="1 of 2 branches missed.">        for (VarDeclaration var2 : variablesInThisScope)</span>
         {
-<span class="nc bnc" id="L327" title="All 2 branches missed.">            if (isVarNameTheSame(var2, var))</span>
+<span class="nc bnc" id="L328" title="All 2 branches missed.">            if (isVarNameTheSame(var2, var))</span>
             {
-<span class="nc" id="L329">                return var2;</span>
+<span class="nc" id="L330">                return var2;</span>
             }
-<span class="nc" id="L331">        }</span>
+<span class="nc" id="L332">        }</span>
 
-<span class="fc" id="L333">        return null;</span>
+<span class="fc" id="L334">        return null;</span>
     }
     
     public VarDeclaration getVarAlreadyDeclaredInThisScope(Token var)
     {
-<span class="fc" id="L338">        return getVarAlreadyDeclaredInThisScope(parser.getCurrentScope(), var);</span>
+<span class="fc" id="L339">        return getVarAlreadyDeclaredInThisScope(parser.getCurrentScope(), var);</span>
     }
     
     public VarDeclaration getVarAlreadyDeclaredInThisScope(
         VarDeclaration var)
     {
-<span class="fc" id="L344">        return getVarAlreadyDeclaredInThisScope(var.getName());</span>
+<span class="fc" id="L345">        return getVarAlreadyDeclaredInThisScope(var.getName());</span>
     }
     
     public VarDeclaration getVarAlreadyDeclaredInThisScopeOrHigher(
         Token potentialVarName)
     {
-<span class="nc" id="L350">        Scope curSearchScope = parser.getCurrentScope();</span>
+<span class="nc" id="L351">        Scope curSearchScope = parser.getCurrentScope();</span>
         
-<span class="nc bnc" id="L352" title="All 2 branches missed.">        while (curSearchScope != null)</span>
+<span class="nc bnc" id="L353" title="All 2 branches missed.">        while (curSearchScope != null)</span>
         {
-<span class="nc" id="L354">            VarDeclaration variable = getVarAlreadyDeclaredInThisScope</span>
-<span class="nc" id="L355">                (curSearchScope, potentialVarName);</span>
+<span class="nc" id="L355">            VarDeclaration variable = getVarAlreadyDeclaredInThisScope</span>
+<span class="nc" id="L356">                (curSearchScope, potentialVarName);</span>
             
-<span class="nc bnc" id="L357" title="All 2 branches missed.">            if (variable != null)</span>
+<span class="nc bnc" id="L358" title="All 2 branches missed.">            if (variable != null)</span>
             {
-<span class="nc" id="L359">                return variable;</span>
+<span class="nc" id="L360">                return variable;</span>
             }
             
-<span class="nc" id="L362">            curSearchScope = curSearchScope.getParent();</span>
-<span class="nc" id="L363">        }</span>
+<span class="nc" id="L363">            curSearchScope = curSearchScope.getParent();</span>
+<span class="nc" id="L364">        }</span>
         
-<span class="nc" id="L365">        return null;</span>
+<span class="nc" id="L366">        return null;</span>
     }
     
     public boolean isVarAlreadyDeclaredInThisScope(VarDeclaration var)
     {
-<span class="pc bpc" id="L370" title="1 of 2 branches missed.">        return getVarAlreadyDeclaredInThisScope(var) != null;</span>
+<span class="pc bpc" id="L371" title="1 of 2 branches missed.">        return getVarAlreadyDeclaredInThisScope(var) != null;</span>
     }
     
     /**
@@ -380,25 +381,25 @@ public class VariableHandler
      */
     private VarDeclaration.Sign getSign()
     {
-<span class="fc" id="L383">        String              peekText    = parser.peek().getTextContent();</span>
-<span class="fc" id="L384">        VarDeclaration.Sign sign        = VarDeclaration.Sign.UNSPECIFIED;</span>
+<span class="fc" id="L384">        String              peekText    = parser.peek().getTextContent();</span>
+<span class="fc" id="L385">        VarDeclaration.Sign sign        = VarDeclaration.Sign.UNSPECIFIED;</span>
         
-<span class="pc bpc" id="L386" title="1 of 2 branches missed.">        if (peekText.equals(&quot;signed&quot;))</span>
+<span class="pc bpc" id="L387" title="1 of 2 branches missed.">        if (peekText.equals(&quot;signed&quot;))</span>
         {
-<span class="nc" id="L388">            sign = VarDeclaration.Sign.SIGNED;</span>
+<span class="nc" id="L389">            sign = VarDeclaration.Sign.SIGNED;</span>
             
             //consume the peek
-<span class="nc" id="L391">            parser.nextToken();</span>
+<span class="nc" id="L392">            parser.nextToken();</span>
         }
-<span class="fc bfc" id="L393" title="All 2 branches covered.">        else if (peekText.equals(&quot;unsigned&quot;))</span>
+<span class="fc bfc" id="L394" title="All 2 branches covered.">        else if (peekText.equals(&quot;unsigned&quot;))</span>
         {
-<span class="fc" id="L395">            sign = VarDeclaration.Sign.UNSIGNED;</span>
+<span class="fc" id="L396">            sign = VarDeclaration.Sign.UNSIGNED;</span>
             
             //consume the peek
-<span class="fc" id="L398">            parser.nextToken();</span>
+<span class="fc" id="L399">            parser.nextToken();</span>
         }
         
-<span class="fc" id="L401">        return sign;</span>
+<span class="fc" id="L402">        return sign;</span>
     }
     
     /**
@@ -409,16 +410,16 @@ public class VariableHandler
     private VarDeclaration.SizeModifier getSizeModifier() 
         throws InvalidSizeModifier
     {
-<span class="fc" id="L412">        Token sizeMod1 = parser.peek();</span>
-<span class="fc" id="L413">        Token sizeMod2OrTypeOrName = parser.peek(2);</span>
+<span class="fc" id="L413">        Token sizeMod1 = parser.peek();</span>
+<span class="fc" id="L414">        Token sizeMod2OrTypeOrName = parser.peek(2);</span>
         
-<span class="fc" id="L415">        String sizeMod1Text = sizeMod1.getTextContent();</span>
-<span class="fc" id="L416">        String sizeMod2OrTypeOrNameText = sizeMod2OrTypeOrName.getTextContent();</span>
+<span class="fc" id="L416">        String sizeMod1Text = sizeMod1.getTextContent();</span>
+<span class="fc" id="L417">        String sizeMod2OrTypeOrNameText = sizeMod2OrTypeOrName.getTextContent();</span>
         
-<span class="fc" id="L418">        VarDeclaration.SizeModifier sizeModifier = VarDeclaration.SizeModifier.</span>
+<span class="fc" id="L419">        VarDeclaration.SizeModifier sizeModifier = VarDeclaration.SizeModifier.</span>
             UNSPECIFIED;
         
-<span class="pc bpc" id="L421" title="1 of 2 branches missed.">        if (sizeMod1Text.equals(&quot;short&quot;))</span>
+<span class="pc bpc" id="L422" title="1 of 2 branches missed.">        if (sizeMod1Text.equals(&quot;short&quot;))</span>
         {
 //            if (sizeMod2OrTypeOrNameText.equals(&quot;char&quot;)  || 
 //                sizeMod2OrTypeOrNameText.equals(&quot;short&quot;) ||
@@ -435,11 +436,11 @@ public class VariableHandler
 //            }
             
             // move parser from current token to &quot;short&quot; keyword
-<span class="nc" id="L438">            parser.nextToken();</span>
+<span class="nc" id="L439">            parser.nextToken();</span>
             
-<span class="nc bnc" id="L440" title="All 2 branches missed.">            if (sizeMod2OrTypeOrNameText.equals(&quot;int&quot;))</span>
+<span class="nc bnc" id="L441" title="All 2 branches missed.">            if (sizeMod2OrTypeOrNameText.equals(&quot;int&quot;))</span>
             {
-<span class="nc" id="L442">                sizeModifier = VarDeclaration.SizeModifier.SHORT;</span>
+<span class="nc" id="L443">                sizeModifier = VarDeclaration.SizeModifier.SHORT;</span>
             }
             else
             {
@@ -447,59 +448,59 @@ public class VariableHandler
                 //  data type base for this modifier (ex. short dounle) or a
                 //  variable name that they forgot to specify the base,
                 //  either way synchronize the parser
-<span class="nc" id="L450">                throw new InvalidSizeModifier(sizeMod1, sizeMod2OrTypeOrName);</span>
+<span class="nc" id="L451">                throw new InvalidSizeModifier(sizeMod1, sizeMod2OrTypeOrName);</span>
             }
         }
-<span class="fc bfc" id="L453" title="All 2 branches covered.">        else if (sizeMod1Text.equals(&quot;long&quot;))</span>
+<span class="fc bfc" id="L454" title="All 2 branches covered.">        else if (sizeMod1Text.equals(&quot;long&quot;))</span>
         {
-<span class="fc bfc" id="L455" title="All 2 branches covered.">            if (sizeMod2OrTypeOrNameText.equals(&quot;long&quot;))</span>
+<span class="fc bfc" id="L456" title="All 2 branches covered.">            if (sizeMod2OrTypeOrNameText.equals(&quot;long&quot;))</span>
             {
-<span class="fc" id="L457">                Token typeOrName = parser.peek(3);</span>
-<span class="fc" id="L458">                String typeOrNameText = </span>
-<span class="fc" id="L459">                    typeOrName.getTextContent();</span>
+<span class="fc" id="L458">                Token typeOrName = parser.peek(3);</span>
+<span class="fc" id="L459">                String typeOrNameText = </span>
+<span class="fc" id="L460">                    typeOrName.getTextContent();</span>
                 
-<span class="pc bpc" id="L461" title="1 of 2 branches missed.">                if (typeOrNameText.equals(&quot;char&quot;)  || </span>
-<span class="pc bpc" id="L462" title="1 of 2 branches missed.">                      typeOrNameText.equals(&quot;short&quot;) || </span>
-<span class="pc bpc" id="L463" title="1 of 2 branches missed.">                      typeOrNameText.equals(&quot;long&quot;)  ||</span>
-<span class="pc bpc" id="L464" title="1 of 2 branches missed.">                      typeOrNameText.equals(&quot;float&quot;) ||</span>
-<span class="pc bpc" id="L465" title="1 of 2 branches missed.">                      typeOrNameText.equals(&quot;double&quot;))</span>
+<span class="pc bpc" id="L462" title="1 of 2 branches missed.">                if (typeOrNameText.equals(&quot;char&quot;)  || </span>
+<span class="pc bpc" id="L463" title="1 of 2 branches missed.">                      typeOrNameText.equals(&quot;short&quot;) || </span>
+<span class="pc bpc" id="L464" title="1 of 2 branches missed.">                      typeOrNameText.equals(&quot;long&quot;)  ||</span>
+<span class="pc bpc" id="L465" title="1 of 2 branches missed.">                      typeOrNameText.equals(&quot;float&quot;) ||</span>
+<span class="pc bpc" id="L466" title="1 of 2 branches missed.">                      typeOrNameText.equals(&quot;double&quot;))</span>
                 {
                     //  synchronize parser
-<span class="nc" id="L468">                    parser.nextToken();</span>
 <span class="nc" id="L469">                    parser.nextToken();</span>
+<span class="nc" id="L470">                    parser.nextToken();</span>
                     
-<span class="nc" id="L471">                    throw new InvalidSizeModifier(sizeMod1, </span>
+<span class="nc" id="L472">                    throw new InvalidSizeModifier(sizeMod1, </span>
                         sizeMod2OrTypeOrName, typeOrName);
                 }
                 else
                 {
-<span class="fc" id="L476">                    sizeModifier = VarDeclaration.SizeModifier.LONG_LONG;</span>
+<span class="fc" id="L477">                    sizeModifier = VarDeclaration.SizeModifier.LONG_LONG;</span>
                 
                     //  align tokens such that nextToken() is the variable type
-<span class="fc" id="L479">                    parser.nextToken();</span>
+<span class="fc" id="L480">                    parser.nextToken();</span>
                     
-<span class="pc bpc" id="L481" title="1 of 2 branches missed.">                    if (typeOrNameText.equals(&quot;int&quot;))</span>
+<span class="pc bpc" id="L482" title="1 of 2 branches missed.">                    if (typeOrNameText.equals(&quot;int&quot;))</span>
                     {
-<span class="nc" id="L483">                        parser.nextToken();</span>
+<span class="nc" id="L484">                        parser.nextToken();</span>
                     }
                 }
-<span class="fc" id="L486">            }</span>
-<span class="pc bpc" id="L487" title="1 of 2 branches missed.">            else if (sizeMod2OrTypeOrNameText.equals(&quot;char&quot;) ||</span>
-<span class="pc bpc" id="L488" title="1 of 2 branches missed.">                    sizeMod2OrTypeOrNameText.equals(&quot;short&quot;) ||</span>
-<span class="pc bpc" id="L489" title="1 of 2 branches missed.">                    sizeMod2OrTypeOrNameText.equals(&quot;float&quot;))</span>
+<span class="fc" id="L487">            }</span>
+<span class="pc bpc" id="L488" title="1 of 2 branches missed.">            else if (sizeMod2OrTypeOrNameText.equals(&quot;char&quot;) ||</span>
+<span class="pc bpc" id="L489" title="1 of 2 branches missed.">                    sizeMod2OrTypeOrNameText.equals(&quot;short&quot;) ||</span>
+<span class="pc bpc" id="L490" title="1 of 2 branches missed.">                    sizeMod2OrTypeOrNameText.equals(&quot;float&quot;))</span>
             {
-<span class="nc" id="L491">                parser.nextToken();</span>
-<span class="nc" id="L492">                throw new InvalidSizeModifier(sizeMod1, </span>
+<span class="nc" id="L492">                parser.nextToken();</span>
+<span class="nc" id="L493">                throw new InvalidSizeModifier(sizeMod1, </span>
                     sizeMod2OrTypeOrName);
             }
             else
             {
-<span class="fc" id="L497">                parser.nextToken();</span>
-<span class="fc" id="L498">                sizeModifier = VarDeclaration.SizeModifier.LONG;</span>
+<span class="fc" id="L498">                parser.nextToken();</span>
+<span class="fc" id="L499">                sizeModifier = VarDeclaration.SizeModifier.LONG;</span>
             }
         }
         
-<span class="fc" id="L502">        return sizeModifier;</span>
+<span class="fc" id="L503">        return sizeModifier;</span>
     }
     
     private TypeAndClassID getTypeAndClassID()
@@ -508,79 +509,79 @@ public class VariableHandler
         
         try
         {
-<span class="fc" id="L511">            sizeModifier = getSizeModifier();</span>
+<span class="fc" id="L512">            sizeModifier = getSizeModifier();</span>
         } 
-<span class="nc" id="L513">        catch (InvalidSizeModifier ex)</span>
+<span class="nc" id="L514">        catch (InvalidSizeModifier ex)</span>
         {
-<span class="nc" id="L515">            Token errAt = ex.getSizeMod1();</span>
-<span class="nc" id="L516">            Logger.err(errAt, ex.getMessage());</span>
+<span class="nc" id="L516">            Token errAt = ex.getSizeMod1();</span>
+<span class="nc" id="L517">            Logger.err(errAt, ex.getMessage());</span>
             
             //synchronize parser
-<span class="nc" id="L519">            sizeModifier = VarDeclaration.SizeModifier.UNSPECIFIED;</span>
-<span class="fc" id="L520">        }</span>
+<span class="nc" id="L520">            sizeModifier = VarDeclaration.SizeModifier.UNSPECIFIED;</span>
+<span class="fc" id="L521">        }</span>
         
-<span class="pc bpc" id="L522" title="1 of 2 branches missed.">        if (sizeModifier == VarDeclaration.SizeModifier.SHORT)</span>
+<span class="pc bpc" id="L523" title="1 of 2 branches missed.">        if (sizeModifier == VarDeclaration.SizeModifier.SHORT)</span>
         {
-<span class="nc bnc" id="L524" title="All 2 branches missed.">            if (parser.peekMatches(&quot;int&quot;))</span>
+<span class="nc bnc" id="L525" title="All 2 branches missed.">            if (parser.peekMatches(&quot;int&quot;))</span>
             {
                 //consume size modifier token
-<span class="nc" id="L527">                parser.nextToken();</span>
+<span class="nc" id="L528">                parser.nextToken();</span>
             }
             else
             {
-<span class="nc" id="L531">                return guessTypeFromSizeErrorAndLogError(sizeModifier);</span>
+<span class="nc" id="L532">                return guessTypeFromSizeErrorAndLogError(sizeModifier);</span>
             }
             
-<span class="nc" id="L534">            return new TypeAndClassID(VarDeclaration.SimplifiedType.SHORT,</span>
+<span class="nc" id="L535">            return new TypeAndClassID(VarDeclaration.SimplifiedType.SHORT,</span>
                 ClassHandler.CLASS_UNSPECIFIED);
         }
-<span class="fc bfc" id="L537" title="All 2 branches covered.">        else if (sizeModifier == VarDeclaration.SizeModifier.LONG)</span>
+<span class="fc bfc" id="L538" title="All 2 branches covered.">        else if (sizeModifier == VarDeclaration.SizeModifier.LONG)</span>
         {
-<span class="pc bpc" id="L539" title="1 of 2 branches missed.">            if (parser.peekMatches(&quot;double&quot;))</span>
+<span class="pc bpc" id="L540" title="1 of 2 branches missed.">            if (parser.peekMatches(&quot;double&quot;))</span>
             {
                 //consume size modifier token
-<span class="nc" id="L542">                parser.nextToken();</span>
+<span class="nc" id="L543">                parser.nextToken();</span>
                 
-<span class="nc" id="L544">                return new TypeAndClassID(VarDeclaration.SimplifiedType.</span>
+<span class="nc" id="L545">                return new TypeAndClassID(VarDeclaration.SimplifiedType.</span>
                    LONG_DOUBLE, ClassHandler.CLASS_UNSPECIFIED);
             }
-<span class="pc bpc" id="L547" title="1 of 2 branches missed.">            else if (parser.peekMatches(&quot;int&quot;))</span>
+<span class="pc bpc" id="L548" title="1 of 2 branches missed.">            else if (parser.peekMatches(&quot;int&quot;))</span>
             {
                 //consume size modifier token
-<span class="fc" id="L550">                parser.nextToken();</span>
+<span class="fc" id="L551">                parser.nextToken();</span>
             }
             else 
             {
-<span class="nc" id="L554">                return guessTypeFromSizeErrorAndLogError(sizeModifier);</span>
+<span class="nc" id="L555">                return guessTypeFromSizeErrorAndLogError(sizeModifier);</span>
             }
             
-<span class="fc" id="L557">            return new TypeAndClassID(VarDeclaration.SimplifiedType.LONG,</span>
+<span class="fc" id="L558">            return new TypeAndClassID(VarDeclaration.SimplifiedType.LONG,</span>
                 ClassHandler.CLASS_UNSPECIFIED);
         }
-<span class="fc bfc" id="L560" title="All 2 branches covered.">        else if (sizeModifier == VarDeclaration.SizeModifier.LONG_LONG)</span>
+<span class="fc bfc" id="L561" title="All 2 branches covered.">        else if (sizeModifier == VarDeclaration.SizeModifier.LONG_LONG)</span>
         {
             //align tokens such that nextToken is variable type or varName
-<span class="fc" id="L563">            parser.nextToken();</span>
+<span class="fc" id="L564">            parser.nextToken();</span>
             
-<span class="fc" id="L565">            Token   varTypeOrName       = parser.peek();</span>
-<span class="fc" id="L566">            String  varTypeOrNameText   = varTypeOrName.getTextContent();</span>
+<span class="fc" id="L566">            Token   varTypeOrName       = parser.peek();</span>
+<span class="fc" id="L567">            String  varTypeOrNameText   = varTypeOrName.getTextContent();</span>
             
-<span class="pc bpc" id="L568" title="1 of 2 branches missed.">            if (varTypeOrNameText.equals(&quot;int&quot;))</span>
+<span class="pc bpc" id="L569" title="1 of 2 branches missed.">            if (varTypeOrNameText.equals(&quot;int&quot;))</span>
             {
                 //consume var type token
-<span class="nc" id="L571">                parser.nextToken();</span>
+<span class="nc" id="L572">                parser.nextToken();</span>
             }
-<span class="pc bpc" id="L573" title="1 of 2 branches missed.">            else if (!varTypeOrName.isValidName())</span>
+<span class="pc bpc" id="L574" title="1 of 2 branches missed.">            else if (!varTypeOrName.isValidName())</span>
             {
-<span class="nc" id="L575">                return guessTypeFromSizeErrorAndLogError(sizeModifier);</span>
+<span class="nc" id="L576">                return guessTypeFromSizeErrorAndLogError(sizeModifier);</span>
             }
             
-<span class="fc" id="L578">            return new TypeAndClassID(VarDeclaration.SimplifiedType.LONG_LONG,</span>
+<span class="fc" id="L579">            return new TypeAndClassID(VarDeclaration.SimplifiedType.LONG_LONG,</span>
                 ClassHandler.CLASS_UNSPECIFIED);
         }
         else
         {
-<span class="fc" id="L583">            return getUnmodifiedType();</span>
+<span class="fc" id="L584">            return getUnmodifiedType();</span>
         }
     }
     
@@ -588,38 +589,38 @@ public class VariableHandler
      * Parses a variable type without regards to the modifier used.
      */
     private TypeAndClassID getUnmodifiedType() {
-<span class="fc" id="L591">        parser.nextToken();</span>
-<span class="fc" id="L592">        String type = parser.getCurTokText();</span>
+<span class="fc" id="L592">        parser.nextToken();</span>
+<span class="fc" id="L593">        String type = parser.getCurTokText();</span>
 
-<span class="pc bpc" id="L594" title="1 of 2 branches missed.">        if (type.equals(&quot;char&quot;))</span>
+<span class="pc bpc" id="L595" title="1 of 2 branches missed.">        if (type.equals(&quot;char&quot;))</span>
         {
-<span class="fc" id="L596">            return new TypeAndClassID(VarDeclaration.SimplifiedType.CHAR,</span>
+<span class="fc" id="L597">            return new TypeAndClassID(VarDeclaration.SimplifiedType.CHAR,</span>
                 ClassHandler.CLASS_UNSPECIFIED);
         }
-<span class="nc bnc" id="L599" title="All 2 branches missed.">        else if (type.equals(&quot;int&quot;))</span>
+<span class="nc bnc" id="L600" title="All 2 branches missed.">        else if (type.equals(&quot;int&quot;))</span>
         {
-<span class="nc" id="L601">            return new TypeAndClassID(VarDeclaration.SimplifiedType.INT,</span>
+<span class="nc" id="L602">            return new TypeAndClassID(VarDeclaration.SimplifiedType.INT,</span>
                 ClassHandler.CLASS_UNSPECIFIED);
         }
-<span class="nc bnc" id="L604" title="All 2 branches missed.">        else if (type.equals(&quot;float&quot;))</span>
+<span class="nc bnc" id="L605" title="All 2 branches missed.">        else if (type.equals(&quot;float&quot;))</span>
         {
-<span class="nc" id="L606">            return new TypeAndClassID(VarDeclaration.SimplifiedType.FLOAT,</span>
+<span class="nc" id="L607">            return new TypeAndClassID(VarDeclaration.SimplifiedType.FLOAT,</span>
                 ClassHandler.CLASS_UNSPECIFIED);
         }
-<span class="nc bnc" id="L609" title="All 2 branches missed.">        else if (type.equals(&quot;double&quot;))</span>
+<span class="nc bnc" id="L610" title="All 2 branches missed.">        else if (type.equals(&quot;double&quot;))</span>
         {
-<span class="nc" id="L611">            return new TypeAndClassID(VarDeclaration.SimplifiedType.DOUBLE,</span>
+<span class="nc" id="L612">            return new TypeAndClassID(VarDeclaration.SimplifiedType.DOUBLE,</span>
                 ClassHandler.CLASS_UNSPECIFIED);
         }
-<span class="nc bnc" id="L614" title="All 2 branches missed.">        else if (type.equals(&quot;void&quot;)) </span>
+<span class="nc bnc" id="L615" title="All 2 branches missed.">        else if (type.equals(&quot;void&quot;)) </span>
         {
-<span class="nc" id="L616">            return new TypeAndClassID(VarDeclaration.SimplifiedType.VOID,</span>
+<span class="nc" id="L617">            return new TypeAndClassID(VarDeclaration.SimplifiedType.VOID,</span>
                 ClassHandler.CLASS_UNSPECIFIED);
         }
-<span class="nc bnc" id="L619" title="All 2 branches missed.">        else if (ClassHandler.isClassDefined(parser.getCurToken()))</span>
+<span class="nc bnc" id="L620" title="All 2 branches missed.">        else if (ClassHandler.isClassDefined(parser.getCurToken()))</span>
         {
-<span class="nc" id="L621">            return new TypeAndClassID(VarDeclaration.SimplifiedType.CLASS,</span>
-<span class="nc" id="L622">                ClassHandler.getClassID(parser.getCurToken()));</span>
+<span class="nc" id="L622">            return new TypeAndClassID(VarDeclaration.SimplifiedType.CLASS,</span>
+<span class="nc" id="L623">                ClassHandler.getClassID(parser.getCurToken()));</span>
         }
 
         //TODO : else check for structs
@@ -628,16 +629,16 @@ public class VariableHandler
         //  has no type!
         //
         //attempt to synchronize parser
-<span class="nc" id="L631">        return null;</span>
+<span class="nc" id="L632">        return null;</span>
     }
     
     private TypeAndClassID guessTypeFromSizeErrorAndLogError(
         VarDeclaration.SizeModifier sizeModifier)
     {
-<span class="nc" id="L637">        Logger.err(parser.getCurToken(), &quot;invalid size specifier \&quot;&quot; + </span>
-<span class="nc" id="L638">            sizeModifier.getActualModifierText() + &quot;\&quot; for type \&quot;&quot; +</span>
-<span class="nc" id="L639">            parser.peek().getTextContent() + &quot;\&quot;&quot;);</span>
-<span class="nc" id="L640">        return getUnmodifiedType();</span>
+<span class="nc" id="L638">        Logger.err(parser.getCurToken(), &quot;invalid size specifier \&quot;&quot; + </span>
+<span class="nc" id="L639">            sizeModifier.getActualModifierText() + &quot;\&quot; for type \&quot;&quot; +</span>
+<span class="nc" id="L640">            parser.peek().getTextContent() + &quot;\&quot;&quot;);</span>
+<span class="nc" id="L641">        return getUnmodifiedType();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

@@ -1,9 +1,28 @@
+/*
+ * Copyright 2021 John Schneider.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package bluC.transpiler;
 
+import bluC.Utils;
 import java.util.ArrayList;
 import bluC.transpiler.Statement.VarDeclaration.Sign;
 import bluC.transpiler.Statement.VarDeclaration.SimplifiedType;
 import bluC.parser.Parser;
+import bluC.parser.handlers.expression.ExpressionHandler;
+import java.util.Objects;
 
 /**
  * @author John Schneider
@@ -80,13 +99,57 @@ public abstract class Statement
         {
             return true;
         }
+
+        @Override
+        public int hashCode()
+        {
+            int hash = 3;
+            hash = 79 * hash + Objects.hashCode(this.body);
+            hash = 79 * hash + (int) (this.getStartingLineIndex() ^
+                (this.getStartingLineIndex() >>> 32));
+            hash = 79 * hash + (int) (this.getEndingLineIndex() ^ 
+                (this.getEndingLineIndex() >>> 32));
+            return hash;
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            if (this == obj)
+            {
+                return true;
+            }
+            if (obj == null)
+            {
+                return false;
+            }
+            if (getClass() != obj.getClass())
+            {
+                return false;
+            }
+            if (!super.equals(obj))
+            {
+                return false;
+            }
+            
+            final Block other = (Block) obj;
+            if (!Objects.equals(this.body, other.body))
+            {
+                return false;
+            }
+            return true;
+        }
+        
+        
     }
     
     public static class Function extends Block
     {
-        private Statement.VarDeclaration returnType;
-        private Statement.ParameterList parameterList;
-        private Token functionName;
+        private Statement.VarDeclaration
+                        returnType;
+        private Statement.ParameterList
+                        parameterList;
+        private Token   functionName;
         
         public Function(Statement.VarDeclaration returnType, Token functionName,
             long startingLineIndex)
@@ -131,6 +194,57 @@ public abstract class Statement
         {
             return parameterList;
         }
+
+        @Override
+        public int hashCode()
+        {
+            int hash = 3;
+            hash = 37 * hash + Objects.hashCode(this.returnType);
+            hash = 37 * hash + Objects.hashCode(this.parameterList);
+            hash = 37 * hash + Objects.hashCode(this.functionName);
+            hash = 37 * hash + (int) (this.getStartingLineIndex() ^ 
+                (this.getStartingLineIndex() >>> 32));
+            hash = 37 * hash + (int) (this.getEndingLineIndex() ^ 
+                (this.getEndingLineIndex() >>> 32));
+            return hash;
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            if (this == obj)
+            {
+                return true;
+            }
+            if (obj == null)
+            {
+                return false;
+            }
+            if (getClass() != obj.getClass())
+            {
+                return false;
+            }
+            if (!super.equals(obj))
+            {
+                return false;
+            }
+            
+            final Function other = (Function) obj;
+            if (!Objects.equals(this.returnType, other.returnType))
+            {
+                return false;
+            }
+            if (!Objects.equals(this.parameterList, other.parameterList))
+            {
+                return false;
+            }
+            if (!Objects.equals(this.functionName, other.functionName))
+            {
+                return false;
+            }
+            return true;
+        }
+        
         
         @Override
         <T> T accept(Visitor<T> visitor)
@@ -158,6 +272,46 @@ public abstract class Statement
         {
             return parameters;
         }
+
+        @Override
+        public int hashCode()
+        {
+            int hash = 3;
+            hash = 13 * hash + Objects.hashCode(this.parameters);
+            hash = 13 * hash + (int) (this.getStartingLineIndex() ^ 
+                (this.getStartingLineIndex() >>> 32));
+            hash = 13 * hash + (int) (this.getEndingLineIndex() ^ 
+                (this.getEndingLineIndex() >>> 32));
+            return hash;
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            if (this == obj)
+            {
+                return true;
+            }
+            if (obj == null)
+            {
+                return false;
+            }
+            if (getClass() != obj.getClass())
+            {
+                return false;
+            }
+            if (!super.equals(obj))
+            {
+                return false;
+            }
+            
+            final ParameterList other = (ParameterList) obj;
+            if (!Objects.equals(this.parameters, other.parameters))
+            {
+                return false;
+            }
+            return true;
+        }
         
         @Override
         <T> T accept(Visitor<T> visitor)
@@ -171,7 +325,7 @@ public abstract class Statement
         private final Statement.ClassDef class_;
         private final String mangledName;
         private final Parser parser;
-        
+            
         public Method(Statement.ClassDef class_, VarDeclaration returnVar,
             Token methodName, String mangledName, Parser parser,
             long startingLineIndex)
@@ -240,6 +394,61 @@ public abstract class Statement
         {
             return mangledName;
         }
+
+        @Override
+        public int hashCode()
+        {
+            int hash = 7;
+            hash = 53 * hash + Objects.hashCode(this.class_);
+            hash = 53 * hash + Objects.hashCode(this.mangledName);
+            hash = 53 * hash + Objects.hashCode(this.parser);
+            hash = 53 * hash + Objects.hashCode(this.getReturnType());
+            hash = 53 * hash + Objects.hashCode(this.getParameters());
+            hash = 53 * hash + Objects.hashCode(this.getNameToken());
+            hash = 53 * hash + (int) (this.getStartingLineIndex() ^ 
+                (this.getStartingLineIndex() >>> 32));
+            hash = 53 * hash + (int) (this.getEndingLineIndex() ^ 
+                (this.getEndingLineIndex() >>> 32));
+            hash = 53 * hash + Objects.hashCode(this.getBody());
+            return hash;
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            if (this == obj)
+            {
+                return true;
+            }
+            if (obj == null)
+            {
+                return false;
+            }
+            if (getClass() != obj.getClass())
+            {
+                return false;
+            }
+            if (!super.equals(obj))
+            {
+                return false;
+            }
+            
+            final Method other = (Method) obj;
+            if (!Objects.equals(this.mangledName, other.mangledName))
+            {
+                return false;
+            }
+            if (!Objects.equals(this.class_, other.class_))
+            {
+                return false;
+            }
+            if (!Objects.equals(this.parser, other.parser))
+            {
+                return false;
+            }
+            return true;
+        }
+        
         
         @Override
         <T> T accept(Visitor<T> visitor)
@@ -270,6 +479,47 @@ public abstract class Statement
             {
                 return false;
             }
+
+            @Override
+            public int hashCode()
+            {
+                int hash = 5;
+                hash = 59 * hash + Objects.hashCode(this.condition);
+                hash = 59 * hash + (int) (this.getStartingLineIndex() ^ 
+                    (this.getStartingLineIndex() >>> 32));
+                hash = 59 * hash + (int) (this.getEndingLineIndex() ^ 
+                    (this.getEndingLineIndex() >>> 32));
+                hash = 59 * hash + Objects.hashCode(this.getBody());
+                return hash;
+            }
+
+            @Override
+            public boolean equals(Object obj)
+            {
+                if (this == obj)
+                {
+                    return true;
+                }
+                if (obj == null)
+                {
+                    return false;
+                }
+                if (getClass() != obj.getClass())
+                {
+                    return false;
+                }
+                if (!super.equals(obj))
+                {
+                    return false;
+                }
+                
+                final ElseIf other = (ElseIf) obj;
+                if (!Objects.equals(this.condition, other.condition))
+                {
+                    return false;
+                }
+                return true;
+            }
         }
         
         public static class Else extends Block
@@ -285,6 +535,8 @@ public abstract class Statement
                 // the visitIf itself adds extra whitespace
                 return false;
             }
+            
+            //.equals and .hashCode from Block should still work for this class
         }
         
         private Expression condition;
@@ -322,6 +574,57 @@ public abstract class Statement
         public Statement.Block getElse()
         {
             return else_;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            int hash = 3;
+            hash = 53 * hash + (int) (this.getStartingLineIndex() ^ 
+                (this.getStartingLineIndex() >>> 32));
+            hash = 53 * hash + (int) (this.getEndingLineIndex() ^ 
+                (this.getEndingLineIndex() >>> 32));
+            hash = 53 * hash + Objects.hashCode(this.getBody());
+            hash = 53 * hash + Objects.hashCode(this.condition);
+            hash = 53 * hash + Objects.hashCode(this.elseIfs);
+            hash = 53 * hash + Objects.hashCode(this.else_);
+            return hash;
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            if (this == obj)
+            {
+                return true;
+            }
+            if (obj == null)
+            {
+                return false;
+            }
+            if (getClass() != obj.getClass())
+            {
+                return false;
+            }
+            if (!super.equals(obj))
+            {
+                return false;
+            }
+            
+            final If other = (If) obj;
+            if (!Objects.equals(this.condition, other.condition))
+            {
+                return false;
+            }
+            if (!Objects.equals(this.elseIfs, other.elseIfs))
+            {
+                return false;
+            }
+            if (!Objects.equals(this.else_, other.else_))
+            {
+                return false;
+            }
+            return true;
         }
         
         @Override
@@ -383,6 +686,11 @@ public abstract class Statement
             return className;
         }
         
+        public String getClassNameText()
+        {
+            return className.getTextContent();
+        }
+        
         public void setBaseClass(Token baseClass) 
         {
             this.baseClass = baseClass;
@@ -397,6 +705,56 @@ public abstract class Statement
         <T> T accept(Visitor<T> visitor)
         {
             return visitor.visitClassDef(this);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            int hash = 5;
+            hash = 53 * hash + Objects.hashCode(this.className);
+            hash = 53 * hash + Objects.hashCode(this.baseClass);
+            hash = 53 * hash + (int) (this.classID ^ (this.classID >>> 32));
+            hash = 53 * hash + (int) (this.getStartingLineIndex() ^ 
+                (this.getStartingLineIndex() >>> 32));
+            hash = 53 * hash + (int) (this.getEndingLineIndex() ^ 
+                (this.getEndingLineIndex() >>> 32));
+            return hash;
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            if (this == obj)
+            {
+                return true;
+            }
+            if (obj == null)
+            {
+                return false;
+            }
+            if (getClass() != obj.getClass())
+            {
+                return false;
+            }
+            if (!super.equals(obj))
+            {
+                return false;
+            }
+            
+            final ClassDef other = (ClassDef) obj;
+            if (this.classID != other.classID)
+            {
+                return false;
+            }
+            if (!Objects.equals(this.className, other.className))
+            {
+                return false;
+            }
+            if (!Objects.equals(this.baseClass, other.baseClass))
+            {
+                return false;
+            }
+            return true;
         }
     }
     
@@ -418,20 +776,86 @@ public abstract class Statement
         {
             return true;
         }
+        
+        // .equals and .hashCode from Block should be fine for this class
     }
     
     public static class While extends Block
     {
+        private Expression exitCondition;
+    
         public While(long startingLineIndex)
         {
             super(startingLineIndex);
+            initDefaultExitCondition();
         }
+        
+        private void initDefaultExitCondition()
+        {
+            this.setExitCondition(ExpressionHandler.
+                createNullLiteral(TokenFileInfo.NO_FILEPATH,
+                (int) this.getStartingLineIndex()));
+        }
+        
+        public Expression getExitCondition()
+        {
+            return exitCondition;
+        }
+
+        public void setExitCondition(Expression exitCondition)
+        {
+            this.exitCondition = exitCondition;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            int hash = 7;
+            hash = 47 * hash + Objects.hashCode(this.exitCondition);
+            hash = 47 * hash + Objects.hashCode(this.getBody());
+            hash = 47 * hash + (int) (this.getStartingLineIndex() ^ 
+                (this.getStartingLineIndex() >>> 32));
+            hash = 47 * hash + (int) (this.getEndingLineIndex() ^ 
+                (this.getEndingLineIndex() >>> 32));
+            return hash;
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            if (this == obj)
+            {
+                return true;
+            }
+            if (obj == null)
+            {
+                return false;
+            }
+            if (getClass() != obj.getClass())
+            {
+                return false;
+            }
+            if (!super.equals(obj))
+            {
+                return false;
+            }
+            
+            final While other = (While) obj;
+            if (!Objects.equals(this.exitCondition, other.exitCondition))
+            {
+                return false;
+            }
+            return true;
+        }
+        
         
         @Override
         <T> T accept(Visitor<T> visitor)
         {
             return visitor.visitWhile(this);
         }
+        
+        // TODO - fix .equals and .hashCode to include the new vars as well
     }
     
     public static class Return extends Statement
@@ -447,6 +871,46 @@ public abstract class Statement
         public Statement getReturnedStatement()
         {
             return returnedStatement;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            int hash = 3;
+            hash = 79 * hash + Objects.hashCode(this.returnedStatement);
+            hash = 79 * hash + (int) (this.getStartingLineIndex() ^ 
+                (this.getStartingLineIndex() >>> 32));
+            hash = 79 * hash + (int) (this.getEndingLineIndex() ^ 
+                (this.getEndingLineIndex() >>> 32));
+            return hash;
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            if (this == obj)
+            {
+                return true;
+            }
+            if (obj == null)
+            {
+                return false;
+            }
+            if (getClass() != obj.getClass())
+            {
+                return false;
+            }
+            if (!super.equals(obj))
+            {
+                return false;
+            }
+            
+            final Return other = (Return) obj;
+            if (!Objects.equals(this.returnedStatement, other.returnedStatement))
+            {
+                return false;
+            }
+            return true;
         }
         
         @Override
@@ -476,14 +940,50 @@ public abstract class Statement
         {
             return expression;
         }
+
+        @Override
+        public int hashCode()
+        {
+            int hash = 3;
+            hash = 89 * hash + Objects.hashCode(this.expression);
+            hash = 89 * hash + (int) (this.getStartingLineIndex() ^ 
+                (this.getStartingLineIndex() >>> 32));
+            hash = 89 * hash + (int) (this.getEndingLineIndex() ^ 
+                (this.getEndingLineIndex() >>> 32));
+            return hash;
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            if (this == obj)
+            {
+                return true;
+            }
+            if (obj == null)
+            {
+                return false;
+            }
+            if (getClass() != obj.getClass())
+            {
+                return false;
+            }
+            if (!super.equals(obj))
+            {
+                return false;
+            }
+            
+            final ExpressionStatement other = (ExpressionStatement) obj;
+            if (!Objects.equals(this.expression, other.expression))
+            {
+                return false;
+            }
+            return true;
+        }
     }
     
     public static class VarDeclaration extends Statement
     {
-        public static final Token       NO_ASSIGNMENT   = null;
-        public static final Expression  NO_VALUE        = null;
-        public static final long        NO_CLASS_ID     = Long.MIN_VALUE;
-        
         public static enum Sign
         {
             SIGNED,
@@ -519,7 +1019,15 @@ public abstract class Statement
             CLASS
         }
         
-        public static final String RETURN_VAR_NAME = "";
+        public static final Token       NO_ASSIGNMENT   = null;
+        public static final Expression  NO_VALUE        = null;
+        
+        /**
+         * The ID of a variable that holds plain-old-data. 
+         */
+        public static final long        NOT_A_CLASS     = Long.MIN_VALUE;
+        
+        public static final String      RETURN_VAR_NAME = "";
         
         /**
          * How many indirections (asterisks) are declared for this variable
@@ -535,18 +1043,18 @@ public abstract class Statement
          * If the SimplifiedType is CLASS, then this is set to the classID, 
          *  otherwise it's Long.MIN_VALUE.
          */
-        private long classID = NO_CLASS_ID;
+        private long classID = NOT_A_CLASS;
         
         public VarDeclaration(Sign sign, SimplifiedType simplifiedType, 
             int pointerLevel, Token varName, Token assignmentOperator, 
             Expression value, long startingLineIndex)
         {
             super(startingLineIndex);
-            this.sign = sign;
-            this.simplifiedType = simplifiedType;
-            this.pointerLevel = pointerLevel;
-            this.varName = varName;
-            this.value = value;
+            this.sign               = sign;
+            this.simplifiedType     = simplifiedType;
+            this.pointerLevel       = pointerLevel;
+            this.varName            = varName;
+            this.value              = value;
             this.assignmentOperator = assignmentOperator;
         }
         
@@ -599,6 +1107,76 @@ public abstract class Statement
         {
             return classID;
         }
+
+        @Override
+        public int hashCode()
+        {
+            int hash = 7;
+            hash = 29 * hash + (int) (this.getStartingLineIndex() ^ 
+                (this.getStartingLineIndex() >>> 32));
+            hash = 29 * hash + (int) (this.getEndingLineIndex() ^ 
+                (this.getEndingLineIndex() >>> 32));
+            hash = 29 * hash + this.pointerLevel;
+            hash = 29 * hash + Objects.hashCode(this.sign);
+            hash = 29 * hash + Objects.hashCode(this.simplifiedType);
+            hash = 29 * hash + Objects.hashCode(this.varName);
+            hash = 29 * hash + Objects.hashCode(this.assignmentOperator);
+            hash = 29 * hash + Objects.hashCode(this.value);
+            hash = 29 * hash + (int) (this.classID ^ (this.classID >>> 32));
+            return hash;
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            if (this == obj)
+            {
+                return true;
+            }
+            if (obj == null)
+            {
+                return false;
+            }
+            if (getClass() != obj.getClass())
+            {
+                return false;
+            }
+            if (!super.equals(obj))
+            {
+                return false;
+            }
+            
+            final VarDeclaration other = (VarDeclaration) obj;
+            if (this.pointerLevel != other.pointerLevel)
+            {
+                return false;
+            }
+            if (this.classID != other.classID)
+            {
+                return false;
+            }
+            if (this.sign != other.sign)
+            {
+                return false;
+            }
+            if (this.simplifiedType != other.simplifiedType)
+            {
+                return false;
+            }
+            if (!Objects.equals(this.varName, other.varName))
+            {
+                return false;
+            }
+            if (!Objects.equals(this.assignmentOperator, other.assignmentOperator))
+            {
+                return false;
+            }
+            if (!Objects.equals(this.value, other.value))
+            {
+                return false;
+            }
+            return true;
+        }
         
         @Override
         <T> T accept(Visitor<T> visitor)
@@ -609,8 +1187,14 @@ public abstract class Statement
     
     public static class Package extends Statement
     {
-        public static final String  noPackage = null;
-        public static final int     noLineIndex = -1;
+        public static final String  NO_PACKAGE = null;
+        
+        /**
+         * JS 3/24/2021 : I don't think this is used anywhere but I'm leaving it
+         *  in until the package class has been implemented, just in case this
+         *  was a planned future refactoring.
+         */
+        //public static final int     NO_LINE_INDEX = -1;
         
         private String fullyQualifiedPackageName;
         
@@ -623,6 +1207,47 @@ public abstract class Statement
         public String getFullyQualifiedPackageName()
         {
             return fullyQualifiedPackageName;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            int hash = 3;
+            hash = 41 * hash + Objects.hashCode(this.fullyQualifiedPackageName);
+            hash = 41 * hash + (int) (this.getStartingLineIndex() ^ 
+                (this.getStartingLineIndex() >>> 32));
+            hash = 41 * hash + (int) (this.getEndingLineIndex() ^ 
+                (this.getEndingLineIndex() >>> 32));
+            return hash;
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            if (this == obj)
+            {
+                return true;
+            }
+            if (obj == null)
+            {
+                return false;
+            }
+            if (getClass() != obj.getClass())
+            {
+                return false;
+            }
+            if (!super.equals(obj))
+            {
+                return false;
+            }
+            
+            final Package other = (Package) obj;
+            if (!Objects.equals(this.fullyQualifiedPackageName, 
+                other.fullyQualifiedPackageName))
+            {
+                return false;
+            }
+            return true;
         }
         
         @Override
@@ -671,4 +1296,30 @@ public abstract class Statement
         this.endingLineIndex = endingLineIndex;
     }
     
+    @Override
+    public boolean equals(Object other)
+    {
+        if (other instanceof Statement)
+        {
+            Statement otherStmt = (Statement) other;
+            return 
+                getStartingLineIndex() == otherStmt.getStartingLineIndex() &&
+                getEndingLineIndex() == otherStmt.getEndingLineIndex();
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int hash = 7;
+        hash = 83 * hash + (int) (this.startingLineIndex ^ 
+            (this.startingLineIndex >>> 32));
+        hash = 83 * hash + (int) (this.endingLineIndex ^ 
+            (this.endingLineIndex >>> 32));
+        return hash;
+    }
 }

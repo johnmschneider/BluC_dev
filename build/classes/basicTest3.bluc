@@ -1,0 +1,80 @@
+
+/*char* ex = "test";
+int a = 2;
+a = a + 3;
+a = ex;*/
+char realCharTest = 'x';
+long int x = 0;
+long long b;
+
+// test parse time for valid while loops
+int main(int argc, char** argv)
+{
+    while (x < 70000)
+    {
+        long int y = x;
+        x = x + 1;
+    }
+
+    int iForgotAParen;
+    while (iForgotAParen == 0)
+    {
+    }
+
+    int iForgotAnotherParen;
+    while (iForgotAnotherParen == 0)
+    {
+    }
+    
+    int iForgotBothParens;
+    while (iForgotBothParens == 0)
+    {
+    }
+    
+    int iForgotABrace;
+    while (iForgotABrace == 0)
+    {
+    }
+
+    int iForgotAnotherBrace;
+    // todo: don't go into fatal parse error on this type of loop conditonal error
+    //while (iForgotAnotherBrace)
+    //{
+    //}
+    
+    while (iForgotAnotherBrace == 0)
+    {
+    }
+}
+
+/*
+int main(int hi) {
+    int c = 0;
+    
+    if (c)
+    {
+        printf("example");
+    }
+    
+    return 0;
+}*/
+
+/*
+class Test {
+    int hi;
+    
+    void hello() {
+        
+    }
+};
+
+int main() {
+    Test test();
+    test.hello();
+    return 0;
+}*/
+
+//(var-declaration unspecified char *ex (= "test"))	"/* end stmt line 1 */"
+//(expression-statement null)	"/* end stmt line 18 */"
+//(expression-statement null)	"/* end stmt line 25 */"
+//(return (expression-statement 0))	"/* end stmt line 26 */"

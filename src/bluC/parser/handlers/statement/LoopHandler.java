@@ -15,7 +15,6 @@
  */
 package bluC.parser.handlers.statement;
 
-import bluC.Logger;
 import bluC.parser.Parser;
 import bluC.transpiler.Statement;
 
@@ -28,12 +27,17 @@ public class LoopHandler
     private final Parser            parser;
     private final StatementHandler  statementHandler;
     private final WhileHandler      whileHandler;
+    private final BlockHandler      blockHandler;
     
-    public LoopHandler(Parser parser, StatementHandler statementHandler)
+    public LoopHandler(
+        Parser parser, StatementHandler statementHandler, 
+        BlockHandler blockHandler)
     {
         this.statementHandler   = statementHandler;
         this.parser             = parser;
-        this.whileHandler       = new WhileHandler(parser, statementHandler);
+        this.blockHandler       = blockHandler;
+        this.whileHandler       = new WhileHandler(
+            parser, statementHandler, blockHandler);
     }
     
     

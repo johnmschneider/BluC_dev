@@ -1,7 +1,24 @@
+/*
+ * Copyright 2021 John Schneider.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package bluC.parser.handlers.statement;
 
 import bluC.parser.handlers.expression.ExpressionHandler;
 import bluC.Logger;
+import bluC.ResultType;
 import bluC.transpiler.Expression;
 import bluC.transpiler.Statement;
 import bluC.transpiler.Statement.VarDeclaration.Sign;
@@ -17,13 +34,29 @@ import bluC.parser.Parser;
  */
 public class StatementHandler
 {
-    private final Parser parser;
+    private final Parser            parser;
     private final ExpressionHandler expressionHandler;
-    private final VariableHandler varHandler;
-    private final FunctionHandler funcHandler;
-    private final BlockHandler blockHandler;
-    private final IfHandler ifHandler;
-    private final ClassHandler classHandler;
+    private final VariableHandler   varHandler;
+    private final FunctionHandler   funcHandler;
+    private final BlockHandler      blockHandler;
+    private final IfHandler         ifHandler;
+    private final ClassHandler      classHandler;
+    private final LoopHandler       loopHandler;
+    
+    public static enum JustParseExprErrCode
+    {
+        UNEXPECTED_END_OF_STATEMENT,
+        MALFORMED_EXPRESSION;
+    }
+        
+    public static class JustParseExprResult extends 
+        ResultType<Expression, JustParseExprErrCode> 
+    {
+        public JustParseExprResult(JustParseExprErrCode errCode)
+        {
+            super(errCode);
+        }
+    }
     
     public StatementHandler(Parser parser)
     {
@@ -37,6 +70,7 @@ public class StatementHandler
             expressionHandler);
         classHandler        = new ClassHandler(parser, varHandler, blockHandler,
             funcHandler);
+        loopHandler         = new LoopHandler(parser, this, blockHandler);
         
         //due to circular references to varHandler we had to create a 
         //  reference to varHandler and THEN retrieve references to the other 
@@ -157,11 +191,12 @@ public class StatementHandler
         }
         else
         {
-            return handlePackage();
+            //return handlePackage();
+            return loopHandler.handleLoopOrHigher();
         }
     }
     
-    private Statement handlePackage()
+    public Statement handlePackage()
     {
         Token next = parser.peek();
         
@@ -260,5 +295,44 @@ public class StatementHandler
                 new TokenFileInfo(next.getFilepath(), next.getLineIndex())),
                 
             null, null, parser.getCurTokLineIndex());
+    }
+
+    public JustParseExprResult justParseExpression()
+    {
+        int         startIndex;
+        Expression  rawResult;
+        JustParseExprResult
+                    result;
+        
+        startIndex  = parser.getCurTokIndex();
+        rawResult   = expressionHandler.handleExpression();
+        result      = new JustParseExprResult(
+            JustParseExprErrCode.MALFORMED_EXPRESSION);
+        
+        if (rawResult.isNullLiteral())
+        {
+            // try to determine what went wrong with parsing the expression
+            
+            parser.setToken(startIndex);
+            
+            while (!parser.atEOF())
+            {
+                if (parser.peekMatches(";", "{", "}"))
+                {
+                    result.setErrCode(
+                        JustParseExprErrCode.UNEXPECTED_END_OF_STATEMENT);
+                    break;
+                }
+                
+                parser.nextToken();
+            }
+            // else it's already set to malformed expression
+        }
+        else
+        {
+            result.setData(rawResult);
+        }
+        
+        return result;
     }
 }

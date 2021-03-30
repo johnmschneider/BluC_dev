@@ -64,28 +64,65 @@ public class LoopHandlerUtils
     
     /**
      * Synchronizes the parser, assuming that the condition section
-     *  of the loop was malformed
+     *  of the loop was malformed.
+     * 
+     * Automatically jumps to the first token of the loop (e.g. "while" or
+     *  "for", etc).
+     * 
+     * Ends on the "best guess" of the last token of the loop (e.g. for a
+     *  multi-statement loop this will be a "}" or for a single-statement, ";")
      */
-    public void synchronizeParserFromBadCondition()
+    public void synchronizeParserFromBadCondition(int startingTokenIndex)
     {
         Token   errorLocation;
         GotoStartResults
                 findBlockStartResult;
-        int     startIndex;
         
-        startIndex              = parser.getCurTokIndex();
+        parser.setToken(startingTokenIndex);
         errorLocation           = parser.getCurToken();
         findBlockStartResult    = gotoBlockStart();
         
         if (findBlockStartResult.getWasSuccessful())
         {
             handleMalformedStartCondition(
-                startIndex, errorLocation, findBlockStartResult);
+                startingTokenIndex, errorLocation, findBlockStartResult);
         }
         else
         {
-            gotoBlockEnd(startIndex, errorLocation);
+            gotoBlockEnd(startingTokenIndex, errorLocation);
         }
+    }
+    
+    /**
+     * Synchronizes the parser from a bad block. Jumps to the token
+     *  conditionalEndIndex, so starting token isn't necessary.
+     * 
+     * Ends on the token that is the "best guess" for the what is the last token
+     *  of the loop.
+     */
+    public void synchronizeParserFromBadBlock(int conditionalEndIndex)
+    {
+        Logger.err(parser.peek(), "encountered unexpected closing brace " +
+            "(\"}\") while trying to desugar single-statement " +
+            nameOfLoopType + "-loop (did you forget to add an opening brace " +
+            "\"{\"?");
+        
+        // synchronize parser by guessing that this is a multi-statement
+        //  loop
+        TokenBuilder    tokBuilder;
+        Token           openBrace;
+
+        // grab line data from this token
+        parser.setToken(conditionalEndIndex);
+
+        tokBuilder = new TokenBuilder();
+        openBrace = tokBuilder.
+            setFileName     (parser.getCurToken().getFilepath()). 
+            setLineIndex    ((int) parser.getCurTokLineIndex()).
+            setTextContent  ("{").
+            setWasEmittedByCompiler(true).
+            build();
+        parser.addToken(openBrace, conditionalEndIndex + 1);
     }
     
     private void handleMalformedStartCondition(
@@ -259,7 +296,15 @@ public class LoopHandlerUtils
         return result;
     }
     
-    
+    /**
+     * Goes to the block end.
+     * 
+     * Expects to either be after an opening brace "{", or after the closing of
+     *  the conditional ")".
+     * 
+     * Ends on the block end (or the best guess of the block end if the *actual*
+     *  end can't be found).
+     */
     private void gotoBlockEnd(int startIndex, Token errorLocation)
     {
         boolean didLoopEnd;
@@ -274,11 +319,15 @@ public class LoopHandlerUtils
             didLoopEnd              = parser.gotoEndOfBlock();
             isLoopMultiStatement    = true;
         }
+        else if (parser.curTextMatches(";"))
+        {
+            didLoopEnd = true;
+        }
         else
         {
             Logger.err(parser.getCurToken(), "(FATAL error in compiler): " +
                 "could not synchronize parser on this \"" + nameOfLoopType +
-                "\"loop with a malformed starting condition; unexpected " +
+                "\" loop with a malformed starting condition; unexpected " +
                 "result from findBlockStart");
 
             /** 

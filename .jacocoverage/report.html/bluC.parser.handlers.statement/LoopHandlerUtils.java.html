@@ -1,0 +1,323 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>LoopHandlerUtils.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;BluC&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.source.html" class="el_package">bluC.parser.handlers.statement</a> &gt; <span class="el_source">LoopHandlerUtils.java</span></div><h1>LoopHandlerUtils.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2021 John Schneider.
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package bluC.parser.handlers.statement;
+
+import bluC.Logger;
+import bluC.ResultType;
+import bluC.builders.TokenBuilder;
+import bluC.parser.Parser;
+import bluC.transpiler.Token;
+
+/**
+ *
+ * @author John Schneider
+ */
+public class LoopHandlerUtils
+{
+    private final Parser parser;
+    private String       nameOfLoopType;
+    
+<span class="nc" id="L33">    private enum GotoStartErrCodes</span>
+    {
+<span class="nc" id="L35">        NO_OPENING_PAREN,</span>
+<span class="nc" id="L36">        MALFORMED_SINGLE_STATEMENT_LOOP,</span>
+<span class="nc" id="L37">        MALFORMED_MULTI_STATEMENT_LOOP;</span>
+    }
+    
+    private static class GotoStartResults extends 
+        ResultType&lt;Token, GotoStartErrCodes&gt;
+    {
+        public GotoStartResults(GotoStartErrCodes errCode)
+        {
+<span class="nc" id="L45">            super(errCode);</span>
+<span class="nc" id="L46">        }</span>
+    }
+    
+    public LoopHandlerUtils(Parser parser)
+<span class="fc" id="L50">    {</span>
+<span class="fc" id="L51">        this.parser = parser;</span>
+<span class="fc" id="L52">    }</span>
+
+    
+    public String getNameOfLoopType()
+    {
+<span class="nc" id="L57">        return nameOfLoopType;</span>
+    }
+
+    public void setNameOfLoopType(String nameOfLoopType)
+    {
+<span class="fc" id="L62">        this.nameOfLoopType = nameOfLoopType;</span>
+<span class="fc" id="L63">    }</span>
+    
+    /**
+     * Synchronizes the parser, assuming that the condition section
+     *  of the loop was malformed
+     */
+    public void synchronizeParserFromBadCondition()
+    {
+        Token   errorLocation;
+        GotoStartResults
+                findBlockStartResult;
+        int     startIndex;
+        
+<span class="nc" id="L76">        startIndex              = parser.getCurTokIndex();</span>
+<span class="nc" id="L77">        errorLocation           = parser.getCurToken();</span>
+<span class="nc" id="L78">        findBlockStartResult    = gotoBlockStart();</span>
+        
+<span class="nc bnc" id="L80" title="All 2 branches missed.">        if (findBlockStartResult.getWasSuccessful())</span>
+        {
+<span class="nc" id="L82">            handleMalformedStartCondition(</span>
+                startIndex, errorLocation, findBlockStartResult);
+        }
+        else
+        {
+<span class="nc" id="L87">            gotoBlockEnd(startIndex, errorLocation);</span>
+        }
+<span class="nc" id="L89">    }</span>
+    
+    private void handleMalformedStartCondition(
+        int startIndex, Token errorLocation, GotoStartResults blockStartResult)
+    {
+<span class="nc" id="L94">        GotoStartErrCodes errCode        = blockStartResult.getErrCode();</span>
+        
+<span class="nc bnc" id="L96" title="All 4 branches missed.">        switch (errCode)</span>
+        {
+            case NO_OPENING_PAREN:
+<span class="nc" id="L99">                Logger.err(errorLocation, </span>
+                    &quot;Malformed &quot; + nameOfLoopType + 
+                    &quot;-loop, expected \&quot;(\&quot; to open the conditional&quot; + 
+                    &quot;section of the loop&quot;);
+                // try to synchronize parser by properly starting the condition
+<span class="nc" id="L104">                injectFakeConditionOpenParen(startIndex, errorLocation);</span>
+                
+                // try rehandling this again, to see if it's also missing an
+                //  ending parenthesis
+<span class="nc" id="L108">                handleMalformedStartCondition(</span>
+<span class="nc" id="L109">                    startIndex, errorLocation, gotoBlockStart());</span>
+                
+            case MALFORMED_SINGLE_STATEMENT_LOOP:
+<span class="nc" id="L112">                Logger.err(errorLocation, </span>
+                    &quot;Malformed single-statement &quot; + nameOfLoopType + 
+                    &quot;-loop, expected \&quot;)\&quot; to close the conditional &quot; + 
+                    &quot;section of the loop&quot;);
+                /**
+                 * try to synchronize parser by properly ending the condition
+                 * 
+                 *  (the only way to get this errCode is to be missing a &quot;)&quot;,
+                 *      and have no open brace &quot;{&quot; before the end of the next
+                 *      statement, which we then try to synchronize as a
+                 *      single-statement loop)
+                 */
+<span class="nc" id="L124">                injectFakeConditionCloseParen(startIndex, errorLocation);</span>
+                
+<span class="nc" id="L126">                break;</span>
+            case MALFORMED_MULTI_STATEMENT_LOOP:
+<span class="nc" id="L128">                Logger.err(errorLocation, </span>
+                    &quot;Malformed multi-statement &quot; + nameOfLoopType + 
+                    &quot;-loop, expected \&quot;}\&quot; to close the opening brace of &quot; +
+                    &quot;the loop&quot;);
+                /**
+                 * try to synchronize parser by properly ending the condition
+                 * 
+                 *  (the only way to get this errCode is to be missing a &quot;)&quot;,
+                 *      AND to have an opening brace &quot;{&quot; before the end of the
+                 *      next statement, which we then try to synchronize as a
+                 *      multi-statement loop)
+                 */
+<span class="nc" id="L140">                injectFakeConditionCloseParen(startIndex, errorLocation);</span>
+                
+<span class="nc" id="L142">                break;</span>
+            default:
+                /**
+                 * I don't see any way for this branch to be reached unless 
+                 *  the result enum was extended without also updating this
+                 *  function.
+                 * 
+                 * It's only here because java complains otherwise.
+                 */
+<span class="nc" id="L151">                Logger.err(errorLocation,</span>
+                   &quot;(FATAL error in compiler): encountered an unexpected &quot; +
+                    &quot;way that a loop was malformed, one that the &quot; +
+                    &quot;compiler didn't anticipate&quot;);
+                break;
+        }
+        
+<span class="nc" id="L158">        gotoBlockEnd(startIndex, errorLocation);</span>
+<span class="nc" id="L159">    }</span>
+    
+    /**
+     * Injects a compiler-generated &quot;(&quot; token and sets the current token index
+     *  to the injected token.
+     */
+    private void injectFakeConditionOpenParen(
+        int startIndex, Token errorLocation)
+    {
+<span class="nc" id="L168">        TokenBuilder    parenBuilder = new TokenBuilder();</span>
+<span class="nc" id="L169">        Token           openParen = parenBuilder.</span>
+<span class="nc" id="L170">            setFileName             (errorLocation.getFilepath()). </span>
+<span class="nc" id="L171">            setLineIndex            (errorLocation.getLineIndex()).</span>
+<span class="nc" id="L172">            setTextContent          (&quot;(&quot;).</span>
+<span class="nc" id="L173">            setWasEmittedByCompiler (true).</span>
+<span class="nc" id="L174">            build();</span>
+        
+        // the actual startIndex will be the loop keyword token
+<span class="nc" id="L177">        parser.addToken(openParen, startIndex + 1);</span>
+<span class="nc" id="L178">        parser.setToken(startIndex + 1);</span>
+<span class="nc" id="L179">    }</span>
+    
+    /**
+     * Injects a compiler-generated &quot;)&quot; token and sets the current token index
+     *  to the injected token.
+     */
+    private void injectFakeConditionCloseParen(
+        int startIndex, Token errorLocation)
+    {
+<span class="nc" id="L188">        TokenBuilder    parenBuilder = new TokenBuilder();</span>
+<span class="nc" id="L189">        Token           openParen = parenBuilder.</span>
+<span class="nc" id="L190">            setFileName             (errorLocation.getFilepath()). </span>
+<span class="nc" id="L191">            setLineIndex            (errorLocation.getLineIndex()).</span>
+<span class="nc" id="L192">            setTextContent          (&quot;)&quot;).</span>
+<span class="nc" id="L193">            setWasEmittedByCompiler (true).</span>
+<span class="nc" id="L194">            build();</span>
+        
+        // startIndex + 1 will be opening paren &quot;(&quot;
+        //
+        //  (there's no easy way to guess what the actual condition might be,
+        //  and at any rate it's erroneous, so just leave the condition blank).
+<span class="nc" id="L200">        parser.addToken(openParen, startIndex + 2);</span>
+<span class="nc" id="L201">        parser.setToken(startIndex + 2);</span>
+<span class="nc" id="L202">    }</span>
+    
+    /**
+     * Leaves the parser on the opening token of the loop block (either 
+     *  &quot;)&quot; for a single-statement loop or &quot;{&quot; for a multi-statement loop),
+     *  or returns a failed ResultType if the conditional/opening statement of
+     *  this loop was malformed (missing a &quot;)&quot;).
+     */
+    private GotoStartResults gotoBlockStart()
+    {
+        GotoStartResults result;
+        
+<span class="nc bnc" id="L214" title="All 2 branches missed.">        if (parser.peekMatches(&quot;(&quot;))</span>
+        {
+<span class="nc" id="L216">            result = keepGoingToBlockStart();</span>
+        }
+        else
+        {
+<span class="nc" id="L220">            result = new GotoStartResults(GotoStartErrCodes.NO_OPENING_PAREN);</span>
+        }
+        
+<span class="nc" id="L223">        return result;</span>
+    }
+    
+    /**
+     * Helper method for gotoBlockStart. Shouldn't be called directly.
+     */
+    private GotoStartResults keepGoingToBlockStart()
+    {
+        GotoStartResults 
+                result;
+        boolean foundClosingParen;
+        
+<span class="nc" id="L235">        result              = new GotoStartResults(</span>
+            GotoStartErrCodes.MALFORMED_SINGLE_STATEMENT_LOOP);
+<span class="nc" id="L237">        foundClosingParen   = false;</span>
+        
+<span class="nc bnc" id="L239" title="All 2 branches missed.">        while (!parser.atEOF())</span>
+        {
+<span class="nc bnc" id="L241" title="All 2 branches missed.">            if (parser.peekMatches(&quot;)&quot;))</span>
+            {
+<span class="nc" id="L243">                parser.nextToken();</span>
+<span class="nc" id="L244">                foundClosingParen = true;</span>
+<span class="nc" id="L245">                break;</span>
+            }
+        }
+        
+<span class="nc bnc" id="L249" title="All 2 branches missed.">        if (foundClosingParen)</span>
+        {
+            //check if it's a multi-statement loop
+<span class="nc bnc" id="L252" title="All 2 branches missed.">            if (parser.peekMatches(&quot;{&quot;))</span>
+            {
+<span class="nc" id="L254">                result = new GotoStartResults(</span>
+                    GotoStartErrCodes.MALFORMED_MULTI_STATEMENT_LOOP);
+            }
+        }
+        
+<span class="nc" id="L259">        return result;</span>
+    }
+    
+    
+    private void gotoBlockEnd(int startIndex, Token errorLocation)
+    {
+        boolean didLoopEnd;
+<span class="nc" id="L266">        boolean isLoopMultiStatement = false;</span>
+        
+<span class="nc bnc" id="L268" title="All 2 branches missed.">        if (parser.curTextMatches(&quot;)&quot;))</span>
+        {
+<span class="nc" id="L270">            didLoopEnd = parser.gotoEndOfStatement();</span>
+        }
+<span class="nc bnc" id="L272" title="All 2 branches missed.">        else if (parser.curTextMatches(&quot;{&quot;))</span>
+        {
+<span class="nc" id="L274">            didLoopEnd              = parser.gotoEndOfBlock();</span>
+<span class="nc" id="L275">            isLoopMultiStatement    = true;</span>
+        }
+        else
+        {
+<span class="nc" id="L279">            Logger.err(parser.getCurToken(), &quot;(FATAL error in compiler): &quot; +</span>
+                &quot;could not synchronize parser on this \&quot;&quot; + nameOfLoopType +
+                &quot;\&quot;loop with a malformed starting condition; unexpected &quot; +
+                &quot;result from findBlockStart&quot;);
+
+            /** 
+             * try to synchronize the parser. I suppose synchronizing on a
+             *  statement will do? This parser state shouldn't be possible.
+             */
+<span class="nc" id="L288">            didLoopEnd = parser.gotoEndOfStatement();</span>
+        }
+        
+<span class="nc bnc" id="L291" title="All 2 branches missed.">        if (!didLoopEnd)</span>
+        {
+<span class="nc" id="L293">            handleNoLoopEnding(startIndex, errorLocation, isLoopMultiStatement);</span>
+        }
+<span class="nc" id="L295">    }</span>
+    
+    private void handleNoLoopEnding(
+        int startIndex, Token errorLocation, boolean isLoopMultiStatement)
+    {
+<span class="nc bnc" id="L300" title="All 2 branches missed.">        if (!isLoopMultiStatement)</span>
+        {
+<span class="nc" id="L302">            Logger.err(errorLocation,</span>
+                &quot;Expected \&quot;;\&quot; to end single-statement &quot; + nameOfLoopType +
+                    &quot;-loop&quot;);
+        }
+        else
+        {
+<span class="nc" id="L308">            Logger.err(errorLocation,</span>
+                &quot;Expected \&quot;}\&quot; to end multi-statement &quot; + nameOfLoopType +
+                    &quot;-loop&quot;);
+        }
+        
+        /**
+         * startIndex + 2 should be the closing parenthesis of the conditional
+         *  &quot;)&quot;, and is the last known valid token, because the synchronization
+         *  code makes sure of this. After that, the parser has no idea what 
+         *  this stream of tokens might be, so set the index to this token and
+         *  try to reinterpret the AST after this location.
+         */
+<span class="nc" id="L320">        parser.setToken(startIndex + 2);</span>
+<span class="nc" id="L321">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

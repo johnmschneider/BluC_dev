@@ -1,3 +1,19 @@
+/*
+ * Copyright 2021 John Schneider.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package bluC.parser.handlers.expression;
 
 import bluC.Logger;
@@ -16,15 +32,15 @@ import bluC.parser.handlers.statement.VariableHandler;
  */
 public class ExpressionHandler
 {
-    private Parser parser;
+    private Parser          parser;
     private VariableHandler varHandler;
-    private ObjectHandler objectHandler;
+    private ObjectHandler   objectHandler;
     
     public ExpressionHandler(Parser parser, StatementHandler statementHandler)
     {
-        this.parser = parser;
-        varHandler = statementHandler.getVarHandler();
-        objectHandler = new ObjectHandler(parser, this);
+        this.parser     = parser;
+        varHandler      = statementHandler.getVarHandler();
+        objectHandler   = new ObjectHandler(parser, this);
     }
     
     
@@ -35,10 +51,11 @@ public class ExpressionHandler
 
     private Expression handleAssignmentOrHigher()
     {
-        Expression expression = handleEqualityOrHigher();
-        Token potentialOperator;
-        parser.nextToken();
-        potentialOperator = parser.getCurToken();
+        Expression  expression;
+        Token       potentialOperator;
+        
+        potentialOperator   = parser.peek();
+        expression          = handleEqualityOrHigher();    
         
         if (potentialOperator.getTextContent().equals("="))
         {
@@ -56,24 +73,53 @@ public class ExpressionHandler
             }
         }
         
-        parser.prevToken();
         return expression;
     }
     
     private Expression handleEqualityOrHigher()
     {
-        Expression expression = handleComparisonOrHigher();
+        Expression  result;
+        
+        if (parser.peekMatches("!=", "=="))
+        {
+            LeftEqualityOperandIsValidResults
+                    isLeftOpValid;
+        
+            isLeftOpValid = leftEqualityOperandIsValid();
+            
+            if(isLeftOpValid.getWasSuccessful())
+            {
+                result = parseEquality();
+            }
+            else
+            {
+                result = handleBadEqualityLeftOperand();
+            }
+        }
+        else 
+        {
+            result = handleComparisonOrHigher();
+        }
+        
+        return result;
+    }
+    
+    private Expression parseEquality()
+    {
+        Expression result = null;
         
         while (parser.peekMatches("!=", "=="))
         {
             parser.nextToken();
             Token operator = parser.getCurToken();
-            
-            Expression right = handleComparisonOrHigher();
-            expression = new Expression.Binary(operator, expression, right);
+
+            Expression left     = handleComparisonOrHigher();
+            Expression right    = handleComparisonOrHigher();
+            result              = new Expression.Binary(
+                operator, left, right);
         }
         
-        return expression;
+        return result;
     }
     
     private Expression handleComparisonOrHigher()
@@ -158,7 +204,7 @@ public class ExpressionHandler
         {
             if (parser.peekMatches("false") || parser.peekMatches("true") ||
                 parser.peekMatches("null") || next.isNumber() || 
-                next.isString())
+                next.isStringLiteral() || next.isCharLiteral())
             {
                 parser.nextToken();
                 Token literal = parser.getCurToken();
@@ -207,6 +253,9 @@ public class ExpressionHandler
         
         //if we reached here then something went wrong with the parsing,
         //  so throw an error
+        
+        // TODO - fix this, it logs an error before it returns back to the
+        //  other statement handlers to try and match a different grammar.
         return handleInvalidStartOfExpression();
     }
     
@@ -330,4 +379,14 @@ public class ExpressionHandler
                 
             new TokenFileInfo(next.getFilepath(), next.getLineIndex())));
     }
+    
+    public static Expression.Literal createNullLiteral(String filePath, 
+        int lineIndex)
+    {
+        return new Expression.Literal(new Token(
+            new TokenInfo("null", true),
+                
+            new TokenFileInfo(filePath, lineIndex)));
+    }
+    
 }

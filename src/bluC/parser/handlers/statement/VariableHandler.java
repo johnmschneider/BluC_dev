@@ -1,3 +1,19 @@
+/*
+ * Copyright 2021 John Schneider.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package bluC.parser.handlers.statement;
 
 import java.util.ArrayList;
@@ -19,11 +35,12 @@ import bluC.parser.handlers.expression.ExpressionHandler;
  */
 public class VariableHandler
 {
-    private final Parser parser;
-    private final StatementHandler statementHandler;
-    private FunctionHandler funcHandler;
-    private ExpressionHandler expressionHandler;
-    private static long unresolvedVariableNamesCount = Long.MIN_VALUE;
+    private final Parser            parser;
+    private final StatementHandler  statementHandler;
+    private FunctionHandler         funcHandler;
+    private ExpressionHandler       expressionHandler;
+    private static long             unresolvedVariableNamesCount = 
+        Long.MIN_VALUE;
     
     public class TypeAndClassID
     {
@@ -72,8 +89,8 @@ public class VariableHandler
         int     startTokenIndex     = parser.getCurTokIndex();
         VarDeclaration.Sign
                 sign                = getSign();
-        
-        TypeAndClassID typeAndClassID = getTypeAndClassID();
+        TypeAndClassID 
+                typeAndClassID      = getTypeAndClassID();
         
         if (typeAndClassID != null)
         {
@@ -82,7 +99,7 @@ public class VariableHandler
                 return funcHandler.handleFunctionOrMethod(sign,
                     typeAndClassID.getType());
             }
-            else 
+            else
             {
                 return handleVarDeclarationWithValidType(sign, 
                     typeAndClassID.getType(), typeAndClassID.getClassID());
@@ -404,20 +421,6 @@ public class VariableHandler
         
         if (sizeMod1Text.equals("short"))
         {
-//            if (sizeMod2OrTypeOrNameText.equals("char")  || 
-//                sizeMod2OrTypeOrNameText.equals("short") ||
-//                sizeMod2OrTypeOrNameText.equals("long")  ||
-//                sizeMod2OrTypeOrNameText.equals("float") ||
-//                sizeMod2OrTypeOrNameText.equals("double"))
-//            {
-//                sizeErrorOccurred = true;
-//            }
-//            else
-//            {
-//                parser.nextToken();
-//                sizeModifier = VarDeclaration.SizeModifier.SHORT;
-//            }
-            
             // move parser from current token to "short" keyword
             parser.nextToken();
             

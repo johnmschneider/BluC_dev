@@ -1,8 +1,25 @@
+/*
+ * Copyright 2021 John Schneider.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package bluC.transpiler;
 
 import bluC.parser.exceptions.MalformedNumber;
 import bluC.parser.exceptions.MalformedFloat;
 import bluC.parser.exceptions.MalformedInt;
+import java.util.Objects;
 
 /**
  *
@@ -32,7 +49,7 @@ public class Token
     {
         this.tokenInfo  = tokenInfo;
         this.fileInfo   = fileInfo;
-        this.package_   = Statement.Package.noPackage;
+        this.package_   = Statement.Package.NO_PACKAGE;
     }
     
     
@@ -125,7 +142,7 @@ public class Token
         return true;
     }
     
-    public boolean isString()
+    public boolean isStringLiteral()
     {
         String textContent = getTextContent();
         boolean startsWithQuote = textContent.charAt(0) == '"';
@@ -136,6 +153,19 @@ public class Token
         }
         
         return textContent.charAt(textContent.length() - 1) == '"';
+    }
+    
+    public boolean isCharLiteral()
+    {
+        String  textContent = getTextContent();
+        boolean startsWithQuote = textContent.charAt(0) == '\'';
+        
+        if (!startsWithQuote)
+        {
+            return false;
+        }
+        
+        return textContent.charAt(textContent.length() - 1) == '\'';
     }
     
     /**
@@ -207,5 +237,42 @@ public class Token
         return "[textContent == \"" + getTextContent() + "\"]\n" +
                "[line == \"" + (getLineIndex() + 1) + "\"]\n" +
                "[file == \"" + getFilepath() + "\"]";
+    }
+    
+    @Override
+    public boolean equals(Object other)
+    {
+        if (other instanceof Token)
+        {
+            Token otherToken = (Token) other;
+            
+            return
+                fileInfo.equals(otherToken.fileInfo) &&
+                tokenInfo.equals(otherToken.tokenInfo) &&
+                
+                /**
+                 * This is *supposed* to be comparing null to null so please
+                 *  ignore the Netbeans warning of == comparison for strings
+                 * 
+                 * (They didn't add a SupressWarnings for each type of hint)
+                 */
+                (package_ == Statement.Package.NO_PACKAGE ? 
+                    otherToken.package_ == Statement.Package.NO_PACKAGE :
+                    package_.equals(otherToken.package_));
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int hash = 7;
+        hash = 89 * hash + Objects.hashCode(this.tokenInfo);
+        hash = 89 * hash + Objects.hashCode(this.fileInfo);
+        hash = 89 * hash + Objects.hashCode(this.package_);
+        return hash;
     }
 }

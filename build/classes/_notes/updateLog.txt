@@ -1,0 +1,8 @@
+0) update log since last github push
+
+1) Fixed support for character literals. Support was added for lexing strings 
+    and chars, and for parsing strings, but the parser didn't check for a 
+    character literal.
+
+2) Started work on testing infrastructure (mostly Builder patterns to help
+    artificially construct parts of an AST).
