@@ -18,9 +18,10 @@ package bluC.builders;
 
 import bluC.transpiler.Expression;
 import bluC.transpiler.Token;
-import bluC.transpiler.Statement.VarDeclaration;
-import static bluC.transpiler.Statement.VarDeclaration.Sign;
-import static bluC.transpiler.Statement.VarDeclaration.SimplifiedType;
+import bluC.transpiler.statements.blocks.ClassDef;
+import bluC.transpiler.statements.vars.Sign;
+import bluC.transpiler.statements.vars.SimplifiedType;
+import bluC.transpiler.statements.vars.VarDeclaration;
 
 /**
  * Builds a variable declaration based on the parameters.
@@ -66,45 +67,45 @@ public class VarDeclarationBuilder
     private Expression initialValue;
     
     /**
-     * Optional parameter, ID of the class if this is a class, otherwise it's
-     *  VarDeclaration.NOT_A_CLASS
+     * Optional parameter. ID of the class if this is a class, otherwise it's
+  ClassDef.NOT_DEFINED
      */
-    private long       classID;
+    private String       classID;
 
     public VarDeclarationBuilder()
-<span class="fc" id="L75">    {</span>
-<span class="fc" id="L76">        initTokenDefaults();</span>
-<span class="fc" id="L77">        initAssignmentDefaults();</span>
-<span class="fc" id="L78">        initClassDefaults();</span>
-<span class="fc" id="L79">        initVarDefaults();</span>
-<span class="fc" id="L80">    }</span>
+<span class="fc" id="L76">    {</span>
+<span class="fc" id="L77">        initTokenDefaults();</span>
+<span class="fc" id="L78">        initAssignmentDefaults();</span>
+<span class="fc" id="L79">        initClassDefaults();</span>
+<span class="fc" id="L80">        initVarDefaults();</span>
+<span class="fc" id="L81">    }</span>
     
     private void initTokenDefaults()
     {
-<span class="fc" id="L84">        wasEmittedByCompiler    = false;</span>
-<span class="fc" id="L85">    }</span>
+<span class="fc" id="L85">        wasEmittedByCompiler    = false;</span>
+<span class="fc" id="L86">    }</span>
     
     private void initAssignmentDefaults()
     {
-<span class="fc" id="L89">        initialValue        = VarDeclaration.NO_VALUE;</span>
-<span class="fc" id="L90">        assignmentOperator  = VarDeclaration.NO_ASSIGNMENT;</span>
-<span class="fc" id="L91">    }</span>
+<span class="fc" id="L90">        initialValue        = VarDeclaration.NO_VALUE;</span>
+<span class="fc" id="L91">        assignmentOperator  = VarDeclaration.NO_ASSIGNMENT;</span>
+<span class="fc" id="L92">    }</span>
     
     private void initClassDefaults()
     {
-<span class="fc" id="L95">        classID = VarDeclaration.NOT_A_CLASS;</span>
-<span class="fc" id="L96">    }</span>
+<span class="fc" id="L96">        classID = ClassDef.NOT_DEFINED;</span>
+<span class="fc" id="L97">    }</span>
     
     private void initVarDefaults()
     {
-<span class="fc" id="L100">        signedness      = Sign.UNSPECIFIED;</span>
-<span class="fc" id="L101">        pointerLevel    = 0;</span>
-<span class="fc" id="L102">    }</span>
+<span class="fc" id="L101">        signedness      = Sign.UNSPECIFIED;</span>
+<span class="fc" id="L102">        pointerLevel    = 0;</span>
+<span class="fc" id="L103">    }</span>
     
     
     public Expression getInitialValue()
     {
-<span class="fc" id="L107">        return initialValue;</span>
+<span class="fc" id="L108">        return initialValue;</span>
     }
     
     /**
@@ -112,8 +113,8 @@ public class VarDeclarationBuilder
      */
     public VarDeclarationBuilder setJustInitialValue(Expression initialValue)
     {
-<span class="fc" id="L115">        this.initialValue = initialValue;</span>
-<span class="fc" id="L116">        return this;</span>
+<span class="fc" id="L116">        this.initialValue = initialValue;</span>
+<span class="fc" id="L117">        return this;</span>
     }
     
     /**
@@ -126,117 +127,117 @@ public class VarDeclarationBuilder
         TokenBuilder tokBuilder;
         Token        assignmentOp;
         
-<span class="fc" id="L129">        tokBuilder      = new TokenBuilder();</span>
-<span class="fc" id="L130">        assignmentOp    = tokBuilder.</span>
-<span class="fc" id="L131">            setFileName     (getFileName()).</span>
-<span class="fc" id="L132">            setLineIndex    (getStartingLineIndex()).</span>
-<span class="fc" id="L133">            setTextContent  (&quot;=&quot;).</span>
-<span class="fc" id="L134">            build();</span>
-<span class="fc" id="L135">        this.setAssignmentOperator(assignmentOp);</span>
+<span class="fc" id="L130">        tokBuilder      = new TokenBuilder();</span>
+<span class="fc" id="L131">        assignmentOp    = tokBuilder.</span>
+<span class="fc" id="L132">            setFileName     (getFileName()).</span>
+<span class="fc" id="L133">            setLineIndex    (getStartingLineIndex()).</span>
+<span class="fc" id="L134">            setTextContent  (&quot;=&quot;).</span>
+<span class="fc" id="L135">            build();</span>
+<span class="fc" id="L136">        this.setAssignmentOperator(assignmentOp);</span>
         
-<span class="fc" id="L137">        this.initialValue = initialValue;</span>
-<span class="fc" id="L138">        return this;</span>
+<span class="fc" id="L138">        this.initialValue = initialValue;</span>
+<span class="fc" id="L139">        return this;</span>
     }
     
     public String getFileName()
     {
-<span class="fc" id="L143">        return fileName;</span>
+<span class="fc" id="L144">        return fileName;</span>
     }
 
     public VarDeclarationBuilder setFileName(String fileName)
     {
-<span class="fc" id="L148">        this.fileName = fileName;</span>
-<span class="fc" id="L149">        return this;</span>
+<span class="fc" id="L149">        this.fileName = fileName;</span>
+<span class="fc" id="L150">        return this;</span>
     }
 
     public int getStartingLineIndex()
     {
-<span class="fc" id="L154">        return startingLineIndex;</span>
+<span class="fc" id="L155">        return startingLineIndex;</span>
     }
 
     public VarDeclarationBuilder setStartingLineIndex(int startingLineIndex)
     {
-<span class="fc" id="L159">        this.startingLineIndex = startingLineIndex;</span>
-<span class="fc" id="L160">        return this;</span>
+<span class="fc" id="L160">        this.startingLineIndex = startingLineIndex;</span>
+<span class="fc" id="L161">        return this;</span>
     }
 
     public String getVarName()
     {
-<span class="fc" id="L165">        return varName;</span>
+<span class="fc" id="L166">        return varName;</span>
     }
 
     public VarDeclarationBuilder setVarName(String varName)
     {
-<span class="fc" id="L170">        this.varName = varName;</span>
-<span class="fc" id="L171">        return this;</span>
+<span class="fc" id="L171">        this.varName = varName;</span>
+<span class="fc" id="L172">        return this;</span>
     }
 
     public boolean getWasEmittedByCompiler()
     {
-<span class="fc" id="L176">        return wasEmittedByCompiler;</span>
+<span class="fc" id="L177">        return wasEmittedByCompiler;</span>
     }
 
     public VarDeclarationBuilder setWasEmittedByCompiler(
         boolean wasEmittedByCompiler)
     {
-<span class="fc" id="L182">        this.wasEmittedByCompiler = wasEmittedByCompiler;</span>
-<span class="fc" id="L183">        return this;</span>
+<span class="fc" id="L183">        this.wasEmittedByCompiler = wasEmittedByCompiler;</span>
+<span class="fc" id="L184">        return this;</span>
     }
 
     public Sign getSignedness()
     {
-<span class="fc" id="L188">        return signedness;</span>
+<span class="fc" id="L189">        return signedness;</span>
     }
 
     public VarDeclarationBuilder setSignedness(Sign signedness)
     {
-<span class="fc" id="L193">        this.signedness = signedness;</span>
-<span class="fc" id="L194">        return this;</span>
+<span class="fc" id="L194">        this.signedness = signedness;</span>
+<span class="fc" id="L195">        return this;</span>
     }
 
     public SimplifiedType getSimplifiedType()
     {
-<span class="fc" id="L199">        return simplifiedType;</span>
+<span class="fc" id="L200">        return simplifiedType;</span>
     }
 
     public VarDeclarationBuilder setSimplifiedType(
         SimplifiedType simplifiedType)
     {
-<span class="fc" id="L205">        this.simplifiedType = simplifiedType;</span>
-<span class="fc" id="L206">        return this;</span>
+<span class="fc" id="L206">        this.simplifiedType = simplifiedType;</span>
+<span class="fc" id="L207">        return this;</span>
     }
 
     public int getPointerLevel()
     {
-<span class="fc" id="L211">        return pointerLevel;</span>
+<span class="fc" id="L212">        return pointerLevel;</span>
     }
 
     public VarDeclarationBuilder setPointerLevel(int pointerLevel)
     {
-<span class="fc" id="L216">        this.pointerLevel = pointerLevel;</span>
-<span class="fc" id="L217">        return this;</span>
+<span class="fc" id="L217">        this.pointerLevel = pointerLevel;</span>
+<span class="fc" id="L218">        return this;</span>
     }
 
     public Token getAssignmentOperator()
     {
-<span class="fc" id="L222">        return assignmentOperator;</span>
+<span class="fc" id="L223">        return assignmentOperator;</span>
     }
 
     public VarDeclarationBuilder setAssignmentOperator(Token assignmentOperator)
     {
-<span class="fc" id="L227">        this.assignmentOperator = assignmentOperator;</span>
-<span class="fc" id="L228">        return this;</span>
+<span class="fc" id="L228">        this.assignmentOperator = assignmentOperator;</span>
+<span class="fc" id="L229">        return this;</span>
     }
     
-    public long getClassID()
+    public String getClassID()
     {
-<span class="fc" id="L233">        return classID;</span>
+<span class="fc" id="L234">        return classID;</span>
     }
 
-    public VarDeclarationBuilder setClassID(long classID)
+    public VarDeclarationBuilder setClassID(String classID)
     {
-<span class="fc" id="L238">        this.classID = classID;</span>
-<span class="fc" id="L239">        return this;</span>
+<span class="fc" id="L239">        this.classID = classID;</span>
+<span class="fc" id="L240">        return this;</span>
     }
     
     public VarDeclaration build()
@@ -244,17 +245,17 @@ public class VarDeclarationBuilder
         Token           varNameToken;
         TokenBuilder    varNameBuilder;
         
-<span class="fc" id="L247">        varNameBuilder = new TokenBuilder();</span>
+<span class="fc" id="L248">        varNameBuilder = new TokenBuilder();</span>
         
-<span class="fc" id="L249">        varNameBuilder.</span>
-<span class="fc" id="L250">            setFileName(fileName).</span>
-<span class="fc" id="L251">            setLineIndex(startingLineIndex).</span>
-<span class="fc" id="L252">            setWasEmittedByCompiler(wasEmittedByCompiler).</span>
-<span class="fc" id="L253">            setTextContent(varName);</span>
+<span class="fc" id="L250">        varNameBuilder.</span>
+<span class="fc" id="L251">            setFileName(fileName).</span>
+<span class="fc" id="L252">            setLineIndex(startingLineIndex).</span>
+<span class="fc" id="L253">            setWasEmittedByCompiler(wasEmittedByCompiler).</span>
+<span class="fc" id="L254">            setTextContent(varName);</span>
         
-<span class="fc" id="L255">        varNameToken = varNameBuilder.build();</span>
+<span class="fc" id="L256">        varNameToken = varNameBuilder.build();</span>
         
-<span class="fc" id="L257">        return new VarDeclaration(signedness, simplifiedType, pointerLevel,</span>
+<span class="fc" id="L258">        return new VarDeclaration(signedness, simplifiedType, pointerLevel,</span>
             varNameToken, assignmentOperator, initialValue, startingLineIndex);
     }
 }

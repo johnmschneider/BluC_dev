@@ -18,11 +18,16 @@ package bluC.transpiler.scope;
 import bluC.builders.FunctionBuilder;
 import bluC.builders.TokenBuilder;
 import bluC.builders.VarDeclarationBuilder;
+import bluC.transpiler.statements.blocks.Block;
 import bluC.transpiler.Expression;
 import bluC.transpiler.Scope;
-import bluC.transpiler.Statement;
-import bluC.transpiler.Statement.Function;
+import bluC.transpiler.statements.blocks.If;
+import bluC.transpiler.statements.Statement;
+import bluC.transpiler.statements.blocks.Function;
 import bluC.transpiler.Token;
+import bluC.transpiler.statements.vars.Sign;
+import bluC.transpiler.statements.vars.SimplifiedType;
+import bluC.transpiler.statements.vars.VarDeclaration;
 import static bluC.transpiler.scope.ScopeTestUtils.createRootScope;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
@@ -40,16 +45,16 @@ public class NonRootTest
 
         Scope           root;
         Scope           nextScope;
-        Statement.Block expectedType;
+        Block expectedType;
         String          expectedTypeString;
         Statement       actualType;
         String          actualTypeString;
 
         root                = createRootScope();
-        expectedType        = new Statement.Block(-1);
+        expectedType        = new Block(-1);
         expectedTypeString  = expectedType.getClass().getTypeName();
 
-        nextScope           = new Scope(root, new Statement.Block(-1));
+        nextScope           = new Scope(root, new Block(-1));
         actualType          = nextScope.getScopeType();
         actualTypeString    = actualType.getClass().getTypeName();
 
@@ -67,7 +72,7 @@ public class NonRootTest
          * fail.
          */
         int                 arbitraryLineNumber;
-        Statement.If        arbitraryBlockForScope;
+        If                  arbitraryBlockForScope;
         Expression.Unary    arbitraryExpressionForIf;
 
         Scope nextScope;
@@ -77,7 +82,7 @@ public class NonRootTest
         arbitraryLineNumber         = 1;
         arbitraryExpressionForIf    = createMockUnaryExpression(
                 "++", false, "parentTest");
-        arbitraryBlockForScope      = new Statement.If(
+        arbitraryBlockForScope      = new If(
                 arbitraryExpressionForIf, arbitraryLineNumber);
 
         root        = createRootScope();
@@ -97,7 +102,7 @@ public class NonRootTest
         TokenBuilder    tokenBuilder;
         VarDeclarationBuilder 
                         varBuilder;
-        Statement.VarDeclaration 
+        VarDeclaration
                         mockVarDecl;
 
         tokenBuilder    = new TokenBuilder();
@@ -111,9 +116,9 @@ public class NonRootTest
         mockVarDecl = varBuilder.
             setFileName         (mockFileName).
             setStartingLineIndex(mockLineIndex).
-            setSignedness       (Statement.VarDeclaration.Sign.SIGNED).
+            setSignedness       (Sign.SIGNED).
             setVarName          (operandVariableName).
-            setSimplifiedType   (Statement.VarDeclaration.SimplifiedType.INT).
+            setSimplifiedType   (SimplifiedType.INT).
             build();
 
         Expression.Variable mockVarUsage        = new Expression.Variable(

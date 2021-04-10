@@ -16,9 +16,11 @@
 
 package bluC.transpiler;
 
-import bluC.transpiler.Statement.ClassDef;
-import bluC.transpiler.Statement.Function;
-import bluC.transpiler.Statement.StructDef;
+import bluC.transpiler.statements.Statement;
+import bluC.transpiler.statements.vars.VarDeclaration;
+import bluC.transpiler.statements.blocks.ClassDef;
+import bluC.transpiler.statements.blocks.Function;
+import bluC.transpiler.statements.blocks.StructDef;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -35,7 +37,7 @@ public class Scope
             
     private final Statement scopeType;
     private final Scope     parent;
-    private final ArrayList<Statement.VarDeclaration>
+    private final ArrayList<VarDeclaration>
                             variablesInThisScope;
             
     public Scope(Scope parent, Statement scopeType)
@@ -55,12 +57,12 @@ public class Scope
         return parent;
     }
     
-    public ArrayList<Statement.VarDeclaration> getVariablesInThisScope()
+    public ArrayList<VarDeclaration> getVariablesInThisScope()
     {
         return variablesInThisScope;
     }
     
-    public void addVariableToScope(Statement.VarDeclaration variable)
+    public void addVariableToScope(VarDeclaration variable)
     {
         variablesInThisScope.add(variable);
     }

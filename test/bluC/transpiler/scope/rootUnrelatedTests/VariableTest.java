@@ -17,7 +17,10 @@ package bluC.transpiler.scope.rootUnrelatedTests;
 
 import bluC.builders.VarDeclarationBuilder;
 import bluC.transpiler.Scope;
-import bluC.transpiler.Statement;
+import bluC.transpiler.statements.Statement;
+import bluC.transpiler.statements.vars.Sign;
+import bluC.transpiler.statements.vars.SimplifiedType;
+import bluC.transpiler.statements.vars.VarDeclaration;
 import static bluC.transpiler.scope.ScopeTestUtils.createRootScope;
 import java.util.ArrayList;
 import static org.junit.Assert.assertEquals;
@@ -37,9 +40,9 @@ public class VariableTest
         int             mockLineIndex;
         VarDeclarationBuilder
                         varBuilder;
-        Statement.VarDeclaration 
+        VarDeclaration 
                         mockVarDecl;
-        Statement.VarDeclaration 
+        VarDeclaration 
                         mockVarDecl2;
 
         root            = createRootScope();
@@ -53,21 +56,21 @@ public class VariableTest
 
         mockVarDecl     = varBuilder. 
             setVarName("varTest").
-            setSimplifiedType(Statement.VarDeclaration.SimplifiedType.LONG).
-            setSignedness(Statement.VarDeclaration.Sign.UNSIGNED).
+            setSimplifiedType(SimplifiedType.LONG).
+            setSignedness(Sign.UNSIGNED).
             build();
 
         mockVarDecl2    = varBuilder.
             setVarName("varTest2").
-            setSimplifiedType(Statement.VarDeclaration.SimplifiedType.CHAR).
-            setSignedness(Statement.VarDeclaration.Sign.UNSPECIFIED).
+            setSimplifiedType(SimplifiedType.CHAR).
+            setSignedness(Sign.UNSPECIFIED).
             build();
 
         root.addVariableToScope(mockVarDecl);
         root.addVariableToScope(mockVarDecl2);
 
         int             variableCount;
-        ArrayList<Statement.VarDeclaration>
+        ArrayList<VarDeclaration>
                         variables;
 
         variables       = root.getVariablesInThisScope();
@@ -84,9 +87,9 @@ public class VariableTest
         int             mockLineIndex;
         VarDeclarationBuilder
                         varBuilder;
-        Statement.VarDeclaration 
+        VarDeclaration 
                         mockVarDecl;
-        Statement.VarDeclaration 
+        VarDeclaration 
                         mockVarDecl2;
 
         root            = createRootScope();
@@ -100,21 +103,21 @@ public class VariableTest
 
         mockVarDecl     = varBuilder. 
             setVarName("typeTest").
-            setSimplifiedType(Statement.VarDeclaration.SimplifiedType.CHAR).
-            setSignedness(Statement.VarDeclaration.Sign.UNSIGNED).
+            setSimplifiedType(SimplifiedType.CHAR).
+            setSignedness(Sign.UNSIGNED).
             build();
 
         mockVarDecl2    = varBuilder.
             setVarName("typeTestNo2").
-            setSimplifiedType(Statement.VarDeclaration.SimplifiedType.DOUBLE).
-            setSignedness(Statement.VarDeclaration.Sign.UNSPECIFIED).
+            setSimplifiedType(SimplifiedType.DOUBLE).
+            setSignedness(Sign.UNSPECIFIED).
             build();
 
         root.addVariableToScope(mockVarDecl);
         root.addVariableToScope(mockVarDecl2);
 
         int             variableCount;
-        ArrayList<Statement.VarDeclaration>
+        ArrayList<VarDeclaration>
                         variables;
 
         variables       = root.getVariablesInThisScope();
@@ -131,9 +134,9 @@ public class VariableTest
         int             mockLineIndex;
         VarDeclarationBuilder
                         varBuilder;
-        Statement.VarDeclaration 
+        VarDeclaration 
                         mockVarDecl;
-        Statement.VarDeclaration 
+        VarDeclaration 
                         mockVarDecl2;
 
         root            = createRootScope();
@@ -149,21 +152,21 @@ public class VariableTest
 
         mockVarDecl     = varBuilder. 
             setVarName("scopeTest01").
-            setSimplifiedType(Statement.VarDeclaration.SimplifiedType.LONG).
-            setSignedness(Statement.VarDeclaration.Sign.UNSIGNED).
+            setSimplifiedType(SimplifiedType.LONG).
+            setSignedness(Sign.UNSIGNED).
             build();
 
         mockVarDecl2    = varBuilder.
             setVarName("scopeTest02").
-            setSimplifiedType(Statement.VarDeclaration.SimplifiedType.CHAR).
-            setSignedness(Statement.VarDeclaration.Sign.SIGNED).
+            setSimplifiedType(SimplifiedType.CHAR).
+            setSignedness(Sign.SIGNED).
             build();
 
         root.addVariableToScope(mockVarDecl);
         root.addVariableToScope(mockVarDecl2);
 
         int             variableCount;
-        ArrayList<Statement.VarDeclaration>
+        ArrayList<VarDeclaration>
                         variables;
 
         variables       = root.getVariablesInThisScope();

@@ -18,7 +18,6 @@ package bluC.parser.handlers.expression;
 
 import bluC.Logger;
 import bluC.transpiler.Expression;
-import bluC.transpiler.Statement;
 import bluC.transpiler.Token;
 import bluC.transpiler.TokenFileInfo;
 import bluC.transpiler.TokenInfo;
@@ -26,325 +25,481 @@ import bluC.parser.Parser;
 import bluC.parser.exceptions.MalformedNumber;
 import bluC.parser.handlers.statement.StatementHandler;
 import bluC.parser.handlers.statement.VariableHandler;
+import bluC.transpiler.Expression.Binary;
+import bluC.transpiler.statements.vars.VarDeclaration;
 
 /**
  * @author John Schneider
  */
 public class ExpressionHandler
 {
-    private Parser parser;
-    private VariableHandler varHandler;
-    private ObjectHandler objectHandler;
+    private final Parser          parser;
+    private final VariableHandler varHandler;
+    private final ObjectHandler   objectHandler;
     
     public ExpressionHandler(Parser parser, StatementHandler statementHandler)
-<span class="fc" id="L40">    {</span>
-<span class="fc" id="L41">        this.parser = parser;</span>
-<span class="fc" id="L42">        varHandler = statementHandler.getVarHandler();</span>
-<span class="fc" id="L43">        objectHandler = new ObjectHandler(parser, this);</span>
-<span class="fc" id="L44">    }</span>
-    
+<span class="fc" id="L41">    {</span>
+<span class="fc" id="L42">        this.parser     = parser;</span>
+<span class="fc" id="L43">        varHandler      = statementHandler.getVarHandler();</span>
+<span class="fc" id="L44">        objectHandler   = new ObjectHandler(parser, this);</span>
+<span class="fc" id="L45">    }</span>
     
     public Expression handleExpression()
     {
-<span class="fc" id="L49">        return handleAssignmentOrHigher();</span>
+<span class="fc" id="L49">        return handlePreDeclAssignmentOrHigher();</span>
     }
-
-    private Expression handleAssignmentOrHigher()
+    
+    /**
+     * Handles an expression assigning a value to a variable that has not yet
+     *  been declared (presumably as part of a VarDeclaration).
+     * 
+     * Expects to be on the token immediately before the &quot;=&quot;.
+     */
+    private Expression handlePreDeclAssignmentOrHigher()
     {
-<span class="fc" id="L54">        Expression expression = handleEqualityOrHigher();</span>
-        Token potentialOperator;
-<span class="fc" id="L56">        parser.nextToken();</span>
-<span class="fc" id="L57">        potentialOperator = parser.getCurToken();</span>
+        Expression result;
         
-<span class="pc bpc" id="L59" title="1 of 2 branches missed.">        if (potentialOperator.getTextContent().equals(&quot;=&quot;))</span>
+<span class="pc bpc" id="L62" title="1 of 2 branches missed.">        if (parser.peekMatches(&quot;=&quot;))</span>
         {
-<span class="nc bnc" id="L61" title="All 2 branches missed.">            if (expression instanceof Expression.Variable)</span>
-            {
-<span class="nc" id="L63">                Expression target = expression;</span>
-                Expression value;
-<span class="nc" id="L65">                value = handleAssignmentOrHigher();</span>
-<span class="nc" id="L66">                return new Expression.Assignment(potentialOperator, target, </span>
-                    value);
-            } else
-            {
-<span class="nc" id="L70">                Logger.err(potentialOperator, &quot;Left expression of &quot; +</span>
-                    &quot;assignment operator must be a variable&quot;);
-            }
+            // move to &quot;=&quot;
+<span class="fc" id="L65">            parser.nextToken();</span>
+        }
+
+<span class="fc" id="L68">        result = handlePostDeclAssignmentOrHigher();</span>
+<span class="pc bpc" id="L69" title="1 of 2 branches missed.">        if (result == null)</span>
+        {
+            // TODO - temp test for debugging
+<span class="nc" id="L72">            System.err.println(&quot;RESULT IS NULL:&quot;);</span>
+<span class="nc" id="L73">            new NullPointerException().printStackTrace();</span>
         }
         
-<span class="fc" id="L75">        parser.prevToken();</span>
-<span class="fc" id="L76">        return expression;</span>
+<span class="fc" id="L76">        return result;</span>
+    }
+    
+    /**
+     * Handles an expression assigning a value to a variable that has already
+     *  been declared.
+     * 
+     * Expects to be on the token immediately before the start of the left-hand
+     *  expression.
+     */
+    private Expression handlePostDeclAssignmentOrHigher()
+    {
+        Token       potentialOperator;
+        Expression  leftOperand;
+        
+<span class="fc" id="L91">        leftOperand         = handleEqualityOrHigher();</span>
+<span class="fc" id="L92">        potentialOperator   = parser.peek();</span>
+        
+<span class="pc bpc" id="L94" title="1 of 2 branches missed.">        if (potentialOperator.getTextContent().equals(&quot;=&quot;))</span>
+        {
+            // move to &quot;=&quot;
+<span class="nc" id="L97">            parser.nextToken();</span>
+            
+<span class="nc" id="L99">            Binary assignment = new Binary(</span>
+                potentialOperator, leftOperand,
+<span class="nc" id="L101">                handlePostDeclAssignmentOrHigher());</span>
+            
+<span class="nc" id="L103">            return assignment;</span>
+        }
+        
+<span class="fc" id="L106">        return leftOperand;</span>
     }
     
     private Expression handleEqualityOrHigher()
     {
-<span class="fc" id="L81">        Expression expression = handleComparisonOrHigher();</span>
+<span class="fc" id="L111">        boolean     currentOperatorIsEquality = false;</span>
+        int         startIndex;
         
-<span class="pc bpc" id="L83" title="1 of 2 branches missed.">        while (parser.peekMatches(&quot;!=&quot;, &quot;==&quot;))</span>
+<span class="fc" id="L114">        startIndex          = parser.getCurTokIndex();</span>
+        
+<span class="pc bpc" id="L116" title="1 of 2 branches missed.">        while (!parser.atEOF())</span>
         {
-<span class="nc" id="L85">            parser.nextToken();</span>
-<span class="nc" id="L86">            Token operator = parser.getCurToken();</span>
+<span class="pc bpc" id="L118" title="1 of 2 branches missed.">            if (parser.peekMatches(&quot;!=&quot;, &quot;==&quot;))</span>
+            {
+<span class="nc" id="L120">                currentOperatorIsEquality = true;</span>
+<span class="nc" id="L121">                break;</span>
+            }
+<span class="fc bfc" id="L123" title="All 2 branches covered.">            else if(parser.peekMatches(&quot;;&quot;, &quot;(&quot;, &quot;)&quot;, &quot;{&quot;, &quot;}&quot;))</span>
+            {
+<span class="fc" id="L125">                break;</span>
+            }
             
-<span class="nc" id="L88">            Expression right = handleComparisonOrHigher();</span>
-<span class="nc" id="L89">            expression = new Expression.Binary(operator, expression, right);</span>
-<span class="nc" id="L90">        }</span>
+<span class="fc" id="L128">            parser.nextToken();</span>
+        }
         
-<span class="fc" id="L92">        return expression;</span>
+<span class="fc" id="L131">        parser.setToken(startIndex);</span>
+        
+        Expression result;
+<span class="pc bpc" id="L134" title="1 of 2 branches missed.">        if (currentOperatorIsEquality)</span>
+        {
+<span class="nc" id="L136">            result = parseEquality();</span>
+        }
+        else 
+        {
+<span class="fc" id="L140">            result = handleComparisonOrHigher();</span>
+        }
+        
+<span class="fc" id="L143">        return result;</span>
     }
     
+    /**
+     * Parses equality expression.
+     * 
+     * Expects to be on the starting token of the expression.
+     * 
+     * Leaves parser on end token of the expression.
+     */
+    private Expression parseEquality()
+    {
+<span class="nc" id="L155">        Expression left     = handleComparisonOrHigher();</span>
+<span class="nc" id="L156">        Expression right    = null;</span>
+<span class="nc" id="L157">        Binary     result   = null;</span>
+        
+        // handle first comparison
+<span class="nc bnc" id="L160" title="All 2 branches missed.">        if (parser.peekMatches(&quot;!=&quot;, &quot;==&quot;))</span>
+        {
+<span class="nc" id="L162">            parser.nextToken();</span>
+<span class="nc" id="L163">            Token operator = parser.getCurToken();</span>
+            
+<span class="nc" id="L165">            right = handleComparisonOrHigher();</span>
+<span class="nc" id="L166">            result = new Expression.Binary(</span>
+                operator, left, right);
+        }
+        
+        // handle any further comparisons chained together
+<span class="nc bnc" id="L171" title="All 2 branches missed.">        while (parser.peekMatches(&quot;!=&quot;, &quot;==&quot;))</span>
+        {
+<span class="nc" id="L173">            parser.nextToken();</span>
+<span class="nc" id="L174">            Token operator = parser.getCurToken();</span>
+
+<span class="nc" id="L176">            left     = right;</span>
+<span class="nc" id="L177">            right    = handleComparisonOrHigher();</span>
+<span class="nc" id="L178">            result   = new Expression.Binary(</span>
+                operator, left, right);
+<span class="nc" id="L180">        }</span>
+        
+<span class="nc bnc" id="L182" title="All 2 branches missed.">        return (result == null ? left : result);</span>
+    }
+    
+    // TODO: move this into static analysis/type checker, really anything other
+    //  than the parser..
+    /**
+     * Prints out bad operand message and 
+     */
+    /*private Expression handleBadEqualityLeftOp(
+        ArrayList&lt;Token&gt; expressionSoFar, Token firstOperatorFound)
+    {
+        String output = &quot;l-value \&quot;&quot;;
+        
+        for (int i = 0; i &lt; expressionSoFar.size() - 1; i++)
+        {
+            Token t = expressionSoFar.get(i);
+            output += t.getTextContent() + &quot; &quot;;
+        }
+        
+        output += expressionSoFar.get(expressionSoFar.size()) + 
+            &quot;\&quot; is not able to be used with infix operator &quot; + 
+            firstOperatorFound.getTextContent();
+        
+        
+        Expression.Literal nullLit = createNullLiteral(
+            firstOperatorFound.getFilepath(),
+            firstOperatorFound.getLineIndex());
+        
+        Binary resultToSyncParser = 
+            new Binary(firstOperatorFound, nullLit, nullLit);
+        
+        return resultToSyncParser;
+    }*/
+    
+    /**
+     * Expects the peek() to be a comparison expression or higher.
+     * 
+     * Leaves the parser on the ending token of whatever expression
+     *  it managed to match (or the best-fit token for synchronization).
+     */
     private Expression handleComparisonOrHigher()
     {
-<span class="fc" id="L97">        Expression expression = handleAdditionOrHigher();</span>
+<span class="fc" id="L224">        Expression expression = handleAdditionOrHigher();</span>
         
-<span class="pc bpc" id="L99" title="1 of 2 branches missed.">        while (parser.peekMatches(&quot;&gt;&quot;, &quot;&gt;=&quot;, &quot;&lt;&quot;, &quot;&lt;=&quot;))</span>
+<span class="pc bpc" id="L226" title="1 of 2 branches missed.">        while (parser.peekMatches(&quot;&gt;&quot;, &quot;&gt;=&quot;, &quot;&lt;&quot;, &quot;&lt;=&quot;))</span>
         {
-<span class="nc" id="L101">            parser.nextToken();</span>
-<span class="nc" id="L102">            Token operator = parser.getCurToken();</span>
+<span class="nc" id="L228">            parser.nextToken();</span>
+<span class="nc" id="L229">            Token operator = parser.getCurToken();</span>
             
-<span class="nc" id="L104">            Expression right = handleAdditionOrHigher();</span>
-<span class="nc" id="L105">            expression = new Expression.Binary(operator, expression, right);</span>
-<span class="nc" id="L106">        }</span>
+<span class="nc" id="L231">            Expression right = handleAdditionOrHigher();</span>
+<span class="nc" id="L232">            expression = new Expression.Binary(operator, expression, right);</span>
+<span class="nc" id="L233">        }</span>
         
-<span class="fc" id="L108">        return expression;</span>
+<span class="fc" id="L235">        return expression;</span>
     }
-
+    
+    /**
+     * Expects the peek() to be a n addition expression or higher.
+     * 
+     * Leaves the parser on the ending token of whatever expression
+     *  it managed to match (or the best-fit token for synchronization).
+     */
     private Expression handleAdditionOrHigher()
     {
-<span class="fc" id="L113">        Expression expression = handleMultiplicationOrHigher();</span>
+<span class="fc" id="L246">        Expression expression = handleMultiplicationOrHigher();</span>
         
-<span class="pc bpc" id="L115" title="1 of 2 branches missed.">        while (parser.peekMatches(&quot;-&quot;, &quot;+&quot;))</span>
+<span class="pc bpc" id="L248" title="1 of 2 branches missed.">        while (parser.peekMatches(&quot;-&quot;, &quot;+&quot;))</span>
         {
-<span class="nc" id="L117">            parser.nextToken();</span>
-<span class="nc" id="L118">            Token operator = parser.getCurToken();</span>
+<span class="nc" id="L250">            parser.nextToken();</span>
+<span class="nc" id="L251">            Token operator = parser.getCurToken();</span>
             
-<span class="nc" id="L120">            Expression right = handleMultiplicationOrHigher();</span>
-<span class="nc" id="L121">            expression = new Expression.Binary(operator, expression, right);</span>
-<span class="nc" id="L122">        }</span>
+<span class="nc" id="L253">            Expression right = handleMultiplicationOrHigher();</span>
+<span class="nc" id="L254">            expression = new Expression.Binary(operator, expression, right);</span>
+<span class="nc" id="L255">        }</span>
         
-<span class="fc" id="L124">        return expression;</span>
+<span class="fc" id="L257">        return expression;</span>
     }
 
     private Expression handleMultiplicationOrHigher()
     {
-<span class="fc" id="L129">        Expression expression = handleUnaryOrHigher();</span>
+<span class="fc" id="L262">        Expression expression = handleUnaryOrHigher();</span>
         
-<span class="pc bpc" id="L131" title="1 of 2 branches missed.">        while (parser.peekMatches(&quot;/&quot;, &quot;*&quot;))</span>
+<span class="pc bpc" id="L264" title="1 of 2 branches missed.">        while (parser.peekMatches(&quot;/&quot;, &quot;*&quot;))</span>
         {
-<span class="nc" id="L133">            parser.nextToken();</span>
-<span class="nc" id="L134">            Token operator = parser.getCurToken();</span>
+<span class="nc" id="L266">            parser.nextToken();</span>
+<span class="nc" id="L267">            Token operator = parser.getCurToken();</span>
             
-<span class="nc" id="L136">            Expression right = handleUnaryOrHigher();</span>
-<span class="nc" id="L137">            expression = new Expression.Binary(operator, expression, right);</span>
-<span class="nc" id="L138">        }</span>
+<span class="nc" id="L269">            Expression right = handleUnaryOrHigher();</span>
+<span class="nc" id="L270">            expression = new Expression.Binary(operator, expression, right);</span>
+<span class="nc" id="L271">        }</span>
         
-<span class="fc" id="L140">        return expression;</span>
+<span class="fc" id="L273">        return expression;</span>
     }
 
     private Expression handleUnaryOrHigher()
     {
-<span class="pc bpc" id="L145" title="1 of 2 branches missed.">        while (parser.peekMatches(&quot;!&quot;, &quot;-&quot;))</span>
+<span class="pc bpc" id="L278" title="1 of 2 branches missed.">        while (parser.peekMatches(&quot;!&quot;, &quot;-&quot;))</span>
         {
-<span class="nc" id="L147">            parser.nextToken();</span>
-<span class="nc" id="L148">            Token operator = parser.getCurToken();</span>
+<span class="nc" id="L280">            parser.nextToken();</span>
+<span class="nc" id="L281">            Token operator = parser.getCurToken();</span>
             
-<span class="nc" id="L150">            Expression right = handleUnaryOrHigher();</span>
-<span class="nc" id="L151">            return new Expression.Unary(operator, right);</span>
+<span class="nc" id="L283">            Expression right = handleUnaryOrHigher();</span>
+<span class="nc" id="L284">            return new Expression.Unary(operator, right);</span>
         }
         
-<span class="fc" id="L154">        return handleLiteralOrHigher();</span>
+<span class="fc" id="L287">        return handleLiteralOrHigher();</span>
     }
     
     private Expression handleLiteralOrHigher()
     {   
-<span class="fc" id="L159">        Expression literal = handleLiteral();</span>
+<span class="fc" id="L292">        Expression literal = handleLiteral();</span>
         
-<span class="pc bpc" id="L161" title="1 of 2 branches missed.">        if (literal != null)</span>
+<span class="pc bpc" id="L294" title="1 of 2 branches missed.">        if (literal != null)</span>
         {
-<span class="fc" id="L163">            return literal;</span>
+<span class="fc" id="L296">            return literal;</span>
         }
         
-<span class="nc" id="L166">        return handleHighestPrecedence();</span>
+<span class="nc" id="L299">        return handleHighestPrecedence();</span>
     }
     
     private Expression handleLiteral()
     {
-<span class="fc" id="L171">        Token next = parser.peek();</span>
+<span class="fc" id="L304">        Token next = parser.peek();</span>
         
         try
         {
-<span class="pc bpc" id="L175" title="2 of 4 branches missed.">            if (parser.peekMatches(&quot;false&quot;) || parser.peekMatches(&quot;true&quot;) ||</span>
-<span class="pc bpc" id="L176" title="1 of 4 branches missed.">                parser.peekMatches(&quot;null&quot;) || next.isNumber() || </span>
-<span class="pc bpc" id="L177" title="2 of 4 branches missed.">                next.isStringLiteral() || next.isCharLiteral())</span>
+<span class="pc bpc" id="L308" title="2 of 4 branches missed.">            if (parser.peekMatches(&quot;false&quot;) || parser.peekMatches(&quot;true&quot;) ||</span>
+<span class="pc bpc" id="L309" title="1 of 4 branches missed.">                parser.peekMatches(&quot;null&quot;) || next.isNumber() || </span>
+<span class="pc bpc" id="L310" title="2 of 4 branches missed.">                next.isStringLiteral() || next.isCharLiteral())</span>
             {
-<span class="fc" id="L179">                parser.nextToken();</span>
-<span class="fc" id="L180">                Token literal = parser.getCurToken();</span>
+<span class="fc" id="L312">                parser.nextToken();</span>
+<span class="fc" id="L313">                Token literal = parser.getCurToken();</span>
                 
-<span class="fc" id="L182">                return new Expression.Literal(literal);</span>
+<span class="fc" id="L315">                return new Expression.Literal(literal);</span>
             }
         }
-<span class="nc" id="L185">        catch (MalformedNumber ex)</span>
+<span class="nc" id="L318">        catch (MalformedNumber ex)</span>
         {
-<span class="nc" id="L187">            bluC.Logger.err(next, ex.getMessage() + &quot; Unexpected character \&quot;&quot; + </span>
-<span class="nc" id="L188">                next.getTextContent().charAt(ex.getOffendingCharIndex())+ &quot;\&quot;&quot;);</span>
-<span class="nc" id="L189">            return new Expression.Literal(new Token(</span>
+<span class="nc" id="L320">            bluC.Logger.err(next, ex.getMessage() + &quot; Unexpected character \&quot;&quot; + </span>
+<span class="nc" id="L321">                next.getTextContent().charAt(ex.getOffendingCharIndex())+ &quot;\&quot;&quot;);</span>
+<span class="nc" id="L322">            return new Expression.Literal(new Token(</span>
                     
                 new TokenInfo(&quot;null&quot;, true),
                     
-<span class="nc" id="L193">                new TokenFileInfo(next.getFilepath(), next.getLineIndex())));</span>
-<span class="nc" id="L194">        }</span>
+<span class="nc" id="L326">                new TokenFileInfo(next.getFilepath(), next.getLineIndex())));</span>
+<span class="nc" id="L327">        }</span>
         
-<span class="nc" id="L196">        return null;</span>
+<span class="nc" id="L329">        return null;</span>
     }
     
     private Expression handleHighestPrecedence()
     {
-<span class="nc" id="L201">        Expression expression = handleVariableOrHigher();</span>
+<span class="nc" id="L334">        Expression expression = handleVariable();</span>
         
-<span class="nc bnc" id="L203" title="All 2 branches missed.">        if (expression == null)</span>
+<span class="nc bnc" id="L336" title="All 2 branches missed.">        if (expression == null)</span>
         {
-<span class="nc bnc" id="L205" title="All 2 branches missed.">            if (parser.peekMatches(&quot;(&quot;))</span>
+<span class="nc bnc" id="L338" title="All 2 branches missed.">            if (parser.peekMatches(&quot;(&quot;))</span>
             {
-<span class="nc" id="L207">                expression = handleGrouping();</span>
+<span class="nc" id="L340">                expression = handleGrouping();</span>
             }
-<span class="nc bnc" id="L209" title="All 2 branches missed.">            else if (parser.peekMatches(&quot;--&quot;, &quot;++&quot;))</span>
+<span class="nc bnc" id="L342" title="All 2 branches missed.">            else if (parser.peekMatches(&quot;--&quot;, &quot;++&quot;))</span>
             {
-<span class="nc" id="L211">                expression = handlePrefixIncrementOrDecrement();</span>
+<span class="nc" id="L344">                expression = handlePrefixIncrementOrDecrement();</span>
             }
             
-<span class="nc bnc" id="L214" title="All 2 branches missed.">            if (expression != null)</span>
+<span class="nc bnc" id="L347" title="All 2 branches missed.">            if (expression != null)</span>
             {
-<span class="nc" id="L216">                return expression;</span>
+<span class="nc" id="L349">                return expression;</span>
             }
         }
         else
         {
-<span class="nc" id="L221">            return expression;</span>
+<span class="nc" id="L354">            return expression;</span>
         }
         
         //if we reached here then something went wrong with the parsing,
         //  so throw an error
-<span class="nc" id="L226">        return handleInvalidStartOfExpression();</span>
+        
+        // TODO - fix this, it logs an error before it returns back to the
+        //  other statement handlers to try and match a different grammar.
+<span class="nc" id="L362">        return handleInvalidStartOfExpression();</span>
     }
     
-    private Expression handleVariableOrHigher()
+    /**
+     * Attempts to parse the next token as a variable usage, returns null if
+     *  this failed.
+     * 
+     * Expects to be on the token immediately before a variable declaration.
+     * 
+     * @param isLvalue - whether or not this is on the left hand side of
+     *  an expression.
+     */
+    private Expression handleVariable()
     {
-<span class="nc" id="L231">        Token potentialVarName = parser.peek();</span>
-<span class="nc" id="L232">        Statement.VarDeclaration varInfo = </span>
+<span class="nc" id="L376">        Token potentialVarName = parser.peek();</span>
+<span class="nc" id="L377">        VarDeclaration varInfo = </span>
             varHandler.getVarAlreadyDeclaredInThisScopeOrHigher
-<span class="nc" id="L234">            (potentialVarName);</span>
-<span class="nc" id="L235">        Expression returnee = null;</span>
+<span class="nc" id="L379">            (potentialVarName);</span>
+<span class="nc" id="L380">        Expression returnee = null;</span>
         
-<span class="nc bnc" id="L237" title="All 2 branches missed.">        if (varInfo != null)</span>
+<span class="nc bnc" id="L382" title="All 2 branches missed.">        if (varInfo != null)</span>
         {
             Expression.Variable var;
             
             //set token to var name such that nextToken isn't varName
-<span class="nc" id="L242">            parser.nextToken();</span>
+<span class="nc" id="L387">            parser.nextToken();</span>
             
-<span class="nc" id="L244">            var = new Expression.Variable(varInfo);</span>
+<span class="nc" id="L389">            var = new Expression.Variable(varInfo);</span>
             
-<span class="nc bnc" id="L246" title="All 2 branches missed.">            if (parser.peekMatches(&quot;--&quot;, &quot;++&quot;))</span>
+<span class="nc bnc" id="L391" title="All 2 branches missed.">            if (parser.peekMatches(&quot;--&quot;, &quot;++&quot;))</span>
             {
-<span class="nc" id="L248">                returnee = handleValidPostfixIncrementOrDecrement(var);</span>
+<span class="nc" id="L393">                returnee = handleValidPostfixIncrementOrDecrement(var);</span>
             }
-<span class="nc bnc" id="L250" title="All 2 branches missed.">            else if (parser.peekMatches(&quot;.&quot;, &quot;-&gt;&quot;))</span>
+<span class="nc bnc" id="L395" title="All 2 branches missed.">            else if (parser.peekMatches(&quot;.&quot;, &quot;-&gt;&quot;))</span>
             {
-<span class="nc" id="L252">                returnee = objectHandler.handleObjectAccess(var);</span>
+<span class="nc" id="L397">                returnee = objectHandler.handleObjectAccess(var);</span>
             }
             else
             {
-<span class="nc" id="L256">                returnee = var;</span>
+<span class="nc" id="L401">                returnee = var;</span>
             }
         }
         
-<span class="nc" id="L260">        return returnee;</span>
+<span class="nc" id="L405">        return returnee;</span>
     }
     
     private Expression handleGrouping()
     {
-<span class="nc" id="L265">        parser.nextToken();</span>
-<span class="nc" id="L266">        Token operator = parser.getCurToken();</span>
-<span class="nc" id="L267">        Expression groupee = handleExpression();</span>
+<span class="nc" id="L410">        parser.nextToken();</span>
+<span class="nc" id="L411">        Token operator = parser.getCurToken();</span>
+<span class="nc" id="L412">        Expression groupee = handleExpression();</span>
 
-<span class="nc bnc" id="L269" title="All 2 branches missed.">        if (!parser.peekMatches(&quot;)&quot;))</span>
+<span class="nc bnc" id="L414" title="All 2 branches missed.">        if (!parser.peekMatches(&quot;)&quot;))</span>
         {
-<span class="nc" id="L271">            Logger.err(operator, &quot;Expected \&quot;)\&quot; to close \&quot;&quot; + </span>
-<span class="nc" id="L272">                operator.getTextContent() + &quot;\&quot;&quot;);</span>
+<span class="nc" id="L416">            Logger.err(operator, &quot;Expected \&quot;)\&quot; to close \&quot;&quot; + </span>
+<span class="nc" id="L417">                operator.getTextContent() + &quot;\&quot;&quot;);</span>
         }
         else
         {
             //throw away &quot;)&quot; token and move onto the next
-<span class="nc" id="L277">            parser.nextToken();</span>
-<span class="nc" id="L278">            return new Expression.Grouping(operator, groupee);</span>
+<span class="nc" id="L422">            parser.nextToken();</span>
+<span class="nc" id="L423">            return new Expression.Grouping(operator, groupee);</span>
         }
         
         //synchronize parser
-<span class="nc" id="L282">        parser.nextToken();</span>
-<span class="nc" id="L283">        return null;</span>
+<span class="nc" id="L427">        parser.nextToken();</span>
+<span class="nc" id="L428">        return null;</span>
     }
     
     private Expression handlePrefixIncrementOrDecrement()
     {
-<span class="nc" id="L288">        Token operator = parser.peek();</span>
+<span class="nc" id="L433">        Token operator = parser.peek();</span>
         Expression right;
         
-<span class="nc" id="L291">        parser.nextToken();</span>
-<span class="nc" id="L292">        right = handleExpression();</span>
+<span class="nc" id="L436">        parser.nextToken();</span>
+<span class="nc" id="L437">        right = handleExpression();</span>
 
-<span class="nc bnc" id="L294" title="All 2 branches missed.">        if (right instanceof Expression.Variable)</span>
+<span class="nc bnc" id="L439" title="All 2 branches missed.">        if (right instanceof Expression.Variable)</span>
         {
-<span class="nc" id="L296">            return handleValidPrefixIncrementOrDecrement(operator, </span>
+<span class="nc" id="L441">            return handleValidPrefixIncrementOrDecrement(operator, </span>
                 right);
         }
         else
         {
-<span class="nc" id="L301">            Logger.err(operator, &quot;Right expression of prefix-&quot; +</span>
-<span class="nc bnc" id="L302" title="All 2 branches missed.">                (operator.getTextContent().equals(&quot;--&quot;) ? &quot;decrement&quot; : </span>
+<span class="nc" id="L446">            Logger.err(operator, &quot;Right expression of prefix-&quot; +</span>
+<span class="nc bnc" id="L447" title="All 2 branches missed.">                (operator.getTextContent().equals(&quot;--&quot;) ? &quot;decrement&quot; : </span>
                     &quot;increment&quot;) + 
                 &quot; operator must be a variable&quot;);
 
-<span class="nc" id="L306">            return null;</span>
+<span class="nc" id="L451">            return null;</span>
         }
     }
     
     private Expression handleValidPrefixIncrementOrDecrement(Token operator,
         Expression right)
     {
-<span class="nc" id="L313">        return new Expression.Unary(operator, right);</span>
+<span class="nc" id="L458">        return new Expression.Unary(operator, right);</span>
     }
     
     private Expression handleValidPostfixIncrementOrDecrement(
         Expression.Variable var)
     {
-<span class="nc" id="L319">        Token operator = parser.peek();</span>
-<span class="nc" id="L320">        parser.nextToken();</span>
+<span class="nc" id="L464">        Token operator = parser.peek();</span>
+<span class="nc" id="L465">        parser.nextToken();</span>
         
-<span class="nc" id="L322">        return new Expression.Unary(operator, var, true);</span>
+<span class="nc" id="L467">        return new Expression.Unary(operator, var, true);</span>
     }
     
     private Expression handleInvalidStartOfExpression()
     {
-<span class="nc" id="L327">        Token next = parser.peek();</span>
-<span class="nc" id="L328">        Logger.err(next, &quot;\&quot;&quot; + next.getTextContent() + &quot;\&quot; cannot be the &quot; +</span>
+<span class="nc" id="L472">        Token next = parser.peek();</span>
+<span class="nc" id="L473">        Logger.err(next, &quot;\&quot;&quot; + next.getTextContent() + &quot;\&quot; cannot be the &quot; +</span>
             &quot;start of a new expression&quot;);
         
-<span class="nc" id="L331">        parser.gotoEndOfStatement();</span>
+<span class="nc" id="L476">        parser.gotoEndOfStatement();</span>
         
-<span class="nc bnc" id="L333" title="All 2 branches missed.">        if (parser.atEOF())</span>
+<span class="nc bnc" id="L478" title="All 2 branches missed.">        if (parser.atEOF())</span>
         {
             //this should never happen so dump ast and stack trace
-<span class="nc" id="L336">            parser.dumpAstToStdout();</span>
-<span class="nc" id="L337">            new Exception(&quot;Fatal parse error: prematurely reached end of &quot; +</span>
-<span class="nc" id="L338">                &quot;file&quot;).printStackTrace();</span>
+<span class="nc" id="L481">            parser.dumpAstToStdout();</span>
+<span class="nc" id="L482">            new Exception(&quot;Fatal parse error: prematurely reached end of &quot; +</span>
+<span class="nc" id="L483">                &quot;file&quot;).printStackTrace();</span>
             
             //exit because otherwise our parser goes into an infinite loop
-<span class="nc" id="L341">            System.exit(1);</span>
+<span class="nc" id="L486">            System.exit(1);</span>
         }
         
-<span class="nc" id="L344">        return new Expression.Literal(new Token(</span>
+<span class="nc" id="L489">        return new Expression.Literal(new Token(</span>
             new TokenInfo(&quot;null&quot;, true),
                 
-<span class="nc" id="L347">            new TokenFileInfo(next.getFilepath(), next.getLineIndex())));</span>
+<span class="nc" id="L492">            new TokenFileInfo(next.getFilepath(), next.getLineIndex())));</span>
     }
+    
+    public static Expression.Literal createNullLiteral(String filePath, 
+        int lineIndex)
+    {
+<span class="nc" id="L498">        return new Expression.Literal(new Token(</span>
+            new TokenInfo(&quot;null&quot;, true),
+                
+            new TokenFileInfo(filePath, lineIndex)));
+    }
+    
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

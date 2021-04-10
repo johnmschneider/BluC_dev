@@ -1,0 +1,9 @@
+1) WhileHandler probably good, it's addStatementsToBlock
+2) I think Expression.Variable is checked **before** checking if it's an assignment,
+    which is incorrect
+3) empty block of while loop causes next var declaration (and also probably next
+    statement in general) to parse erroneously
+
+==== the above is fixed i think ====
+
+1) 

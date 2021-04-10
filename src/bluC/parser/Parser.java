@@ -22,12 +22,12 @@ import bluC.Logger;
 import bluC.Utils;
 import bluC.transpiler.AstPrinter;
 import bluC.transpiler.Scope;
-import bluC.transpiler.Statement;
+import bluC.transpiler.statements.Statement;
 import bluC.transpiler.Token;
 import bluC.parser.handlers.statement.StatementHandler;
-import bluC.parser.handlers.statement.StatementHandler.JustParseExprErrCode;
 import bluC.parser.handlers.statement.StatementHandler.JustParseExprResult;
-import bluC.transpiler.Expression;
+import bluC.transpiler.statements.blocks.ClassDef;
+import java.util.Arrays;
 import java.util.Objects;
 
 /**
@@ -38,7 +38,7 @@ public class Parser
 {
     public static final boolean BLOCK_DID_END       = true;
     public static final boolean BLOCK_DID_NOT_END   = false;
-    public static final boolean STATEMENT_DID_END           = true;
+    public static final boolean STATEMENT_DID_END          = true;
     public static final boolean STATEMENT_DID_NOT_END      = true;
     
     private final ArrayList<Token>      lexedTokens;
@@ -129,14 +129,19 @@ public class Parser
             }
             catch (Exception ex)
             {
+                String stackTrace = Arrays.deepToString(ex.getStackTrace()).
+                        replace(", ", "\n");
+                
                 Logger.err(curToken, "Fatal parse error resulted in uncaught " +
-                    "java.lang.Exception:\n" + ex.getMessage() + 
-                    "\n\nDumping parse tree below:\n\n" + dumpAstToString());
+                    "java.lang.Exception whose type is " + ex.getClass().
+                    getTypeName() + ":\n" + stackTrace + "\n\nDumping parse " +
+                    "tree below:\n\n" + dumpAstToString());
             }
             catch (Error err)
             {
                 Logger.err(curToken, "Fatal parse error resulted in uncaught " +
-                    "java.lang.Throwable.Error:\n" + err.getMessage() + 
+                    "java.lang.Throwable.Error whose type is " + err.
+                    getClass().getTypeName() + ":\n" + err.getMessage() + 
                     "\n\nDumping parse tree below:\n\n" + dumpAstToString());
             }
             catch (Throwable t)
@@ -146,7 +151,8 @@ public class Parser
                 //  classes simply derive Throwable in this project)
                 Logger.err(curToken, "Fatal parse error resulted in uncaught " +
                     "java.lang.Throwable which is neither an Exception or " +
-                    "Error:\n" + "class == " + t.getClass().getTypeName() +
+                    "Error whose type is " + t.getClass().getTypeName() + 
+                    ":\n" + "class == " + t.getClass().getTypeName() +
                     "\n" + t.getMessage() + "\n\n" + dumpAstToString());
             }
             
@@ -339,21 +345,39 @@ public class Parser
         }
     }
     
-    public boolean gotoEndOfStatement()
+    /**
+     * Goes to the end of the statement and returns which tokens were found.
+     */
+    public boolean gotoEndOfStatement(TokenListener listener)
     {
         boolean didEnd = STATEMENT_DID_NOT_END;
         
         while (!atEOF())
         {
+            listener.onNextToken(getCurToken());
+            
             if (peekMatches(";"))
             {
                 didEnd = STATEMENT_DID_END;
+                break;
             }
             
             nextToken();
         }
         
         return didEnd;
+    }
+    
+    public boolean gotoEndOfStatement()
+    {
+        return gotoEndOfStatement(new TokenListener()
+        {
+            @Override
+            public void onNextToken(Token nextToken)
+            {
+                //no listener needed
+            }
+        });
     }
     
     public boolean gotoEndOfBlock()
@@ -395,7 +419,7 @@ public class Parser
         
         while (currentSearchScope != null)
         {
-            if (currentSearchScope.getScopeType() instanceof Statement.ClassDef)
+            if (currentSearchScope.getScopeType() instanceof ClassDef)
             {
                 return true;
             }

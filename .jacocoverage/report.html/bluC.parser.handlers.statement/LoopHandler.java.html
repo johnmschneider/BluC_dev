@@ -15,9 +15,8 @@
  */
 package bluC.parser.handlers.statement;
 
-import bluC.Logger;
 import bluC.parser.Parser;
-import bluC.transpiler.Statement;
+import bluC.transpiler.statements.Statement;
 
 /**
  *
@@ -28,13 +27,18 @@ public class LoopHandler
     private final Parser            parser;
     private final StatementHandler  statementHandler;
     private final WhileHandler      whileHandler;
+    private final BlockHandler      blockHandler;
     
-    public LoopHandler(Parser parser, StatementHandler statementHandler)
-<span class="fc" id="L33">    {</span>
-<span class="fc" id="L34">        this.statementHandler   = statementHandler;</span>
-<span class="fc" id="L35">        this.parser             = parser;</span>
-<span class="fc" id="L36">        this.whileHandler       = new WhileHandler(parser, statementHandler);</span>
-<span class="fc" id="L37">    }</span>
+    public LoopHandler(
+        Parser parser, StatementHandler statementHandler, 
+        BlockHandler blockHandler)
+<span class="fc" id="L35">    {</span>
+<span class="fc" id="L36">        this.statementHandler   = statementHandler;</span>
+<span class="fc" id="L37">        this.parser             = parser;</span>
+<span class="fc" id="L38">        this.blockHandler       = blockHandler;</span>
+<span class="fc" id="L39">        this.whileHandler       = new WhileHandler(</span>
+            parser, statementHandler, blockHandler);
+<span class="fc" id="L41">    }</span>
     
     
     /**
@@ -45,7 +49,7 @@ public class LoopHandler
      */
     public Statement handleLoopOrHigher()
     {
-<span class="nc" id="L48">        return whileHandler.handleWhileOrHigher();</span>
+<span class="nc" id="L52">        return whileHandler.handleWhileOrHigher();</span>
     }
     
     /* commented out to test while loop parsing

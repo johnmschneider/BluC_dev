@@ -20,13 +20,18 @@ import bluC.parser.handlers.expression.ExpressionHandler;
 import bluC.Logger;
 import bluC.ResultType;
 import bluC.transpiler.Expression;
-import bluC.transpiler.Statement;
-import bluC.transpiler.Statement.VarDeclaration.Sign;
-import bluC.transpiler.Statement.VarDeclaration.SimplifiedType;
+import bluC.transpiler.statements.Statement;
+import bluC.transpiler.statements.vars.Sign;
+import bluC.transpiler.statements.vars.SimplifiedType;
 import bluC.transpiler.Token;
 import bluC.transpiler.TokenFileInfo;
 import bluC.transpiler.TokenInfo;
 import bluC.parser.Parser;
+import bluC.transpiler.statements.ExpressionStatement;
+import bluC.transpiler.statements.Package;
+import bluC.transpiler.statements.Return;
+import bluC.transpiler.statements.vars.VarDeclaration;
+import bluC.transpiler.statements.blocks.Block;
 
 /**
  *
@@ -99,7 +104,7 @@ public class StatementHandler
         Statement returnee = varHandler.handleVarDeclarationOrHigher();
         
         if (checkForSemicolon &&
-            !(returnee instanceof Statement.Block) && !parser.peekMatches(";"))
+            returnee.needsSemicolon() && !parser.peekMatches(";"))
         {
             Token curToken = parser.getCurToken();
             Logger.err(curToken, "Expected \";\" to end statement");
@@ -115,10 +120,10 @@ public class StatementHandler
         
         if (openBrace.getTextContent().equals("{"))
         {
-            Statement.Block block = blockHandler.handleBlock(openBrace);
+            Block block = blockHandler.handleBlock(openBrace);
             return block;
         }
-        else 
+        else
         {
             return handleIfStatementOrHigher();
         }
@@ -149,7 +154,7 @@ public class StatementHandler
         {
             Expression expression = expressionHandler.handleExpression();
 
-            return new Statement.ExpressionStatement(expression, 
+            return new ExpressionStatement(expression, 
                 next.getLineIndex());
         }
         else
@@ -179,12 +184,12 @@ public class StatementHandler
         if (next.getTextContent().equals("return"))
         {
             Statement returnedExpression;
-            Statement.Return return_;
+            Return return_;
             
             parser.nextToken();
             returnedExpression = handleExpressionStatementOrHigher();
             
-            return_ = new Statement.Return(returnedExpression,
+            return_ = new Return(returnedExpression,
                 parser.getCurTokLineIndex());
             
             return return_;
@@ -242,7 +247,7 @@ public class StatementHandler
                     if (parser.getCurTokLineIndex() != 
                         qualifiedNameStartLineIndex)
                     {
-                        return new Statement.Package(fullyQualifiedPackage,
+                        return new Package(fullyQualifiedPackage,
                             startLineIndex);
                     }
                     
@@ -251,7 +256,7 @@ public class StatementHandler
             }
             else if (parser.peekMatches(";"))
             {
-                return new Statement.Package(fullyQualifiedPackage,
+                return new Package(fullyQualifiedPackage,
                     startLineIndex);
             }
 
@@ -286,7 +291,7 @@ public class StatementHandler
         }
         
         //try to synchronize parser
-        return new Statement.VarDeclaration(Sign.UNSPECIFIED, 
+        return new VarDeclaration(Sign.UNSPECIFIED, 
             SimplifiedType.VOID, 0, 
                 
             new Token(

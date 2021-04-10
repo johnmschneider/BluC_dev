@@ -1,7 +1,8 @@
 <body style="background-color:LightGrey">
-# Todo list
+<pre>
+<h1>Todo list</h1>
 
-## Misc
+<h2>Misc</h2>
 1. implement macros
 2. handle #elif directive
 3. handle #else directive
@@ -11,17 +12,16 @@
 7. change all references to "filepath, filePath, filename, fileName" to just "filePath"
 8. double check all of the custom .equals methods to see if they need
     refactoring
-
-## Refactoring
+<br>
+<h2>Refactoring</h2>
 1. refactor out nullSafeEquals because java's Object<b><u>s</u></b>.equals (NOT Objec<b><u>t</u></b>.equals)
     checks for null
 2. refactor Expression.Literal to use the Operand field from Expression instead
     of its own unique "value" field
 3. either update lineIndex to be int or update currentTokenIndex to be long
-
-
-## Features to add
+</pre>
 <pre>
+## Features to add
 <h2> unsafe: </h2><h3>    SYMBOLS RESERVED:
         unsafe [symbol[[var-declaration *] || address-of || block || function || 
                         method || class]]
@@ -107,14 +107,14 @@
 
         <text style="color:blue;font-weight:bold">class</text> <text style="color:purple;">Example</text>
         {
-            <text style="color:blue;font-weight:bold">private:</text>
-                <text style="color:purple;">int</text> count;
+        <text style="color:blue;font-weight:bold">private:</text>
+            <text style="color:purple;">int</text> count;
 
-            <text style="color:blue;font-weight:bold">public:</text>
-                <text style="color:blue;font-weight:bold">inline</text> <text style="color:purple;">void</text> incrementCount()
-                {
-                    count++;
-                }
+        <text style="color:blue;font-weight:bold">public:</text>
+            <text style="color:blue;font-weight:bold">inline</text> <text style="color:purple;">void</text> incrementCount()
+            {
+                count++;
+            }
         }
         
         <text style="color:purple">int</text> main()

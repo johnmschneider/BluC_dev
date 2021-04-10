@@ -17,9 +17,9 @@
 package bluC.builders;
 
 import bluC.transpiler.Expression.Literal;
-import bluC.transpiler.Statement.VarDeclaration;
-import bluC.transpiler.Statement.VarDeclaration.Sign;
-import bluC.transpiler.Statement.VarDeclaration.SimplifiedType;
+import bluC.transpiler.statements.vars.VarDeclaration;
+import bluC.transpiler.statements.vars.Sign;
+import bluC.transpiler.statements.vars.SimplifiedType;
 import bluC.transpiler.Token;
 import org.junit.After;
 import org.junit.Before;
@@ -369,7 +369,7 @@ public class VarDeclarationBuilderTest
     @Test
     public void testGetClassID()
     {
-        long expected = Long.MIN_VALUE + 22;
+        String expected = "Class22";
         testThis.setClassID(expected);
         
         assertEquals(expected, testThis.getClassID());
@@ -378,7 +378,7 @@ public class VarDeclarationBuilderTest
     @Test
     public void testSetClassID()
     {
-        long expected = Long.MIN_VALUE + 5217;
+        String expected = "Class5217";
         testThis.setClassID(expected);
         
         assertEquals(expected, testThis.getClassID());

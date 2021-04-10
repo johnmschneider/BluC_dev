@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>Statement.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;BluC&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.source.html" class="el_package">bluC.transpiler.statements</a> &gt; <span class="el_source">Statement.java</span></div><h1>Statement.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2021 John Schneider.
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package bluC.transpiler.statements;
+
+import bluC.transpiler.statements.vars.VarDeclaration;
+import bluC.transpiler.statements.blocks.While;
+import bluC.transpiler.statements.blocks.StructDef;
+import bluC.transpiler.statements.blocks.ClassDef;
+import bluC.transpiler.statements.blocks.If;
+import bluC.transpiler.statements.blocks.Method;
+import bluC.transpiler.statements.blocks.Function;
+import bluC.transpiler.statements.blocks.Block;
+import bluC.transpiler.statements.vars.Sign;
+import bluC.transpiler.statements.vars.SimplifiedType;
+import bluC.parser.handlers.expression.ExpressionHandler;
+import bluC.transpiler.Expression;
+import bluC.transpiler.Token;
+import bluC.transpiler.TokenFileInfo;
+import java.util.Objects;
+
+/**
+ * @author John Schneider
+ */
+public abstract class Statement
+{
+<span class="fc" id="L40">    public static long NO_STARTING_LINE_INDEX = -1;</span>
+<span class="fc" id="L41">    public static long NO_ENDING_LINE_INDEX   = -1;</span>
+    
+<span class="fc" id="L43">    private long startingLineIndex  = NO_STARTING_LINE_INDEX;</span>
+<span class="fc" id="L44">    private long endingLineIndex    = NO_ENDING_LINE_INDEX;</span>
+    
+    public static interface Visitor&lt;T&gt;
+    {
+        //blocks
+        T visitBlock        (Block statement);
+        
+        T visitFunction     (Function statement);
+        T visitMethod       (Method statement);
+        T visitParameterList(ParameterList statement);
+                    
+        T visitIf           (If statement);
+        T visitClassDef     (ClassDef statement);
+        T visitStructDef    (StructDef statement);
+        T visitWhile        (While statement);
+        
+        //misc
+        T visitReturn               (Return statement);
+        T visitExpressionStatement  (ExpressionStatement statement);
+        T visitPackage              (Package statement);
+        
+        //vars
+        T visitVarDeclaration       (VarDeclaration statement);
+    }
+
+    
+    
+    public Statement(long startingLineIndex)
+<span class="fc" id="L72">    {</span>
+<span class="fc" id="L73">        this.startingLineIndex = startingLineIndex;</span>
+<span class="fc" id="L74">    }</span>
+    
+    
+    public abstract &lt;T&gt; T accept(Visitor&lt;T&gt; visitor);
+    
+    public boolean needsSemicolon()
+    {
+<span class="fc" id="L81">        return true;</span>
+    }
+    
+    /**
+     * Returns the line the statement started on.
+     */
+    public long getStartingLineIndex()
+    {
+<span class="fc" id="L89">        return startingLineIndex;</span>
+    }
+    
+    public void setStartingLineIndex(long startingLineIndex)
+    {
+<span class="nc" id="L94">        this.startingLineIndex = startingLineIndex;</span>
+<span class="nc" id="L95">    }</span>
+    
+    /**
+     * Returns the line the statement ended on.
+     */
+    public long getEndingLineIndex()
+    {
+<span class="fc" id="L102">        return endingLineIndex;</span>
+    }
+    
+    public void setEndingLineIndex(long endingLineIndex)
+    {
+<span class="nc" id="L107">        this.endingLineIndex = endingLineIndex;</span>
+<span class="nc" id="L108">    }</span>
+    
+    @Override
+    public boolean equals(Object other)
+    {
+<span class="pc bpc" id="L113" title="1 of 2 branches missed.">        if (other instanceof Statement)</span>
+        {
+<span class="fc" id="L115">            Statement otherStmt = (Statement) other;</span>
+<span class="fc" id="L116">            return </span>
+<span class="pc bpc" id="L117" title="1 of 2 branches missed.">                getStartingLineIndex() == otherStmt.getStartingLineIndex() &amp;&amp;</span>
+<span class="pc bpc" id="L118" title="1 of 2 branches missed.">                getEndingLineIndex() == otherStmt.getEndingLineIndex();</span>
+        }
+        else
+        {
+<span class="nc" id="L122">            return false;</span>
+        }
+    }
+
+    @Override
+    public int hashCode()
+    {
+<span class="nc" id="L129">        int hash = 7;</span>
+<span class="nc" id="L130">        hash = 83 * hash + (int) (this.startingLineIndex ^ </span>
+            (this.startingLineIndex &gt;&gt;&gt; 32));
+<span class="nc" id="L132">        hash = 83 * hash + (int) (this.endingLineIndex ^ </span>
+            (this.endingLineIndex &gt;&gt;&gt; 32));
+<span class="nc" id="L134">        return hash;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

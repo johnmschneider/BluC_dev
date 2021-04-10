@@ -19,12 +19,18 @@ package bluC.parser.handlers.statement;
 import bluC.Logger;
 import bluC.BluC;
 import bluC.transpiler.Scope;
-import bluC.transpiler.Statement;
+import bluC.transpiler.statements.Statement;
 import bluC.transpiler.Token;
 import bluC.parser.Parser;
-import bluC.transpiler.Statement.VarDeclaration;
+import bluC.transpiler.statements.blocks.ClassDef;
+import bluC.transpiler.statements.blocks.Method;
+import bluC.transpiler.statements.blocks.Function;
+import bluC.transpiler.statements.ParameterList;
 import bluC.transpiler.TokenFileInfo;
 import bluC.transpiler.TokenInfo;
+import bluC.transpiler.statements.vars.Sign;
+import bluC.transpiler.statements.vars.SimplifiedType;
+import bluC.transpiler.statements.vars.VarDeclaration;
 
 /**
  *
@@ -38,128 +44,128 @@ public class FunctionHandler
     private final StatementHandler statementHandler;
     private final BlockHandler blockHandler;
     private final VariableHandler varHandler;
-<span class="fc" id="L41">    private static long unresolvedFunctionNamesCount = Long.MIN_VALUE;</span>
+<span class="fc" id="L47">    private static long unresolvedFunctionNamesCount = Long.MIN_VALUE;</span>
     
     public FunctionHandler(Parser parser, StatementHandler statementHandler,
         BlockHandler blockHandler)
-<span class="fc" id="L45">    {</span>
-<span class="fc" id="L46">        this.parser = parser;</span>
-<span class="fc" id="L47">        this.statementHandler = statementHandler;</span>
-<span class="fc" id="L48">        this.blockHandler = blockHandler;</span>
-<span class="fc" id="L49">        varHandler = statementHandler.getVarHandler();</span>
-<span class="fc" id="L50">    }</span>
+<span class="fc" id="L51">    {</span>
+<span class="fc" id="L52">        this.parser = parser;</span>
+<span class="fc" id="L53">        this.statementHandler = statementHandler;</span>
+<span class="fc" id="L54">        this.blockHandler = blockHandler;</span>
+<span class="fc" id="L55">        varHandler = statementHandler.getVarHandler();</span>
+<span class="fc" id="L56">    }</span>
     
-    public Statement handleFunctionOrMethod(VarDeclaration.Sign returnSign, 
-        VarDeclaration.SimplifiedType returnSimplifiedType)
+    public Statement handleFunctionOrMethod(Sign returnSign, 
+        SimplifiedType returnSimplifiedType)
     {
-<span class="nc bnc" id="L55" title="All 2 branches missed.">        if (parser.isInAClass())</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">        if (parser.isInAClass())</span>
         {
-<span class="nc" id="L57">            return handleMethod(returnSign, returnSimplifiedType);</span>
+<span class="nc" id="L63">            return handleMethod(returnSign, returnSimplifiedType);</span>
         }
 
-<span class="nc" id="L60">        return handleFunction(returnSign, returnSimplifiedType);</span>
+<span class="nc" id="L66">        return handleFunction(returnSign, returnSimplifiedType);</span>
     }
     
-    private Statement handleFunction(VarDeclaration.Sign returnSign, 
-        VarDeclaration.SimplifiedType returnSimplifiedType)
+    private Statement handleFunction(Sign returnSign, 
+        SimplifiedType returnSimplifiedType)
     {
-<span class="nc" id="L66">        Statement.Function function = getFuncOrMethod(returnSign, </span>
+<span class="nc" id="L72">        Function function = getFuncOrMethod(returnSign, </span>
             returnSimplifiedType);
         
-<span class="nc" id="L69">        parser.pushScope(new Scope(parser.getCurrentScope(), function));</span>
-<span class="nc" id="L70">        handleGlobalFunctionDeclaration(function);</span>
-<span class="nc" id="L71">        parser.popScope(parser.getCurToken());</span>
+<span class="nc" id="L75">        parser.pushScope(new Scope(parser.getCurrentScope(), function));</span>
+<span class="nc" id="L76">        handleGlobalFunctionDeclaration(function);</span>
+<span class="nc" id="L77">        parser.popScope(parser.getCurToken());</span>
 
-<span class="nc" id="L73">        return function;</span>
+<span class="nc" id="L79">        return function;</span>
     }
     
-    private Statement.Function getFuncOrMethod(VarDeclaration.Sign returnSign, 
-        VarDeclaration.SimplifiedType returnSimplifiedType) 
+    private Function getFuncOrMethod(Sign returnSign, 
+        SimplifiedType returnSimplifiedType) 
     {
-<span class="nc" id="L79">        int returnPointerLevel = varHandler.getPointerLevel();</span>
-        Statement.VarDeclaration returnType;
-        Statement.Function function;
+<span class="nc" id="L85">        int returnPointerLevel = varHandler.getPointerLevel();</span>
+        VarDeclaration returnType;
+        Function function;
         Token functionName;
 
-<span class="nc" id="L84">        parser.nextToken();</span>
+<span class="nc" id="L90">        parser.nextToken();</span>
 
-<span class="nc" id="L86">        functionName = parser.getCurToken();</span>
-<span class="nc" id="L87">        returnType = getReturnTypeVar(returnSign, returnSimplifiedType, </span>
+<span class="nc" id="L92">        functionName = parser.getCurToken();</span>
+<span class="nc" id="L93">        returnType = getReturnTypeVar(returnSign, returnSimplifiedType, </span>
             returnPointerLevel);
-<span class="nc" id="L89">        function = new Statement.Function(returnType, functionName,</span>
-<span class="nc" id="L90">            functionName.getLineIndex());</span>
+<span class="nc" id="L95">        function = new Function(returnType, functionName,</span>
+<span class="nc" id="L96">            functionName.getLineIndex());</span>
         
-<span class="nc" id="L92">        return function;</span>
+<span class="nc" id="L98">        return function;</span>
     }
     
-    private Statement.VarDeclaration getReturnTypeVar(
-        VarDeclaration.Sign returnTypeSign, 
-        VarDeclaration.SimplifiedType returnTypeType, 
+    private VarDeclaration getReturnTypeVar(
+        Sign returnTypeSign, 
+        SimplifiedType returnTypeType, 
         int returnTypePointerLevel)
     {
-<span class="nc" id="L100">        Token curToken = parser.getCurToken();</span>
-<span class="nc" id="L101">        Token varName = new Token(</span>
+<span class="nc" id="L106">        Token curToken = parser.getCurToken();</span>
+<span class="nc" id="L107">        Token varName = new Token(</span>
             new TokenInfo(VarDeclaration.RETURN_VAR_NAME, false),
                 
-<span class="nc" id="L104">            new TokenFileInfo(curToken.getFilepath(), </span>
-<span class="nc" id="L105">                curToken.getLineIndex()));</span>
+<span class="nc" id="L110">            new TokenFileInfo(curToken.getFilepath(), </span>
+<span class="nc" id="L111">                curToken.getLineIndex()));</span>
 
-<span class="nc" id="L107">        return new Statement.VarDeclaration(returnTypeSign, returnTypeType, </span>
+<span class="nc" id="L113">        return new VarDeclaration(returnTypeSign, returnTypeType, </span>
             returnTypePointerLevel, varName, null, null,
-<span class="nc" id="L109">            curToken.getLineIndex());</span>
+<span class="nc" id="L115">            curToken.getLineIndex());</span>
     }
     
-    public Statement handleMethod(VarDeclaration.Sign returnSign, 
-        VarDeclaration.SimplifiedType returnSimplifiedType)
+    public Statement handleMethod(Sign returnSign, 
+        SimplifiedType returnSimplifiedType)
     {
-<span class="nc" id="L115">        Statement.Function rawMethod = </span>
-<span class="nc" id="L116">            getFuncOrMethod(returnSign, returnSimplifiedType);</span>
+<span class="nc" id="L121">        Function rawMethod = </span>
+<span class="nc" id="L122">            getFuncOrMethod(returnSign, returnSimplifiedType);</span>
         
-<span class="nc" id="L118">        Statement.ClassDef curClass = (Statement.ClassDef) (parser.</span>
-<span class="nc" id="L119">            getCurrentScope().getScopeType());</span>
+<span class="nc" id="L124">        ClassDef curClass = (ClassDef) (parser.</span>
+<span class="nc" id="L125">            getCurrentScope().getScopeType());</span>
         
-<span class="nc" id="L121">        Statement.Method method = new Statement.Method(curClass, </span>
-<span class="nc" id="L122">            rawMethod.getReturnType(), rawMethod.getNameToken(), </span>
-<span class="nc" id="L123">            getMangledMethodName(curClass, rawMethod),</span>
-<span class="nc" id="L124">            parser, rawMethod.getStartingLineIndex());</span>
+<span class="nc" id="L127">        Method method = new Method(curClass, </span>
+<span class="nc" id="L128">            rawMethod.getReturnType(), rawMethod.getNameToken(), </span>
+<span class="nc" id="L129">            getMangledMethodName(curClass, rawMethod),</span>
+<span class="nc" id="L130">            parser, rawMethod.getStartingLineIndex());</span>
 
-<span class="nc" id="L126">        parser.pushScope(new Scope(parser.getCurrentScope(), method));</span>
-<span class="nc" id="L127">        handleMethodDeclaration(method);</span>
-<span class="nc" id="L128">        parser.popScope(parser.getCurToken());</span>
+<span class="nc" id="L132">        parser.pushScope(new Scope(parser.getCurrentScope(), method));</span>
+<span class="nc" id="L133">        handleMethodDeclaration(method);</span>
+<span class="nc" id="L134">        parser.popScope(parser.getCurToken());</span>
 
-<span class="nc" id="L130">        return method;</span>
+<span class="nc" id="L136">        return method;</span>
     }
     
-    private String getMangledMethodName(Statement.ClassDef curClass,
-        Statement.Function rawMethod)
+    private String getMangledMethodName(ClassDef curClass,
+        Function rawMethod)
     {
-<span class="nc" id="L136">        return BluC.BLU_C_NAMESPACE_PREFIX + &quot;_&quot; + ClassHandler.</span>
-<span class="nc" id="L137">            CLASS_NAMESPACE_PREFIX + &quot;_&quot; + curClass.getClassName().</span>
-<span class="nc" id="L138">            getTextContent() + &quot;_&quot; + METHOD_NAMESPACE_PREFIX + &quot;_&quot; +</span>
-<span class="nc" id="L139">            rawMethod.getNameText();</span>
+<span class="nc" id="L142">        return BluC.BLU_C_NAMESPACE_PREFIX + &quot;_&quot; + ClassHandler.</span>
+<span class="nc" id="L143">            CLASS_NAMESPACE_PREFIX + &quot;_&quot; + curClass.getClassName().</span>
+<span class="nc" id="L144">            getTextContent() + &quot;_&quot; + METHOD_NAMESPACE_PREFIX + &quot;_&quot; +</span>
+<span class="nc" id="L145">            rawMethod.getNameText();</span>
         //TODO : add package support in mangling
     }
     
-    private Statement handleMethodDeclaration(Statement.Method method)
+    private Statement handleMethodDeclaration(Method method)
     {
-<span class="nc" id="L145">        handleGlobalFunctionDeclaration(method);</span>
+<span class="nc" id="L151">        handleGlobalFunctionDeclaration(method);</span>
         
-<span class="nc" id="L147">        return method;</span>
+<span class="nc" id="L153">        return method;</span>
     }
     
     private void handleGlobalFunctionDeclaration(
-        Statement.Function function)
+        Function function)
     {
-<span class="nc bnc" id="L153" title="All 2 branches missed.">        if (function.hasValidName())</span>
+<span class="nc bnc" id="L159" title="All 2 branches missed.">        if (function.hasValidName())</span>
         {
-<span class="nc" id="L155">            handleGlobalFunctionDeclarationWithValidReturnTypeAndName(</span>
+<span class="nc" id="L161">            handleGlobalFunctionDeclarationWithValidReturnTypeAndName(</span>
                 function);
         }
         else
         {
-<span class="nc" id="L160">            handleBadGlobalFunctionName(function);</span>
+<span class="nc" id="L166">            handleBadGlobalFunctionName(function);</span>
         }
-<span class="nc" id="L162">    }</span>
+<span class="nc" id="L168">    }</span>
     
     /**
      * This is when we are either: (1) on a valid function name, or (2) the
@@ -168,20 +174,20 @@ public class FunctionHandler
      *  function name).
      */
     private void handleGlobalFunctionDeclarationWithValidReturnTypeAndName(
-        Statement.Function functionWithRetTypeAndName)
+        Function functionWithRetTypeAndName)
     {
-        Statement.ParameterList params;
+        ParameterList params;
         Token next;
-<span class="nc" id="L175">        Token functionName = functionWithRetTypeAndName.getNameToken();</span>
+<span class="nc" id="L181">        Token functionName = functionWithRetTypeAndName.getNameToken();</span>
         
-<span class="nc" id="L177">        params = getFunctionParameters(functionName);</span>
-<span class="nc" id="L178">        functionWithRetTypeAndName.setParameters(params);</span>
-<span class="nc" id="L179">        next = parser.peek();</span>
+<span class="nc" id="L183">        params = getFunctionParameters(functionName);</span>
+<span class="nc" id="L184">        functionWithRetTypeAndName.setParameters(params);</span>
+<span class="nc" id="L185">        next = parser.peek();</span>
         
-<span class="nc bnc" id="L181" title="All 2 branches missed.">        if (next.getTextContent().equals(&quot;{&quot;))</span>
+<span class="nc bnc" id="L187" title="All 2 branches missed.">        if (next.getTextContent().equals(&quot;{&quot;))</span>
         {
-<span class="nc" id="L183">            parser.nextToken();</span>
-<span class="nc" id="L184">            blockHandler.addStatementsToBlock(next, functionWithRetTypeAndName);</span>
+<span class="nc" id="L189">            parser.nextToken();</span>
+<span class="nc" id="L190">            blockHandler.addStatementsToBlock(next, functionWithRetTypeAndName);</span>
             
             /** 
              * It seems we can't do this because the parser, by design, must
@@ -202,39 +208,39 @@ public class FunctionHandler
         }
         else
         {
-<span class="nc" id="L205">            Logger.err(next, &quot;Expected \&quot;{\&quot; to open body of function \&quot;&quot; +</span>
-<span class="nc" id="L206">                functionName.getTextContent() + &quot;\&quot;&quot;);</span>
+<span class="nc" id="L211">            Logger.err(next, &quot;Expected \&quot;{\&quot; to open body of function \&quot;&quot; +</span>
+<span class="nc" id="L212">                functionName.getTextContent() + &quot;\&quot;&quot;);</span>
         }
-<span class="nc" id="L208">    }</span>
+<span class="nc" id="L214">    }</span>
     
-    private Statement.ParameterList getFunctionParameters(Token functionName)
+    private ParameterList getFunctionParameters(Token functionName)
     {
-<span class="nc" id="L212">        Token expectedOpenParen = parser.peek();</span>
+<span class="nc" id="L218">        Token expectedOpenParen = parser.peek();</span>
         
-<span class="nc bnc" id="L214" title="All 2 branches missed.">        if (expectedOpenParen.getTextContent().equals(&quot;(&quot;))</span>
+<span class="nc bnc" id="L220" title="All 2 branches missed.">        if (expectedOpenParen.getTextContent().equals(&quot;(&quot;))</span>
         {
             //move parser to &quot;(&quot; token
-<span class="nc" id="L217">            parser.nextToken();</span>
+<span class="nc" id="L223">            parser.nextToken();</span>
             
-<span class="nc" id="L219">            Statement.ParameterList returnee = new Statement.ParameterList(</span>
-<span class="nc" id="L220">                parser.peek().getLineIndex());</span>
+<span class="nc" id="L225">            ParameterList returnee = new ParameterList(</span>
+<span class="nc" id="L226">                parser.peek().getLineIndex());</span>
             
-<span class="nc" id="L222">            addParametersToParameterList(returnee, functionName);</span>
+<span class="nc" id="L228">            addParametersToParameterList(returnee, functionName);</span>
             
-<span class="nc" id="L224">            return returnee;</span>
+<span class="nc" id="L230">            return returnee;</span>
         }
         else
         {
-<span class="nc" id="L228">            Logger.err(expectedOpenParen, &quot;Expected \&quot;(\&quot; to start parameter &quot; +</span>
-<span class="nc" id="L229">                &quot;list for function \&quot;&quot; + functionName.getTextContent() + &quot;\&quot;&quot;);</span>
-<span class="nc" id="L230">            return new Statement.ParameterList(parser.peek(2).getLineIndex());</span>
+<span class="nc" id="L234">            Logger.err(expectedOpenParen, &quot;Expected \&quot;(\&quot; to start parameter &quot; +</span>
+<span class="nc" id="L235">                &quot;list for function \&quot;&quot; + functionName.getTextContent() + &quot;\&quot;&quot;);</span>
+<span class="nc" id="L236">            return new ParameterList(parser.peek(2).getLineIndex());</span>
         }
     }
     
-    private void addParametersToParameterList(Statement.ParameterList params,
+    private void addParametersToParameterList(ParameterList params,
         Token functionName)
     {
-<span class="nc" id="L237">        boolean closingParenFound   = false;</span>
+<span class="nc" id="L243">        boolean closingParenFound   = false;</span>
         Token curToken;
         
         /**
@@ -243,74 +249,74 @@ public class FunctionHandler
          * VariableHandler.handleVarDeclarationOrHigher() requires the parser to
          *  be on the token immediately BEFORE the variable declaration starts.
          */
-<span class="nc" id="L246">        curToken = parser.getCurToken();</span>
+<span class="nc" id="L252">        curToken = parser.getCurToken();</span>
         
-<span class="nc bnc" id="L248" title="All 2 branches missed.">        while (!parser.atEOF())</span>
+<span class="nc bnc" id="L254" title="All 2 branches missed.">        while (!parser.atEOF())</span>
         {
-<span class="nc bnc" id="L250" title="All 2 branches missed.">            if (curToken.getTextContent().equals(&quot;)&quot;))</span>
+<span class="nc bnc" id="L256" title="All 2 branches missed.">            if (curToken.getTextContent().equals(&quot;)&quot;))</span>
             {
-<span class="nc" id="L252">                closingParenFound = true;</span>
-<span class="nc" id="L253">                break;</span>
+<span class="nc" id="L258">                closingParenFound = true;</span>
+<span class="nc" id="L259">                break;</span>
             }
             
-<span class="nc" id="L256">            params.addParameter((Statement.VarDeclaration) </span>
-<span class="nc" id="L257">                varHandler.handleVarDeclarationOrHigher());</span>
+<span class="nc" id="L262">            params.addParameter((VarDeclaration) </span>
+<span class="nc" id="L263">                varHandler.handleVarDeclarationOrHigher());</span>
             
-<span class="nc" id="L259">            parser.nextToken();</span>
-<span class="nc" id="L260">            curToken = parser.getCurToken();</span>
+<span class="nc" id="L265">            parser.nextToken();</span>
+<span class="nc" id="L266">            curToken = parser.getCurToken();</span>
         }
         
-<span class="nc bnc" id="L263" title="All 2 branches missed.">        if (!closingParenFound)</span>
+<span class="nc bnc" id="L269" title="All 2 branches missed.">        if (!closingParenFound)</span>
         {
-<span class="nc" id="L265">            Logger.err(curToken, &quot;Expected \&quot;)\&quot; to end parameter list for &quot; +</span>
-<span class="nc" id="L266">                &quot;function \&quot;&quot; + functionName.getTextContent() + &quot;\&quot;&quot;);</span>
+<span class="nc" id="L271">            Logger.err(curToken, &quot;Expected \&quot;)\&quot; to end parameter list for &quot; +</span>
+<span class="nc" id="L272">                &quot;function \&quot;&quot; + functionName.getTextContent() + &quot;\&quot;&quot;);</span>
         }
-<span class="nc" id="L268">    }</span>
+<span class="nc" id="L274">    }</span>
     
     private void handleBadGlobalFunctionName(
-        Statement.Function function)
+        Function function)
     {
-<span class="nc" id="L273">        Token funcName = function.getNameToken();</span>
+<span class="nc" id="L279">        Token funcName = function.getNameToken();</span>
         
-<span class="nc" id="L275">        Logger.err(funcName,&quot;Expected function name to follow \&quot;&quot; + </span>
-<span class="nc" id="L276">            parser.peek(-1).getTextContent() + &quot;\&quot; (token \&quot;&quot; + </span>
-<span class="nc" id="L277">            funcName.getTextContent() + &quot;\&quot; is an invalid name)&quot;);</span>
+<span class="nc" id="L281">        Logger.err(funcName,&quot;Expected function name to follow \&quot;&quot; + </span>
+<span class="nc" id="L282">            parser.peek(-1).getTextContent() + &quot;\&quot; (token \&quot;&quot; + </span>
+<span class="nc" id="L283">            funcName.getTextContent() + &quot;\&quot; is an invalid name)&quot;);</span>
 
         //  synchronize parser
-<span class="nc bnc" id="L280" title="All 2 branches missed.">        if (funcName.getTextContent().equals(&quot;;&quot;))</span>
+<span class="nc bnc" id="L286" title="All 2 branches missed.">        if (funcName.getTextContent().equals(&quot;;&quot;))</span>
         {
             //name missing
-<span class="nc" id="L283">            parser.prevToken();</span>
+<span class="nc" id="L289">            parser.prevToken();</span>
         }
         else
         {
             //invalid name
-<span class="nc" id="L288">            parser.gotoEndOfStatement();</span>
+<span class="nc" id="L294">            parser.gotoEndOfStatement();</span>
         }
         
-<span class="nc" id="L291">        Token autoGeneratedName = getAutoGeneratedName(funcName);</span>
+<span class="nc" id="L297">        Token autoGeneratedName = getAutoGeneratedName(funcName);</span>
         
         //add token so that 
         //  handleGlobalFunctionDeclarationWithValidReturnTypeAndName will see 
         //  the auto generated name
-<span class="nc" id="L296">        parser.addToken(autoGeneratedName, parser.getCurTokIndex() + 1);</span>
-<span class="nc" id="L297">        function.setName(autoGeneratedName);</span>
+<span class="nc" id="L302">        parser.addToken(autoGeneratedName, parser.getCurTokIndex() + 1);</span>
+<span class="nc" id="L303">        function.setName(autoGeneratedName);</span>
         
-<span class="nc" id="L299">        handleGlobalFunctionDeclarationWithValidReturnTypeAndName(</span>
+<span class="nc" id="L305">        handleGlobalFunctionDeclarationWithValidReturnTypeAndName(</span>
             function);
-<span class="nc" id="L301">    }</span>
+<span class="nc" id="L307">    }</span>
     
     private Token getAutoGeneratedName(Token funcName)
     {
-<span class="nc" id="L305">        Token returnee = new Token(</span>
+<span class="nc" id="L311">        Token returnee = new Token(</span>
             new TokenInfo(&quot;unresolvedFunctionName&quot; +
-<span class="nc" id="L307">                Long.toUnsignedString(unresolvedFunctionNamesCount), true), </span>
+<span class="nc" id="L313">                Long.toUnsignedString(unresolvedFunctionNamesCount), true), </span>
                 
-<span class="nc" id="L309">            new TokenFileInfo(funcName.getFilepath(), funcName.getLineIndex()));</span>
+<span class="nc" id="L315">            new TokenFileInfo(funcName.getFilepath(), funcName.getLineIndex()));</span>
         
-<span class="nc" id="L311">        unresolvedFunctionNamesCount++;</span>
+<span class="nc" id="L317">        unresolvedFunctionNamesCount++;</span>
         
-<span class="nc" id="L313">        return returnee;</span>
+<span class="nc" id="L319">        return returnee;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

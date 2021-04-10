@@ -21,7 +21,7 @@ package bluC.builders;
 
 import bluC.parser.Parser;
 import bluC.transpiler.Lexer;
-import bluC.transpiler.Statement;
+import bluC.transpiler.statements.Statement;
 import bluC.transpiler.Token;
 import java.util.ArrayList;
 import java.util.Arrays;

@@ -6,6 +6,7 @@ char realCharTest = 'x';
 long int x = 0;
 long long b;
 
+/*
 int main(int argc, char** argv)
 {
     while (x < 70000)
@@ -37,7 +38,7 @@ int main(int argc, char** argv)
     while (iForgotAnotherBrace)
     {
         
-}
+}*/
 
 /*
 int main(int hi) {

@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>VarDeclaration.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;BluC&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.source.html" class="el_package">bluC.transpiler.statements.vars</a> &gt; <span class="el_source">VarDeclaration.java</span></div><h1>VarDeclaration.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2021 John Schneider.
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package bluC.transpiler.statements.vars;
+
+import bluC.transpiler.Expression;
+import bluC.transpiler.Token;
+import bluC.transpiler.statements.Statement;
+import bluC.transpiler.statements.blocks.ClassDef;
+import java.util.Objects;
+
+/**
+ *
+ * @author John Schneider
+ */
+public class VarDeclaration extends Statement
+{
+<span class="fc" id="L30">    public static final Token       NO_ASSIGNMENT = null;</span>
+<span class="fc" id="L31">    public static final Expression  NO_VALUE = null;</span>
+    
+    /**
+     * The ID of a variable that holds plain-old-data.
+     */
+    public static final String  RETURN_VAR_NAME = &quot;&quot;;
+    
+    /**
+     * How many indirections (asterisks) are declared for this variable
+     */
+    private final int            pointerLevel;
+    private final Sign           sign;
+    private final SimplifiedType simplifiedType;
+    private final Token          varName;
+    private final Token          assignmentOperator;
+    private final Expression     value;
+    
+    /**
+     * If the SimplifiedType is CLASS, then this is set to the classID,
+  otherwise it's ClassDef.NOT_DEFINED
+     */
+<span class="fc" id="L52">    private String classID = ClassDef.NOT_DEFINED;</span>
+    
+    public VarDeclaration(Sign sign, SimplifiedType simplifiedType, 
+        int pointerLevel, Token varName, Token assignmentOperator,
+        Expression value, long startingLineIndex)
+    {
+<span class="fc" id="L58">        super(startingLineIndex);</span>
+<span class="fc" id="L59">        this.sign               = sign;</span>
+<span class="fc" id="L60">        this.simplifiedType     = simplifiedType;</span>
+<span class="fc" id="L61">        this.pointerLevel       = pointerLevel;</span>
+<span class="fc" id="L62">        this.varName            = varName;</span>
+<span class="fc" id="L63">        this.value              = value;</span>
+<span class="fc" id="L64">        this.assignmentOperator = assignmentOperator;</span>
+<span class="fc" id="L65">    }</span>
+
+    public Sign getSign()
+    {
+<span class="nc" id="L69">        return sign;</span>
+    }
+
+    public SimplifiedType getSimplifiedType()
+    {
+<span class="nc" id="L74">        return simplifiedType;</span>
+    }
+
+    public int getPointerLevel()
+    {
+<span class="nc" id="L79">        return pointerLevel;</span>
+    }
+
+    public Token getName()
+    {
+<span class="fc" id="L84">        return varName;</span>
+    }
+
+    public String getNameText()
+    {
+<span class="nc" id="L89">        return varName.getTextContent();</span>
+    }
+
+    public Expression getValue()
+    {
+<span class="nc" id="L94">        return value;</span>
+    }
+
+    public Token getAssignmentOperator()
+    {
+<span class="nc" id="L99">        return assignmentOperator;</span>
+    }
+
+    public boolean isReturnVar()
+    {
+<span class="nc" id="L104">        return getNameText().equals(RETURN_VAR_NAME);</span>
+    }
+
+    public void setClassID(String classID)
+    {
+<span class="nc" id="L109">        this.classID = classID;</span>
+<span class="nc" id="L110">    }</span>
+
+    public String getClassID()
+    {
+<span class="nc" id="L114">        return classID;</span>
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+<span class="fc bfc" id="L120" title="All 2 branches covered.">        if (this == obj)</span>
+        {
+<span class="fc" id="L122">            return true;</span>
+        }
+<span class="pc bpc" id="L124" title="1 of 2 branches missed.">        if (obj == null)</span>
+        {
+<span class="nc" id="L126">            return false;</span>
+        }
+<span class="pc bpc" id="L128" title="1 of 2 branches missed.">        if (getClass() != obj.getClass())</span>
+        {
+<span class="nc" id="L130">            return false;</span>
+        }
+<span class="pc bpc" id="L132" title="1 of 2 branches missed.">        if (!super.equals(obj))</span>
+        {
+<span class="nc" id="L134">            return false;</span>
+        }
+<span class="fc" id="L136">        final VarDeclaration other = (VarDeclaration) obj;</span>
+<span class="pc bpc" id="L137" title="1 of 2 branches missed.">        if (this.pointerLevel != other.pointerLevel)</span>
+        {
+<span class="nc" id="L139">            return false;</span>
+        }
+<span class="pc bpc" id="L141" title="1 of 2 branches missed.">        if (this.classID != other.classID)</span>
+        {
+<span class="nc" id="L143">            return false;</span>
+        }
+<span class="pc bpc" id="L145" title="1 of 2 branches missed.">        if (this.sign != other.sign)</span>
+        {
+<span class="nc" id="L147">            return false;</span>
+        }
+<span class="pc bpc" id="L149" title="1 of 2 branches missed.">        if (this.simplifiedType != other.simplifiedType)</span>
+        {
+<span class="nc" id="L151">            return false;</span>
+        }
+<span class="pc bpc" id="L153" title="1 of 2 branches missed.">        if (!Objects.equals(this.varName, other.varName))</span>
+        {
+<span class="nc" id="L155">            return false;</span>
+        }
+<span class="pc bpc" id="L157" title="1 of 2 branches missed.">        if (!Objects.equals(this.assignmentOperator, other.assignmentOperator))</span>
+        {
+<span class="nc" id="L159">            return false;</span>
+        }
+<span class="pc bpc" id="L161" title="1 of 2 branches missed.">        if (!Objects.equals(this.value, other.value))</span>
+        {
+<span class="nc" id="L163">            return false;</span>
+        }
+<span class="fc" id="L165">        return true;</span>
+    }
+
+    @Override
+    public int hashCode()
+    {
+<span class="nc" id="L171">        int hash = 7;</span>
+<span class="nc" id="L172">        hash = 23 * hash + this.pointerLevel;</span>
+<span class="nc" id="L173">        hash = 23 * hash + Objects.hashCode(this.sign);</span>
+<span class="nc" id="L174">        hash = 23 * hash + Objects.hashCode(this.simplifiedType);</span>
+<span class="nc" id="L175">        hash = 23 * hash + Objects.hashCode(this.varName);</span>
+<span class="nc" id="L176">        hash = 23 * hash + Objects.hashCode(this.assignmentOperator);</span>
+<span class="nc" id="L177">        hash = 23 * hash + Objects.hashCode(this.value);</span>
+<span class="nc" id="L178">        hash = 23 * hash + Objects.hashCode(this.classID);</span>
+<span class="nc" id="L179">        hash = 23 * hash + (int) (this.getStartingLineIndex() ^</span>
+<span class="nc" id="L180">            (this.getStartingLineIndex() &gt;&gt;&gt; 32));</span>
+<span class="nc" id="L181">        hash = 23 * hash + (int) (this.getEndingLineIndex() ^</span>
+<span class="nc" id="L182">            (this.getEndingLineIndex() &gt;&gt;&gt; 32));</span>
+<span class="nc" id="L183">        return hash;</span>
+    }
+
+    @Override
+    public &lt;T&gt; T accept(Visitor&lt;T&gt; visitor)
+    {
+<span class="nc" id="L189">        return visitor.visitVarDeclaration(this);</span>
+    }
+    
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

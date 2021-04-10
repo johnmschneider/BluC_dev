@@ -16,12 +16,25 @@
 
 package bluC.transpiler;
 
+import bluC.transpiler.statements.Statement;
+import bluC.transpiler.statements.blocks.Block;
 import bluC.Logger;
 import bluC.parser.Parser;
 import java.util.ArrayList;
-import bluC.transpiler.Statement.If.ElseIf;
-import bluC.transpiler.Statement.VarDeclaration.SimplifiedType;
+import bluC.transpiler.statements.blocks.If.ElseIf;
+import bluC.transpiler.statements.vars.SimplifiedType;
 import bluC.parser.handlers.statement.ClassHandler;
+import bluC.transpiler.statements.ExpressionStatement;
+import bluC.transpiler.statements.Package;
+import bluC.transpiler.statements.blocks.ClassDef;
+import bluC.transpiler.statements.blocks.If;
+import bluC.transpiler.statements.blocks.Method;
+import bluC.transpiler.statements.blocks.Function;
+import bluC.transpiler.statements.ParameterList;
+import bluC.transpiler.statements.Return;
+import bluC.transpiler.statements.vars.VarDeclaration;
+import bluC.transpiler.statements.blocks.While;
+import bluC.transpiler.statements.blocks.StructDef;
 
 /**
  *
@@ -41,447 +54,458 @@ public class Transpiler implements Expression.Visitor&lt;String&gt;,
     /**
      * How many blocks the transpiler is currently inside
      */
-<span class="nc" id="L44">    private int indentationLevel = 0;</span>
+<span class="nc" id="L57">    private int indentationLevel = 0;</span>
     
     public Transpiler(String filepath, ArrayList&lt;String&gt; rawFileContents)
-<span class="nc" id="L47">    {</span>
-<span class="nc" id="L48">        this.filepath = filepath;</span>
-<span class="nc" id="L49">        this.rawFileContents = rawFileContents;</span>
-<span class="nc" id="L50">        lexer = new Lexer(filepath, rawFileContents);</span>
-<span class="nc" id="L51">        outputFileContents = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L52">    }</span>
+<span class="nc" id="L60">    {</span>
+<span class="nc" id="L61">        this.filepath = filepath;</span>
+<span class="nc" id="L62">        this.rawFileContents = rawFileContents;</span>
+<span class="nc" id="L63">        lexer = new Lexer(filepath, rawFileContents);</span>
+<span class="nc" id="L64">        outputFileContents = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L65">    }</span>
     
     public ArrayList&lt;String&gt; transpile()
     {
         AstPrinter printer;
         
-<span class="nc" id="L58">        importCoreLanguageDependencies();</span>
-<span class="nc" id="L59">        lex();</span>
-<span class="nc" id="L60">        parse();</span>
+<span class="nc" id="L71">        importCoreLanguageDependencies();</span>
+<span class="nc" id="L72">        lex();</span>
+<span class="nc" id="L73">        parse();</span>
         
-<span class="nc bnc" id="L62" title="All 2 branches missed.">        if (!Logger.hasLoggedError())</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">        if (!Logger.hasLoggedError())</span>
         {
             // TODO : only forward-declare funcs/methods/classes that
             //  require forward declaration to work right (right now 
             //  we forward-declare all of them)
-<span class="nc" id="L67">            forwardDeclareFuncsClassesAndMethods();</span>
-<span class="nc" id="L68">            printer = new AstPrinter();</span>
+<span class="nc" id="L80">            forwardDeclareFuncsClassesAndMethods();</span>
+<span class="nc" id="L81">            printer = new AstPrinter();</span>
 
-<span class="nc bnc" id="L70" title="All 2 branches missed.">            for (Statement statement : statements)</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">            for (Statement statement : statements)</span>
             {
-<span class="nc" id="L72">                String output = statement.accept(this);</span>
+<span class="nc" id="L85">                String output = statement.accept(this);</span>
 
-<span class="nc bnc" id="L74" title="All 2 branches missed.">                if (statement.needsSemicolon())</span>
+<span class="nc bnc" id="L87" title="All 2 branches missed.">                if (statement.needsSemicolon())</span>
                 {
-<span class="nc" id="L76">                    output += &quot;;&quot;;</span>
+<span class="nc" id="L89">                    output += &quot;;&quot;;</span>
                 }
 
-<span class="nc" id="L79">                addToOutputFileContents(output);</span>
+<span class="nc" id="L92">                addToOutputFileContents(output);</span>
 
-<span class="nc" id="L81">                printer.print(statement);</span>
-<span class="nc" id="L82">            }</span>
+<span class="nc" id="L94">                printer.print(statement);</span>
+<span class="nc" id="L95">            }</span>
         }
         else
         {
-<span class="nc" id="L86">            parser.dumpAstToStdout();</span>
+<span class="nc" id="L99">            parser.dumpAstToStdout();</span>
         }
         
-<span class="nc" id="L89">        return outputFileContents;</span>
+<span class="nc" id="L102">        return outputFileContents;</span>
     }
     
     private void addToOutputFileContents(String strToSplit)
     {
-<span class="nc" id="L94">        String[] splitStr = strToSplit.split(&quot;\n&quot;);</span>
+<span class="nc" id="L107">        String[] splitStr = strToSplit.split(&quot;\n&quot;);</span>
         
-<span class="nc bnc" id="L96" title="All 2 branches missed.">        for (String s : splitStr)</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">        for (String s : splitStr)</span>
         {
-<span class="nc" id="L98">            outputFileContents.add(s);</span>
+<span class="nc" id="L111">            outputFileContents.add(s);</span>
         }
-<span class="nc" id="L100">    }</span>
+<span class="nc" id="L113">    }</span>
     
     private void lex()
     {
-<span class="nc" id="L104">        CommentsRemover.run(filepath, rawFileContents);</span>
-<span class="nc bnc" id="L105" title="All 2 branches missed.">        for (String s : rawFileContents)</span>
+<span class="nc" id="L117">        CommentsRemover.run(filepath, rawFileContents);</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">        for (String s : rawFileContents)</span>
         {
-<span class="nc" id="L107">            System.out.println(s);</span>
-<span class="nc" id="L108">        }</span>
+<span class="nc" id="L120">            System.out.println(s);</span>
+<span class="nc" id="L121">        }</span>
         
-<span class="nc" id="L110">        lexedTokens = lexer.lex();</span>
-<span class="nc" id="L111">        lexer.debug_writeOutput();</span>
-<span class="nc" id="L112">    }</span>
+<span class="nc" id="L123">        lexedTokens = lexer.lex();</span>
+<span class="nc" id="L124">        lexer.debug_writeOutput();</span>
+<span class="nc" id="L125">    }</span>
     
     private void parse()
     {
-<span class="nc" id="L116">        parser      = new Parser(lexedTokens);</span>
-<span class="nc" id="L117">        statements  = parser.parse();</span>
-<span class="nc" id="L118">    }</span>
+<span class="nc" id="L129">        parser      = new Parser(lexedTokens);</span>
+<span class="nc" id="L130">        statements  = parser.parse();</span>
+<span class="nc" id="L131">    }</span>
     
     private void importCoreLanguageDependencies()
     {
         
-<span class="nc" id="L123">    }</span>
+<span class="nc" id="L136">    }</span>
     
     private void forwardDeclareFuncsClassesAndMethods()
     {
         
-<span class="nc" id="L128">    }</span>
+<span class="nc" id="L141">    }</span>
     
     @Override
-    public String visitBlock(Statement.Block statement)
+    public String visitBlock(Block statement)
     {
-<span class="nc" id="L133">        String output = &quot;&quot;;</span>
+<span class="nc" id="L146">        String output = &quot;&quot;;</span>
         
         //indent opening brace
-<span class="nc bnc" id="L136" title="All 2 branches missed.">        for (int i = 0; i &lt; indentationLevel; i++)</span>
+<span class="nc bnc" id="L149" title="All 2 branches missed.">        for (int i = 0; i &lt; indentationLevel; i++)</span>
         {
-<span class="nc" id="L138">            output += &quot;    &quot;;</span>
+<span class="nc" id="L151">            output += &quot;    &quot;;</span>
         }
         
-<span class="nc" id="L141">        output += &quot;{\n&quot;;</span>
-<span class="nc" id="L142">        indentationLevel ++;</span>
+<span class="nc" id="L154">        output += &quot;{\n&quot;;</span>
+<span class="nc" id="L155">        indentationLevel ++;</span>
         
-<span class="nc bnc" id="L144" title="All 2 branches missed.">        for (Statement s : statement.getBody())</span>
+<span class="nc bnc" id="L157" title="All 2 branches missed.">        for (Statement s : statement.getBody())</span>
         {
-<span class="nc bnc" id="L146" title="All 2 branches missed.">            if (!(s instanceof Statement.Block))</span>
+<span class="nc bnc" id="L159" title="All 2 branches missed.">            if (!(s instanceof Block))</span>
             {
                 //indent code
-<span class="nc bnc" id="L149" title="All 2 branches missed.">                for (int i = 0; i &lt; indentationLevel; i++)</span>
+<span class="nc bnc" id="L162" title="All 2 branches missed.">                for (int i = 0; i &lt; indentationLevel; i++)</span>
                 {
-<span class="nc" id="L151">                    output += &quot;    &quot;;</span>
+<span class="nc" id="L164">                    output += &quot;    &quot;;</span>
                 }
             }
             
-<span class="nc" id="L155">            output += s.accept(this);</span>
+<span class="nc" id="L168">            output += s.accept(this);</span>
             
-<span class="nc bnc" id="L157" title="All 2 branches missed.">            if (!(s instanceof Statement.Block))</span>
+<span class="nc bnc" id="L170" title="All 2 branches missed.">            if (!(s instanceof Block))</span>
             {
-<span class="nc bnc" id="L159" title="All 2 branches missed.">                if (s.needsSemicolon())</span>
+<span class="nc bnc" id="L172" title="All 2 branches missed.">                if (s.needsSemicolon())</span>
                 {
-<span class="nc" id="L161">                    output += &quot;;&quot;;</span>
+<span class="nc" id="L174">                    output += &quot;;&quot;;</span>
                 }
 
-<span class="nc" id="L164">                output += &quot;\n&quot;;</span>
+<span class="nc" id="L177">                output += &quot;\n&quot;;</span>
             }
             //else blocks add a newline to themselves
-<span class="nc" id="L167">        }</span>
+<span class="nc" id="L180">        }</span>
         
-<span class="nc" id="L169">        indentationLevel --;</span>
+<span class="nc" id="L182">        indentationLevel --;</span>
         
         //indent closing brace
-<span class="nc bnc" id="L172" title="All 2 branches missed.">        for (int i = 0; i &lt; indentationLevel; i++)</span>
+<span class="nc bnc" id="L185" title="All 2 branches missed.">        for (int i = 0; i &lt; indentationLevel; i++)</span>
         {
-<span class="nc" id="L174">            output += &quot;    &quot;;</span>
+<span class="nc" id="L187">            output += &quot;    &quot;;</span>
         }
         
-<span class="nc" id="L177">        output += &quot;}\n&quot;;</span>
+<span class="nc" id="L190">        output += &quot;}\n&quot;;</span>
         
-<span class="nc bnc" id="L179" title="All 2 branches missed.">        if (statement.needsExtraSpace())</span>
+<span class="nc bnc" id="L192" title="All 2 branches missed.">        if (statement.needsExtraSpace())</span>
         {
-<span class="nc" id="L181">            output += &quot; \n&quot;;</span>
+<span class="nc" id="L194">            output += &quot; \n&quot;;</span>
         }
         
-<span class="nc" id="L184">        return output;</span>
+<span class="nc" id="L197">        return output;</span>
     }
 
     @Override
-    public String visitFunction(Statement.Function statement)
+    public String visitFunction(Function statement)
     {
-<span class="nc" id="L190">        String output = &quot;&quot;;</span>
+<span class="nc" id="L203">        String output = &quot;&quot;;</span>
         
-<span class="nc bnc" id="L192" title="All 2 branches missed.">        for (int i = 0; i &lt; indentationLevel; i++)</span>
+<span class="nc bnc" id="L205" title="All 2 branches missed.">        for (int i = 0; i &lt; indentationLevel; i++)</span>
         {
-<span class="nc" id="L194">            output += &quot;    &quot;;</span>
+<span class="nc" id="L207">            output += &quot;    &quot;;</span>
         }
         
-<span class="nc" id="L197">        output += statement.getReturnType().accept(this) + &quot; &quot; + </span>
-<span class="nc" id="L198">                statement.getNameText() + </span>
-<span class="nc" id="L199">                statement.getParameters().accept(this) + &quot;\n&quot; +</span>
-<span class="nc" id="L200">                statement.acceptBlock(this);</span>
+<span class="nc" id="L210">        output += statement.getReturnType().accept(this) + &quot; &quot; + </span>
+<span class="nc" id="L211">                statement.getNameText() + </span>
+<span class="nc" id="L212">                statement.getParameters().accept(this) + &quot;\n&quot; +</span>
+<span class="nc" id="L213">                statement.acceptBlock(this);</span>
         
-<span class="nc" id="L202">        return output;</span>
+<span class="nc" id="L215">        return output;</span>
     }
     
     @Override
-    public String visitMethod(Statement.Method statement)
+    public String visitMethod(Method statement)
     {
-<span class="nc" id="L208">        String output = &quot;&quot;;</span>
+<span class="nc" id="L221">        String output = &quot;&quot;;</span>
         
-<span class="nc bnc" id="L210" title="All 2 branches missed.">        for (int i = 0; i &lt; indentationLevel; i++)</span>
+<span class="nc bnc" id="L223" title="All 2 branches missed.">        for (int i = 0; i &lt; indentationLevel; i++)</span>
         {
-<span class="nc" id="L212">            output += &quot;    &quot;;</span>
+<span class="nc" id="L225">            output += &quot;    &quot;;</span>
         }
         
-<span class="nc" id="L215">        output += statement.getReturnType().accept(this) + &quot; &quot; + </span>
-<span class="nc" id="L216">                statement.getMangledName() + </span>
-<span class="nc" id="L217">                statement.getParameters().accept(this) + &quot;\n&quot; +</span>
-<span class="nc" id="L218">                statement.acceptBlock(this);</span>
+<span class="nc" id="L228">        output += statement.getReturnType().accept(this) + &quot; &quot; + </span>
+<span class="nc" id="L229">                statement.getMangledName() + </span>
+<span class="nc" id="L230">                statement.getParameters().accept(this) + &quot;\n&quot; +</span>
+<span class="nc" id="L231">                statement.acceptBlock(this);</span>
         
-<span class="nc" id="L220">        return output;</span>
+<span class="nc" id="L233">        return output;</span>
     }
     
     @Override
-    public String visitParameterList(Statement.ParameterList statement)
+    public String visitParameterList(ParameterList statement)
     {
-<span class="nc" id="L226">        String output = &quot;(&quot;;</span>
-<span class="nc" id="L227">        ArrayList&lt;Statement.VarDeclaration&gt; params = statement.getParameters();</span>
+<span class="nc" id="L239">        String output = &quot;(&quot;;</span>
+<span class="nc" id="L240">        ArrayList&lt;VarDeclaration&gt; params = statement.getParameters();</span>
         
-<span class="nc bnc" id="L229" title="All 2 branches missed.">        for (int i = 0; i &lt; params.size() - 1; i++)</span>
+<span class="nc bnc" id="L242" title="All 2 branches missed.">        for (int i = 0; i &lt; params.size() - 1; i++)</span>
         {
-<span class="nc" id="L231">            Statement.VarDeclaration param = params.get(i);</span>
-<span class="nc" id="L232">            output += param.accept(this) + &quot;, &quot;;</span>
+<span class="nc" id="L244">            VarDeclaration param = params.get(i);</span>
+<span class="nc" id="L245">            output += param.accept(this) + &quot;, &quot;;</span>
         }
         
-<span class="nc bnc" id="L235" title="All 2 branches missed.">        if (!params.isEmpty())</span>
+<span class="nc bnc" id="L248" title="All 2 branches missed.">        if (!params.isEmpty())</span>
         {
-<span class="nc" id="L237">            output += params.get(params.size() - 1).accept(this);</span>
+<span class="nc" id="L250">            output += params.get(params.size() - 1).accept(this);</span>
         }
         
-<span class="nc" id="L240">        output += &quot;)&quot;;</span>
-<span class="nc" id="L241">        return output;</span>
+<span class="nc" id="L253">        output += &quot;)&quot;;</span>
+<span class="nc" id="L254">        return output;</span>
     }
     
     @Override
-    public String visitIf(Statement.If statement)
+    public String visitIf(If statement)
     {
-<span class="nc" id="L247">        String output = &quot;&quot;;</span>
+<span class="nc" id="L260">        String output = &quot;&quot;;</span>
         
         //indent &quot;if&quot; token and &quot;condition&quot; tokens
-<span class="nc bnc" id="L250" title="All 2 branches missed.">        for (int i = 0; i &lt; indentationLevel; i++)</span>
+<span class="nc bnc" id="L263" title="All 2 branches missed.">        for (int i = 0; i &lt; indentationLevel; i++)</span>
         {
-<span class="nc" id="L252">            output += &quot;    &quot;;</span>
+<span class="nc" id="L265">            output += &quot;    &quot;;</span>
         }
         
-<span class="nc" id="L255">        output += &quot;if (&quot; + statement.getCondition().accept(this) + &quot;)\n&quot;;</span>
-<span class="nc" id="L256">        output += statement.acceptBlock(this);</span>
+<span class="nc" id="L268">        output += &quot;if (&quot; + statement.getCondition().accept(this) + &quot;)\n&quot;;</span>
+<span class="nc" id="L269">        output += statement.acceptBlock(this);</span>
         
-<span class="nc" id="L258">        output += visitElseIfs(statement);</span>
-<span class="nc" id="L259">        output += visitElse(statement);</span>
-<span class="nc" id="L260">        output += &quot;\n&quot;;</span>
-        
-<span class="nc" id="L262">        return output;</span>
-    }
-    
-    private String visitElseIfs(Statement.If statement)
-    {
-<span class="nc" id="L267">        String output = &quot;&quot;;</span>
-<span class="nc" id="L268">        ArrayList&lt;ElseIf&gt; elseIfs = statement.getElseIfs();</span>
-        
-<span class="nc bnc" id="L270" title="All 2 branches missed.">        for (ElseIf elseIf : elseIfs)</span>
-        {
-<span class="nc" id="L272">            output += visitElseIf(elseIf);</span>
-<span class="nc" id="L273">        }</span>
+<span class="nc" id="L271">        output += visitElseIfs(statement);</span>
+<span class="nc" id="L272">        output += visitElse(statement);</span>
+<span class="nc" id="L273">        output += &quot;\n&quot;;</span>
         
 <span class="nc" id="L275">        return output;</span>
     }
     
-    private String visitElseIf(ElseIf elseIf)
+    private String visitElseIfs(If statement)
     {
 <span class="nc" id="L280">        String output = &quot;&quot;;</span>
+<span class="nc" id="L281">        ArrayList&lt;ElseIf&gt; elseIfs = statement.getElseIfs();</span>
         
-        //indent &quot;else if&quot; token and &quot;condition&quot; tokens
-<span class="nc bnc" id="L283" title="All 2 branches missed.">        for (int i = 0; i &lt; indentationLevel; i++)</span>
+<span class="nc bnc" id="L283" title="All 2 branches missed.">        for (ElseIf elseIf : elseIfs)</span>
         {
-<span class="nc" id="L285">            output += &quot;    &quot;;</span>
-        }
+<span class="nc" id="L285">            output += visitElseIf(elseIf);</span>
+<span class="nc" id="L286">        }</span>
         
-<span class="nc" id="L288">        output += &quot;else if (&quot; + elseIf.getCondition().accept(this) + &quot;)\n&quot;;</span>
-<span class="nc" id="L289">        output += elseIf.acceptBlock(this);</span>
-        
-<span class="nc" id="L291">        return output;</span>
+<span class="nc" id="L288">        return output;</span>
     }
     
-    private String visitElse(Statement.If statement)
+    private String visitElseIf(ElseIf elseIf)
     {
-<span class="nc" id="L296">        Statement.Block else_ = statement.getElse();</span>
-<span class="nc" id="L297">        String output = &quot;&quot;;</span>
+<span class="nc" id="L293">        String output = &quot;&quot;;</span>
         
         //indent &quot;else if&quot; token and &quot;condition&quot; tokens
-<span class="nc bnc" id="L300" title="All 2 branches missed.">        for (int i = 0; i &lt; indentationLevel; i++)</span>
+<span class="nc bnc" id="L296" title="All 2 branches missed.">        for (int i = 0; i &lt; indentationLevel; i++)</span>
         {
-<span class="nc" id="L302">            output += &quot;    &quot;;</span>
+<span class="nc" id="L298">            output += &quot;    &quot;;</span>
         }
         
-<span class="nc" id="L305">        output += &quot;else\n&quot;;</span>
-<span class="nc" id="L306">        output += else_.acceptBlock(this);</span>
+<span class="nc" id="L301">        output += &quot;else if (&quot; + elseIf.getCondition().accept(this) + &quot;)\n&quot;;</span>
+<span class="nc" id="L302">        output += elseIf.acceptBlock(this);</span>
         
-<span class="nc" id="L308">        return output;</span>
+<span class="nc" id="L304">        return output;</span>
+    }
+    
+    private String visitElse(If statement)
+    {
+<span class="nc" id="L309">        Block else_ = statement.getElse();</span>
+<span class="nc" id="L310">        String output = &quot;&quot;;</span>
+        
+        //indent &quot;else if&quot; token and &quot;condition&quot; tokens
+<span class="nc bnc" id="L313" title="All 2 branches missed.">        for (int i = 0; i &lt; indentationLevel; i++)</span>
+        {
+<span class="nc" id="L315">            output += &quot;    &quot;;</span>
+        }
+        
+<span class="nc" id="L318">        output += &quot;else\n&quot;;</span>
+<span class="nc" id="L319">        output += else_.acceptBlock(this);</span>
+        
+<span class="nc" id="L321">        return output;</span>
     }
     
     @Override
-    public String visitClassDef(Statement.ClassDef statement)
+    public String visitClassDef(ClassDef statement)
     {
-<span class="nc" id="L314">        ArrayList&lt;Statement.Method&gt; methods = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L315">        String output = &quot;typedef struct\n&quot; +</span>
+<span class="nc" id="L327">        ArrayList&lt;Method&gt; methods = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L328">        String output = &quot;typedef struct\n&quot; +</span>
                         &quot;{\n&quot;;
         
-<span class="nc" id="L318">        indentationLevel++;</span>
+<span class="nc" id="L331">        indentationLevel++;</span>
         
-<span class="nc bnc" id="L320" title="All 2 branches missed.">        for (Statement s : statement.getBody()) </span>
+<span class="nc bnc" id="L333" title="All 2 branches missed.">        for (Statement s : statement.getBody()) </span>
         {
-<span class="nc bnc" id="L322" title="All 2 branches missed.">            if (s instanceof Statement.Method)</span>
+<span class="nc bnc" id="L335" title="All 2 branches missed.">            if (s instanceof Method)</span>
             {
-<span class="nc" id="L324">                methods.add((Statement.Method) s);</span>
+<span class="nc" id="L337">                methods.add((Method) s);</span>
             }
             else
             {
-<span class="nc bnc" id="L328" title="All 2 branches missed.">                for (int i = 0; i &lt; indentationLevel; i++)</span>
+<span class="nc bnc" id="L341" title="All 2 branches missed.">                for (int i = 0; i &lt; indentationLevel; i++)</span>
                 {
-<span class="nc" id="L330">                    output += &quot;    &quot;;</span>
+<span class="nc" id="L343">                    output += &quot;    &quot;;</span>
                 }
 
-<span class="nc" id="L333">                output += s.accept(this);</span>
+<span class="nc" id="L346">                output += s.accept(this);</span>
 
-<span class="nc bnc" id="L335" title="All 2 branches missed.">                if (s.needsSemicolon())</span>
+<span class="nc bnc" id="L348" title="All 2 branches missed.">                if (s.needsSemicolon())</span>
                 {
-<span class="nc" id="L337">                    output += &quot;;\n&quot;;</span>
+<span class="nc" id="L350">                    output += &quot;;\n&quot;;</span>
                 }
             }
-<span class="nc" id="L340">        }</span>
-        
-<span class="nc" id="L342">        indentationLevel--;</span>
-<span class="nc" id="L343">        output += &quot;} &quot; + statement.getClassName().getTextContent() + &quot;;\n \n&quot;;</span>
-        
-<span class="nc bnc" id="L345" title="All 2 branches missed.">        for (Statement.Method m : methods)</span>
-        {
-<span class="nc bnc" id="L347" title="All 2 branches missed.">            for (int i = 0; i &lt; indentationLevel; i++)</span>
-            {
-<span class="nc" id="L349">                output += &quot;    &quot;;</span>
-            }
-
-<span class="nc" id="L352">            output += m.accept(this);</span>
 <span class="nc" id="L353">        }</span>
         
-<span class="nc" id="L355">        return output;</span>
-    }
-    
-    @Override
-    public String visitStructDef(Statement.StructDef statement)
-    {
-<span class="nc" id="L361">        throw new UnsupportedOperationException(&quot;Not supported yet.&quot;); //To change body of generated methods, choose Tools | Templates.</span>
-    }
-    
-    @Override
-    public String visitWhile(Statement.While statement)
-    {
-<span class="nc" id="L367">        throw new UnsupportedOperationException(&quot;Not supported yet.&quot;); //To change body of generated methods, choose Tools | Templates.</span>
-    }
-
-    @Override
-    public String visitReturn(Statement.Return statement)
-    {
-<span class="nc" id="L373">        return &quot;return &quot; + statement.getReturnedStatement().accept(this);</span>
-    }
-
-    @Override
-    public String visitExpressionStatement(Statement.ExpressionStatement 
-        statement)
-    {
-<span class="nc" id="L380">        return statement.getExpression().accept(this);</span>
-    }
-
-    @Override
-    public String visitVarDeclaration(Statement.VarDeclaration statement)
-    {
-<span class="nc" id="L386">        String sign = statement.getSign().name().toLowerCase();</span>
-<span class="nc" id="L387">        String output = &quot;&quot;;</span>
-<span class="nc" id="L388">        Expression value = statement.getValue();</span>
+<span class="nc" id="L355">        indentationLevel--;</span>
+<span class="nc" id="L356">        output += &quot;} &quot; + statement.getClassName().getTextContent() + &quot;;\n \n&quot;;</span>
         
-<span class="nc bnc" id="L390" title="All 2 branches missed.">        if (!sign.equals(&quot;unspecified&quot;))</span>
+<span class="nc bnc" id="L358" title="All 2 branches missed.">        for (Method m : methods)</span>
         {
-<span class="nc" id="L392">            output = sign + &quot; &quot;;</span>
+<span class="nc bnc" id="L360" title="All 2 branches missed.">            for (int i = 0; i &lt; indentationLevel; i++)</span>
+            {
+<span class="nc" id="L362">                output += &quot;    &quot;;</span>
+            }
+
+<span class="nc" id="L365">            output += m.accept(this);</span>
+<span class="nc" id="L366">        }</span>
+        
+<span class="nc" id="L368">        return output;</span>
+    }
+    
+    @Override
+    public String visitStructDef(StructDef statement)
+    {
+<span class="nc" id="L374">        throw new UnsupportedOperationException(&quot;Not supported yet.&quot;); //To change body of generated methods, choose Tools | Templates.</span>
+    }
+    
+    @Override
+    public String visitWhile(While statement)
+    {
+<span class="nc" id="L380">        String output = &quot;&quot;;</span>
+        
+        // indent while
+<span class="nc bnc" id="L383" title="All 2 branches missed.">        for (int i = 0; i &lt; indentationLevel; i++)</span>
+        {
+<span class="nc" id="L385">            output += &quot;    &quot;;</span>
         }
         
-<span class="nc bnc" id="L395" title="All 2 branches missed.">        if (statement.getSimplifiedType() == SimplifiedType.CLASS)</span>
+<span class="nc" id="L388">        output += &quot;while (&quot; + statement.getExitCondition().accept(this) + &quot;)\n&quot;;</span>
+<span class="nc" id="L389">        output += statement.acceptBlock(this);</span>
+        
+<span class="nc" id="L391">        return output;</span>
+    }
+
+    @Override
+    public String visitReturn(Return statement)
+    {
+<span class="nc" id="L397">        return &quot;return &quot; + statement.getReturnedStatement().accept(this);</span>
+    }
+
+    @Override
+    public String visitExpressionStatement(ExpressionStatement 
+        statement)
+    {
+<span class="nc" id="L404">        return statement.getExpression().accept(this);</span>
+    }
+
+    @Override
+    public String visitVarDeclaration(VarDeclaration statement)
+    {
+<span class="nc" id="L410">        String sign = statement.getSign().name().toLowerCase();</span>
+<span class="nc" id="L411">        String output = &quot;&quot;;</span>
+<span class="nc" id="L412">        Expression value = statement.getValue();</span>
+        
+<span class="nc bnc" id="L414" title="All 2 branches missed.">        if (!sign.equals(&quot;unspecified&quot;))</span>
         {
-<span class="nc" id="L397">            output += ClassHandler.getClassDefinition(statement.getClassID()).</span>
-<span class="nc" id="L398">                getClassName().getTextContent();</span>
+<span class="nc" id="L416">            output = sign + &quot; &quot;;</span>
+        }
+        
+<span class="nc bnc" id="L419" title="All 2 branches missed.">        if (statement.getSimplifiedType() == SimplifiedType.CLASS)</span>
+        {
+<span class="nc" id="L421">            output += ClassHandler.getClassDefinition(statement.getClassID()).</span>
+<span class="nc" id="L422">                getClassName().getTextContent();</span>
         }
         else 
         {
-<span class="nc" id="L402">            output += statement.getSimplifiedType().name().toLowerCase().</span>
-<span class="nc" id="L403">                replace(&quot;_&quot;, &quot; &quot;);</span>
+<span class="nc" id="L426">            output += statement.getSimplifiedType().name().toLowerCase().</span>
+<span class="nc" id="L427">                replace(&quot;_&quot;, &quot; &quot;);</span>
         }
         
-<span class="nc bnc" id="L406" title="All 2 branches missed.">        if (!statement.isReturnVar())</span>
+<span class="nc bnc" id="L430" title="All 2 branches missed.">        if (!statement.isReturnVar())</span>
         {
-<span class="nc" id="L408">            output += &quot; &quot;;</span>
+<span class="nc" id="L432">            output += &quot; &quot;;</span>
         }
         //else it's a return declaration
         
-<span class="nc bnc" id="L412" title="All 2 branches missed.">        for (int i = 0; i &lt; statement.getPointerLevel(); i++)</span>
+<span class="nc bnc" id="L436" title="All 2 branches missed.">        for (int i = 0; i &lt; statement.getPointerLevel(); i++)</span>
         {
-<span class="nc" id="L414">            output += &quot;*&quot;;</span>
+<span class="nc" id="L438">            output += &quot;*&quot;;</span>
         }
         
-<span class="nc" id="L417">        output += statement.getNameText();</span>
+<span class="nc" id="L441">        output += statement.getNameText();</span>
         
-<span class="nc bnc" id="L419" title="All 2 branches missed.">        if (value != null)</span>
+<span class="nc bnc" id="L443" title="All 2 branches missed.">        if (value != null)</span>
         {
-<span class="nc" id="L421">            output += &quot; &quot; + statement.getAssignmentOperator().getTextContent() +</span>
-<span class="nc" id="L422">                &quot; &quot; + value.accept(this);</span>
+<span class="nc" id="L445">            output += &quot; &quot; + statement.getAssignmentOperator().getTextContent() +</span>
+<span class="nc" id="L446">                &quot; &quot; + value.accept(this);</span>
         }
         
-<span class="nc" id="L425">        return output;</span>
+<span class="nc" id="L449">        return output;</span>
     }
     
     @Override
     public String visitAssignment(Expression.Assignment visitor)
     {
-<span class="nc" id="L431">        return visitor.getOperand1().accept(this) + &quot; &quot; +</span>
-<span class="nc" id="L432">            visitor.getOperator().getTextContent() + &quot; &quot; +</span>
-<span class="nc" id="L433">            visitor.getOperand2().accept(this);</span>
+<span class="nc" id="L455">        return visitor.getOperand1().accept(this) + &quot; &quot; +</span>
+<span class="nc" id="L456">            visitor.getOperator().getTextContent() + &quot; &quot; +</span>
+<span class="nc" id="L457">            visitor.getOperand2().accept(this);</span>
     }
     
     @Override
     public String visitBinary(Expression.Binary visitor)
     {
-<span class="nc" id="L439">        return visitor.getOperand1().accept(this) + &quot; &quot; +</span>
-<span class="nc" id="L440">            visitor.getOperator().getTextContent() + &quot; &quot; +</span>
-<span class="nc" id="L441">            visitor.getOperand2().accept(this);</span>
+<span class="nc" id="L463">        return visitor.getOperand1().accept(this) + &quot; &quot; +</span>
+<span class="nc" id="L464">            visitor.getOperator().getTextContent() + &quot; &quot; +</span>
+<span class="nc" id="L465">            visitor.getOperand2().accept(this);</span>
     }
 
     @Override
     public String visitGrouping(Expression.Grouping visitor)
     {
-<span class="nc" id="L447">        return &quot;(&quot; + visitor.getOperand1().accept(this) + &quot;)&quot;;</span>
+<span class="nc" id="L471">        return &quot;(&quot; + visitor.getOperand1().accept(this) + &quot;)&quot;;</span>
     }
 
     @Override
     public String visitLiteral(Expression.Literal visitor)
     {
-<span class="nc" id="L453">        return visitor.getTextContent();</span>
+<span class="nc" id="L477">        return visitor.getTextContent();</span>
     }
 
     @Override
     public String visitUnary(Expression.Unary visitor)
     {
-<span class="nc bnc" id="L459" title="All 2 branches missed.">        if (visitor.isOperatorOnRight())</span>
+<span class="nc bnc" id="L483" title="All 2 branches missed.">        if (visitor.isOperatorOnRight())</span>
         {
-<span class="nc" id="L461">            return visitor.getOperand1().accept(this) +</span>
-<span class="nc" id="L462">                visitor.getOperator().getTextContent();</span>
+<span class="nc" id="L485">            return visitor.getOperand1().accept(this) +</span>
+<span class="nc" id="L486">                visitor.getOperator().getTextContent();</span>
         }
         else
         {
-<span class="nc" id="L466">            return visitor.getOperator().getTextContent() +</span>
-<span class="nc" id="L467">                visitor.getOperand1().accept(this);</span>
+<span class="nc" id="L490">            return visitor.getOperator().getTextContent() +</span>
+<span class="nc" id="L491">                visitor.getOperand1().accept(this);</span>
         }
     }
     
     @Override
     public String visitVar(Expression.Variable expression)
     {
-<span class="nc" id="L474">        return expression.getOperator().getTextContent();</span>
+<span class="nc" id="L498">        return expression.getOperator().getTextContent();</span>
     }
 
     @Override
-    public String visitPackage(Statement.Package statement)
+    public String visitPackage(Package statement)
     {
         /**
          * there's no concept of a package in c, and our package keyword
          *  is basically just an additional string to mangle onto mangled names
          */
-<span class="nc" id="L484">        return &quot;&quot;;</span>
+<span class="nc" id="L508">        return &quot;&quot;;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

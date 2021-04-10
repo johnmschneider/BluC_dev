@@ -16,9 +16,11 @@
 
 package bluC.transpiler;
 
+import bluC.transpiler.statements.Statement;
 import bluC.parser.exceptions.MalformedNumber;
 import bluC.parser.exceptions.MalformedFloat;
 import bluC.parser.exceptions.MalformedInt;
+import bluC.transpiler.statements.Package;
 import java.util.Objects;
 
 /**
@@ -49,7 +51,7 @@ public class Token
     {
         this.tokenInfo  = tokenInfo;
         this.fileInfo   = fileInfo;
-        this.package_   = Statement.Package.NO_PACKAGE;
+        this.package_   = Package.NO_PACKAGE;
     }
     
     
@@ -223,12 +225,30 @@ public class Token
             at0 == '>' || at0 == '.' || at0 == '&' || at0 == '|';
     }
     
+    /**
+     * Whether or not this token is named something that might be used as a
+     *  reserved lexeme in the future.
+     * 
+     * For keywords or core types that weren't originally part of the
+     *  specification but are now required in common tasks.
+     */
+    public boolean isFutureReservation()
+    {
+        char[] textArray = getTextContent().toCharArray();
+        
+        boolean isFutureReservation = 
+            textArray[0] == '_' && textArray[1] == '_' && 
+            Character.isLetterOrDigit(textArray[2]);
+        
+        return isFutureReservation;
+    }
+    
     public boolean isValidName()
     {
-        char startingChar = getTextContent().charAt(0);
-        
-        return !(Character.isDigit(startingChar) || isReservedWord() || 
-            isReservedLexeme());
+        char startToken = getTextContent().charAt(0);
+                
+        return !(isFutureReservation() || Character.isDigit(startToken) || 
+            isReservedWord() || isReservedLexeme());
     }
     
     @Override
@@ -256,8 +276,8 @@ public class Token
                  * 
                  * (They didn't add a SupressWarnings for each type of hint)
                  */
-                (package_ == Statement.Package.NO_PACKAGE ? 
-                    otherToken.package_ == Statement.Package.NO_PACKAGE :
+                (package_ == Package.NO_PACKAGE ? 
+                    otherToken.package_ == Package.NO_PACKAGE :
                     package_.equals(otherToken.package_));
         }
         else

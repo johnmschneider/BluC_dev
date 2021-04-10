@@ -16,12 +16,25 @@
 
 package bluC.transpiler;
 
+import bluC.transpiler.statements.Statement;
+import bluC.transpiler.statements.blocks.Block;
 import bluC.Logger;
 import bluC.parser.Parser;
 import java.util.ArrayList;
-import bluC.transpiler.Statement.If.ElseIf;
-import bluC.transpiler.Statement.VarDeclaration.SimplifiedType;
+import bluC.transpiler.statements.blocks.If.ElseIf;
+import bluC.transpiler.statements.vars.SimplifiedType;
 import bluC.parser.handlers.statement.ClassHandler;
+import bluC.transpiler.statements.ExpressionStatement;
+import bluC.transpiler.statements.Package;
+import bluC.transpiler.statements.blocks.ClassDef;
+import bluC.transpiler.statements.blocks.If;
+import bluC.transpiler.statements.blocks.Method;
+import bluC.transpiler.statements.blocks.Function;
+import bluC.transpiler.statements.ParameterList;
+import bluC.transpiler.statements.Return;
+import bluC.transpiler.statements.vars.VarDeclaration;
+import bluC.transpiler.statements.blocks.While;
+import bluC.transpiler.statements.blocks.StructDef;
 
 /**
  *
@@ -128,7 +141,7 @@ public class Transpiler implements Expression.Visitor<String>,
     }
     
     @Override
-    public String visitBlock(Statement.Block statement)
+    public String visitBlock(Block statement)
     {
         String output = "";
         
@@ -143,7 +156,7 @@ public class Transpiler implements Expression.Visitor<String>,
         
         for (Statement s : statement.getBody())
         {
-            if (!(s instanceof Statement.Block))
+            if (!(s instanceof Block))
             {
                 //indent code
                 for (int i = 0; i < indentationLevel; i++)
@@ -154,7 +167,7 @@ public class Transpiler implements Expression.Visitor<String>,
             
             output += s.accept(this);
             
-            if (!(s instanceof Statement.Block))
+            if (!(s instanceof Block))
             {
                 if (s.needsSemicolon())
                 {
@@ -185,7 +198,7 @@ public class Transpiler implements Expression.Visitor<String>,
     }
 
     @Override
-    public String visitFunction(Statement.Function statement)
+    public String visitFunction(Function statement)
     {
         String output = "";
         
@@ -203,7 +216,7 @@ public class Transpiler implements Expression.Visitor<String>,
     }
     
     @Override
-    public String visitMethod(Statement.Method statement)
+    public String visitMethod(Method statement)
     {
         String output = "";
         
@@ -221,14 +234,14 @@ public class Transpiler implements Expression.Visitor<String>,
     }
     
     @Override
-    public String visitParameterList(Statement.ParameterList statement)
+    public String visitParameterList(ParameterList statement)
     {
         String output = "(";
-        ArrayList<Statement.VarDeclaration> params = statement.getParameters();
+        ArrayList<VarDeclaration> params = statement.getParameters();
         
         for (int i = 0; i < params.size() - 1; i++)
         {
-            Statement.VarDeclaration param = params.get(i);
+            VarDeclaration param = params.get(i);
             output += param.accept(this) + ", ";
         }
         
@@ -242,7 +255,7 @@ public class Transpiler implements Expression.Visitor<String>,
     }
     
     @Override
-    public String visitIf(Statement.If statement)
+    public String visitIf(If statement)
     {
         String output = "";
         
@@ -262,7 +275,7 @@ public class Transpiler implements Expression.Visitor<String>,
         return output;
     }
     
-    private String visitElseIfs(Statement.If statement)
+    private String visitElseIfs(If statement)
     {
         String output = "";
         ArrayList<ElseIf> elseIfs = statement.getElseIfs();
@@ -291,9 +304,9 @@ public class Transpiler implements Expression.Visitor<String>,
         return output;
     }
     
-    private String visitElse(Statement.If statement)
+    private String visitElse(If statement)
     {
-        Statement.Block else_ = statement.getElse();
+        Block else_ = statement.getElse();
         String output = "";
         
         //indent "else if" token and "condition" tokens
@@ -309,9 +322,9 @@ public class Transpiler implements Expression.Visitor<String>,
     }
     
     @Override
-    public String visitClassDef(Statement.ClassDef statement)
+    public String visitClassDef(ClassDef statement)
     {
-        ArrayList<Statement.Method> methods = new ArrayList<>();
+        ArrayList<Method> methods = new ArrayList<>();
         String output = "typedef struct\n" +
                         "{\n";
         
@@ -319,9 +332,9 @@ public class Transpiler implements Expression.Visitor<String>,
         
         for (Statement s : statement.getBody()) 
         {
-            if (s instanceof Statement.Method)
+            if (s instanceof Method)
             {
-                methods.add((Statement.Method) s);
+                methods.add((Method) s);
             }
             else
             {
@@ -342,7 +355,7 @@ public class Transpiler implements Expression.Visitor<String>,
         indentationLevel--;
         output += "} " + statement.getClassName().getTextContent() + ";\n \n";
         
-        for (Statement.Method m : methods)
+        for (Method m : methods)
         {
             for (int i = 0; i < indentationLevel; i++)
             {
@@ -356,32 +369,43 @@ public class Transpiler implements Expression.Visitor<String>,
     }
     
     @Override
-    public String visitStructDef(Statement.StructDef statement)
+    public String visitStructDef(StructDef statement)
     {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     
     @Override
-    public String visitWhile(Statement.While statement)
+    public String visitWhile(While statement)
     {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        String output = "";
+        
+        // indent while
+        for (int i = 0; i < indentationLevel; i++)
+        {
+            output += "    ";
+        }
+        
+        output += "while (" + statement.getExitCondition().accept(this) + ")\n";
+        output += statement.acceptBlock(this);
+        
+        return output;
     }
 
     @Override
-    public String visitReturn(Statement.Return statement)
+    public String visitReturn(Return statement)
     {
         return "return " + statement.getReturnedStatement().accept(this);
     }
 
     @Override
-    public String visitExpressionStatement(Statement.ExpressionStatement 
+    public String visitExpressionStatement(ExpressionStatement 
         statement)
     {
         return statement.getExpression().accept(this);
     }
 
     @Override
-    public String visitVarDeclaration(Statement.VarDeclaration statement)
+    public String visitVarDeclaration(VarDeclaration statement)
     {
         String sign = statement.getSign().name().toLowerCase();
         String output = "";
@@ -475,12 +499,12 @@ public class Transpiler implements Expression.Visitor<String>,
     }
 
     @Override
-    public String visitPackage(Statement.Package statement)
+    public String visitPackage(Package statement)
     {
         /**
          * there's no concept of a package in c, and our package keyword
          *  is basically just an additional string to mangle onto mangled names
          */
-        return "";
+        return statement.getFullyQualifiedPackageName();
     }
 }

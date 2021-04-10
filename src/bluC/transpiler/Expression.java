@@ -16,6 +16,7 @@
 
 package bluC.transpiler;
 
+import bluC.transpiler.statements.vars.VarDeclaration;
 import java.util.Objects;
 
 /**
@@ -160,15 +161,15 @@ public abstract class Expression
      */
     public static class Variable extends Expression
     {
-        private Statement.VarDeclaration variableInfo;
-            
-        public Variable(Statement.VarDeclaration variableInfo)
+        private VarDeclaration variableInfo;
+
+        public Variable(VarDeclaration variableInfo)
         {
             super(variableInfo.getName(), null, null);
-            this.variableInfo = variableInfo;
+            this.variableInfo   = variableInfo;
         }
         
-        public Statement.VarDeclaration getVariableInfo()
+        public VarDeclaration getVariableInfo()
         {
             return variableInfo;
         }

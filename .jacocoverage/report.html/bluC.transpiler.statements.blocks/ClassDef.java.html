@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ClassDef.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;BluC&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.source.html" class="el_package">bluC.transpiler.statements.blocks</a> &gt; <span class="el_source">ClassDef.java</span></div><h1>ClassDef.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2021 John Schneider.
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package bluC.transpiler.statements.blocks;
+
+import bluC.transpiler.statements.Statement;
+import bluC.transpiler.Token;
+import bluC.transpiler.TokenFileInfo;
+import bluC.transpiler.TokenInfo;
+import java.util.Objects;
+
+/**
+ *
+ * @author John Schneider
+ */
+public class ClassDef extends Block
+{
+    /**
+     * Represents a class that wasn't yet defined by the parser.
+     *  Used as an error flag -- if we find a class whose name is
+     *  this, then it's an error in the compiler.
+     * 
+     * Stands for Blu C No Class
+     */
+    public static final String      NOT_DEFINED      = &quot;__blucNC&quot;;
+<span class="nc" id="L38">    public static final ClassDef    OBJECT_BASE_CLASS  =</span>
+        new ClassDef(&quot;Object&quot;, &quot;bluc.lang&quot;, Statement.NO_STARTING_LINE_INDEX);
+    
+    private Token   className;
+    private Token   baseClass;
+    private String  classID;
+    
+    // TODO - why didn't I just make this constructor a private method?
+    /**
+     * Helper constructor for other constructors.
+     */
+    private ClassDef(long startingLineIndex)
+    {
+<span class="nc" id="L51">        super(startingLineIndex);</span>
+<span class="nc" id="L52">        this.baseClass  = null;</span>
+<span class="nc" id="L53">        this.classID    = NOT_DEFINED;</span>
+<span class="nc" id="L54">    }</span>
+
+    // TODO - change all ClassDef instances over to use this constructor
+    //  (after packages are implemented)
+    private ClassDef(Token className, String package_, long startingLineIndex)
+    {
+<span class="nc" id="L60">        this(startingLineIndex);</span>
+<span class="nc" id="L61">        this.className = </span>
+            new Token(
+<span class="nc" id="L63">                new TokenInfo(package_ + &quot;_&quot; + className.getTextContent(), </span>
+                    false), 
+<span class="nc" id="L65">                new TokenFileInfo(className.getFilepath(), </span>
+<span class="nc" id="L66">                    className.getLineIndex()), </span>
+                package_);
+<span class="nc" id="L68">    }</span>
+    
+    // For use for base class object
+    private ClassDef(String className, String package_, long startingLineIndex)
+    {
+<span class="nc" id="L73">        this(new Token(</span>
+                new TokenInfo(package_ + &quot;_&quot; + className, 
+                    false),
+                new TokenFileInfo(&quot;ClassDef.java&quot;, 
+                    (int) startingLineIndex), 
+                package_),
+            package_,
+            startingLineIndex);
+<span class="nc" id="L81">    }</span>
+    
+    public ClassDef(Token className, long startingLineIndex)
+    {
+<span class="nc" id="L85">        this(startingLineIndex);</span>
+<span class="nc" id="L86">        this.className = className;</span>
+<span class="nc" id="L87">    }</span>
+
+    public Token getClassName()
+    {
+<span class="nc" id="L91">        return className;</span>
+    }
+
+    public String getClassNameText()
+    {
+<span class="nc" id="L96">        return className.getTextContent();</span>
+    }
+
+    public void setBaseClass(Token baseClass)
+    {
+<span class="nc" id="L101">        this.baseClass = baseClass;</span>
+<span class="nc" id="L102">    }</span>
+
+    public String getClassID()
+    {
+<span class="nc" id="L106">        return classID;</span>
+    }
+
+    @Override
+    public &lt;T&gt; T accept(Visitor&lt;T&gt; visitor)
+    {
+<span class="nc" id="L112">        return visitor.visitClassDef(this);</span>
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+<span class="nc bnc" id="L118" title="All 2 branches missed.">        if (this == obj)</span>
+        {
+<span class="nc" id="L120">            return true;</span>
+        }
+<span class="nc bnc" id="L122" title="All 2 branches missed.">        if (obj == null)</span>
+        {
+<span class="nc" id="L124">            return false;</span>
+        }
+<span class="nc bnc" id="L126" title="All 2 branches missed.">        if (getClass() != obj.getClass())</span>
+        {
+<span class="nc" id="L128">            return false;</span>
+        }
+<span class="nc bnc" id="L130" title="All 2 branches missed.">        if (!super.equals(obj))</span>
+        {
+<span class="nc" id="L132">            return false;</span>
+        }
+<span class="nc" id="L134">        final ClassDef other = (ClassDef) obj;</span>
+<span class="nc bnc" id="L135" title="All 2 branches missed.">        if (!this.classID.equals(other.classID))</span>
+        {
+<span class="nc" id="L137">            return false;</span>
+        }
+<span class="nc bnc" id="L139" title="All 2 branches missed.">        if (!Objects.equals(this.className, other.className))</span>
+        {
+<span class="nc" id="L141">            return false;</span>
+        }
+<span class="nc bnc" id="L143" title="All 2 branches missed.">        if (!Objects.equals(this.baseClass, other.baseClass))</span>
+        {
+<span class="nc" id="L145">            return false;</span>
+        }
+<span class="nc" id="L147">        return true;</span>
+    }
+
+    @Override
+    public int hashCode()
+    {
+<span class="nc" id="L153">        int hash = 7;</span>
+<span class="nc" id="L154">        hash = 19 * hash + Objects.hashCode(this.className);</span>
+<span class="nc" id="L155">        hash = 19 * hash + Objects.hashCode(this.baseClass);</span>
+<span class="nc" id="L156">        hash = 19 * hash + Objects.hashCode(this.classID);</span>
+<span class="nc" id="L157">        hash = 19 * hash + (int) (this.getStartingLineIndex() ^ </span>
+<span class="nc" id="L158">            (this.getStartingLineIndex() &gt;&gt;&gt; 32));</span>
+<span class="nc" id="L159">        hash = 19 * hash + (int) (this.getEndingLineIndex() ^ </span>
+<span class="nc" id="L160">            (this.getEndingLineIndex() &gt;&gt;&gt; 32));</span>
+<span class="nc" id="L161">        return hash;</span>
+    }
+    
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

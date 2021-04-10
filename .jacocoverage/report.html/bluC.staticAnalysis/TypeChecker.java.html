@@ -16,7 +16,7 @@
 
 package bluC.staticAnalysis;
 
-import bluC.transpiler.Statement;
+import bluC.transpiler.statements.Statement;
 import java.util.ArrayList;
 
 /**

@@ -18,9 +18,10 @@ package bluC.builders;
 
 import bluC.transpiler.Expression;
 import bluC.transpiler.Token;
-import bluC.transpiler.Statement.VarDeclaration;
-import static bluC.transpiler.Statement.VarDeclaration.Sign;
-import static bluC.transpiler.Statement.VarDeclaration.SimplifiedType;
+import bluC.transpiler.statements.blocks.ClassDef;
+import bluC.transpiler.statements.vars.Sign;
+import bluC.transpiler.statements.vars.SimplifiedType;
+import bluC.transpiler.statements.vars.VarDeclaration;
 
 /**
  * Builds a variable declaration based on the parameters.
@@ -66,10 +67,10 @@ public class VarDeclarationBuilder
     private Expression initialValue;
     
     /**
-     * Optional parameter, ID of the class if this is a class, otherwise it's
-     *  VarDeclaration.NOT_A_CLASS
+     * Optional parameter. ID of the class if this is a class, otherwise it's
+  ClassDef.NOT_DEFINED
      */
-    private long       classID;
+    private String       classID;
 
     public VarDeclarationBuilder()
     {
@@ -92,7 +93,7 @@ public class VarDeclarationBuilder
     
     private void initClassDefaults()
     {
-        classID = VarDeclaration.NOT_A_CLASS;
+        classID = ClassDef.NOT_DEFINED;
     }
     
     private void initVarDefaults()
@@ -228,12 +229,12 @@ public class VarDeclarationBuilder
         return this;
     }
     
-    public long getClassID()
+    public String getClassID()
     {
         return classID;
     }
 
-    public VarDeclarationBuilder setClassID(long classID)
+    public VarDeclarationBuilder setClassID(String classID)
     {
         this.classID = classID;
         return this;

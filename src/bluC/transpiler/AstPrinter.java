@@ -16,9 +16,22 @@
 
 package bluC.transpiler;
 
+import bluC.transpiler.statements.Statement;
+import bluC.transpiler.statements.blocks.Block;
 import java.util.ArrayList;
-import bluC.transpiler.Statement.VarDeclaration.SimplifiedType;
+import bluC.transpiler.statements.vars.SimplifiedType;
 import bluC.parser.handlers.statement.ClassHandler;
+import bluC.transpiler.statements.ExpressionStatement;
+import bluC.transpiler.statements.Package;
+import bluC.transpiler.statements.blocks.ClassDef;
+import bluC.transpiler.statements.blocks.If;
+import bluC.transpiler.statements.blocks.Method;
+import bluC.transpiler.statements.blocks.Function;
+import bluC.transpiler.statements.ParameterList;
+import bluC.transpiler.statements.Return;
+import bluC.transpiler.statements.vars.VarDeclaration;
+import bluC.transpiler.statements.blocks.While;
+import bluC.transpiler.statements.blocks.StructDef;
 
 /**
  *
@@ -121,7 +134,7 @@ public class AstPrinter implements Expression.Visitor<String>,
     }
     
     @Override
-    public String visitBlock(Statement.Block statement)
+    public String visitBlock(Block statement)
     {
         ArrayList<Statement>    contents;
         String                  output;
@@ -159,7 +172,7 @@ public class AstPrinter implements Expression.Visitor<String>,
     }
 
     @Override
-    public String visitFunction(Statement.Function statement)
+    public String visitFunction(Function statement)
     {
         String output = "";
         
@@ -181,7 +194,7 @@ public class AstPrinter implements Expression.Visitor<String>,
     }
     
     @Override
-    public String visitMethod(Statement.Method statement)
+    public String visitMethod(Method statement)
     {
         String output = "";
         
@@ -203,14 +216,14 @@ public class AstPrinter implements Expression.Visitor<String>,
     }
     
     @Override
-    public String visitParameterList(Statement.ParameterList statement)
+    public String visitParameterList(ParameterList statement)
     {
         String output = "(parameter-list ";
-        ArrayList<Statement.VarDeclaration> params = statement.getParameters();
+        ArrayList<VarDeclaration> params = statement.getParameters();
         
         for (int i = 0; i < params.size() - 1; i++)
         {
-            Statement.VarDeclaration param = params.get(i);
+            VarDeclaration param = params.get(i);
             output += param.accept(this) + " ";
         }
         
@@ -224,7 +237,7 @@ public class AstPrinter implements Expression.Visitor<String>,
     }
     
     @Override
-    public String visitIf(Statement.If statement)
+    public String visitIf(If statement)
     {
         String output = "";
         
@@ -254,10 +267,10 @@ public class AstPrinter implements Expression.Visitor<String>,
         return output;
     }
     
-    private String visitElseIfs(Statement.If statement)
+    private String visitElseIfs(If statement)
     {
         String output = "\n";
-        ArrayList<Statement.If.ElseIf> elseIfs = statement.getElseIfs();
+        ArrayList<If.ElseIf> elseIfs = statement.getElseIfs();
         
         //indent opening paren
         for (int i = 0; i < indentationLevel; i++)
@@ -271,7 +284,7 @@ public class AstPrinter implements Expression.Visitor<String>,
         //  else-ifs ArrayList
         indentationLevel++;
         
-        for (Statement.If.ElseIf elseIf : elseIfs)
+        for (If.ElseIf elseIf : elseIfs)
         {
             output += visitElseIf(elseIf);
         }
@@ -282,7 +295,7 @@ public class AstPrinter implements Expression.Visitor<String>,
         return output;
     }
     
-    private String visitElseIf(Statement.If.ElseIf elseIf)
+    private String visitElseIf(If.ElseIf elseIf)
     {
         String output = "\n";
         
@@ -300,9 +313,9 @@ public class AstPrinter implements Expression.Visitor<String>,
         return output;
     }
     
-    private String visitElse(Statement.If statement)
+    private String visitElse(If statement)
     {
-        Statement.Block else_ = statement.getElse();
+        Block else_ = statement.getElse();
         String output = "\n";
         
         //indent "else if" token and "condition" tokens
@@ -319,7 +332,7 @@ public class AstPrinter implements Expression.Visitor<String>,
     }
     
     @Override
-    public String visitClassDef(Statement.ClassDef statement)
+    public String visitClassDef(ClassDef statement)
     {
         Token className = statement.getClassName();
         String output = "";
@@ -341,13 +354,13 @@ public class AstPrinter implements Expression.Visitor<String>,
     }
     
     @Override
-    public String visitStructDef(Statement.StructDef statement)
+    public String visitStructDef(StructDef statement)
     {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     
     @Override
-    public String visitWhile(Statement.While statement)
+    public String visitWhile(While statement)
     {
         String output = "";
         
@@ -368,7 +381,7 @@ public class AstPrinter implements Expression.Visitor<String>,
     }
 
     @Override
-    public String visitReturn(Statement.Return statement)
+    public String visitReturn(Return statement)
     {
         String output = "";
         
@@ -384,7 +397,7 @@ public class AstPrinter implements Expression.Visitor<String>,
     }
 
     @Override
-    public String visitExpressionStatement(Statement.ExpressionStatement 
+    public String visitExpressionStatement(ExpressionStatement 
         statement)
     {
         return "(expression-statement " + statement.getExpression().
@@ -392,14 +405,14 @@ public class AstPrinter implements Expression.Visitor<String>,
     }
 
     @Override
-    public String visitVarDeclaration(Statement.VarDeclaration statement)
+    public String visitVarDeclaration(VarDeclaration statement)
     {
         String output = "(var-declaration ";
         
         
         if (statement.getSimplifiedType() == SimplifiedType.CLASS)
         {
-            Statement.ClassDef class_ = ClassHandler.getClassDefinition(
+            ClassDef class_ = ClassHandler.getClassDefinition(
                 statement.getClassID());
             output += class_.getClassName().getTextContent();
         }
@@ -434,7 +447,7 @@ public class AstPrinter implements Expression.Visitor<String>,
     }
 
     @Override
-    public String visitPackage(Statement.Package statement)
+    public String visitPackage(Package statement)
     {
         return "(package " + statement.getFullyQualifiedPackageName() + ")";
     }

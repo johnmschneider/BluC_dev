@@ -16,7 +16,7 @@
 package bluC.parser.handlers.statement;
 
 import bluC.parser.Parser;
-import bluC.transpiler.Statement;
+import bluC.transpiler.statements.Statement;
 
 /**
  *

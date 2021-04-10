@@ -18,9 +18,9 @@ package bluC.parser.handlers.statement;
 
 import bluC.Logger;
 import bluC.transpiler.Scope;
-import bluC.transpiler.Statement;
 import bluC.transpiler.Token;
 import bluC.parser.Parser;
+import bluC.transpiler.statements.blocks.Block;
 
 /**
  *
@@ -38,12 +38,20 @@ public class BlockHandler
     }
     
     /**
-     * Handles a block. Expects to be on the token immediately before the
-     *  opening brace "{".
+     * Handles a block.
+     * 
+     * Expects to be on the token immediately before the opening brace "{".
+     * 
+     * Ends on token immediately before the closing brace "}" of the block. 
+     *  
+     * This differs from most other handlers because most blocks' last token
+     *  is in fact the closing brace, and StatementHandler automatically moves
+     *  to the next token after a statement end, and the parser operates on the
+     *  *peeked* token.
      */
-    public Statement.Block handleBlock(Token openBrace)
+    public Block handleBlock(Token openBrace)
     {
-        Statement.Block newBlock = new Statement.Block(
+        Block newBlock = new Block(
             openBrace.getLineIndex());
         
         //set cur token to "{"
@@ -64,17 +72,18 @@ public class BlockHandler
      * 
      * Expects the parser's current token to be the opening brace of the block
      *  ("{").
+     * 
+     * Ends on token immediately before the closing brace "}" of the block, or 
+     *  the best guess for said token when there is a parsing error.
      */
     public void addStatementsToBlock(
-        Token openBrace, Statement.Block block)
+        Token openBrace, Block block)
     {
         boolean isSuccessful = false;
         
         if (parser.peekMatches("}"))
         {
-            // move to "}"
-            parser.nextToken();
-            Logger.warn(openBrace, "empty block");
+            Logger.warn(openBrace, "Empty block");
         }
         else
         {
@@ -82,8 +91,8 @@ public class BlockHandler
             while (!parser.atEOF())
             {
                 // since block is also a statement type, this should handle any 
-                //  nested blocks, ergo we don't have to worry about brace matching
-                //  here
+                //  nested blocks, ergo we don't have to worry about brace 
+                //  matching here
                 block.addStatement(statementHandler.handleStatement(true));
 
                 if (parser.peekMatches("}"))

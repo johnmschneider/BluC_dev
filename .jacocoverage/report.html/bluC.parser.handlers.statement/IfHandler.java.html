@@ -19,14 +19,16 @@ package bluC.parser.handlers.statement;
 import bluC.Logger;
 import bluC.transpiler.Expression;
 import bluC.transpiler.Scope;
-import bluC.transpiler.Statement;
-import bluC.transpiler.Statement.If.Else;
-import bluC.transpiler.Statement.If.ElseIf;
+import bluC.transpiler.statements.Statement;
+import bluC.transpiler.statements.blocks.If.Else;
+import bluC.transpiler.statements.blocks.If.ElseIf;
 import bluC.transpiler.Token;
 import bluC.transpiler.TokenFileInfo;
 import bluC.transpiler.TokenInfo;
 import bluC.parser.Parser;
 import bluC.parser.handlers.expression.ExpressionHandler;
+import bluC.transpiler.statements.blocks.If;
+import bluC.transpiler.statements.blocks.Block;
 
 /**
  *
@@ -40,28 +42,28 @@ public class IfHandler
     
     public IfHandler(Parser parser, BlockHandler blockHandler,
         ExpressionHandler expressionHandler)
-<span class="fc" id="L43">    {</span>
-<span class="fc" id="L44">        this.parser = parser;</span>
-<span class="fc" id="L45">        this.blockHandler = blockHandler;</span>
-<span class="fc" id="L46">        this.expressionHandler = expressionHandler;</span>
-<span class="fc" id="L47">    }</span>
+<span class="fc" id="L45">    {</span>
+<span class="fc" id="L46">        this.parser = parser;</span>
+<span class="fc" id="L47">        this.blockHandler = blockHandler;</span>
+<span class="fc" id="L48">        this.expressionHandler = expressionHandler;</span>
+<span class="fc" id="L49">    }</span>
     
     
     public Statement handleIfStatement(Token potentialIf)
     {
         Token openParen;
             
-<span class="nc" id="L54">        parser.nextToken();</span>
-<span class="nc" id="L55">        openParen = parser.peek();</span>
+<span class="nc" id="L56">        parser.nextToken();</span>
+<span class="nc" id="L57">        openParen = parser.peek();</span>
 
-<span class="nc bnc" id="L57" title="All 2 branches missed.">        if (openParen.getTextContent().equals(&quot;(&quot;))</span>
+<span class="nc bnc" id="L59" title="All 2 branches missed.">        if (openParen.getTextContent().equals(&quot;(&quot;))</span>
         {
-<span class="nc" id="L59">            return handleOpenParenthesisAndCondition(openParen, </span>
+<span class="nc" id="L61">            return handleOpenParenthesisAndCondition(openParen, </span>
                 potentialIf);
         }
         else
         {
-<span class="nc" id="L64">            return handleInvalidIfCondition(openParen,</span>
+<span class="nc" id="L66">            return handleInvalidIfCondition(openParen,</span>
                 potentialIf);
         }
     }
@@ -69,72 +71,72 @@ public class IfHandler
     private Statement handleOpenParenthesisAndCondition(Token openParen,
         Token potentialIf)
     {
-<span class="nc" id="L72">        Statement.If statement = newIfWithCondition(openParen);</span>
-<span class="nc" id="L73">        Token closeParen = parser.peek();</span>
+<span class="nc" id="L74">        If statement = newIfWithCondition(openParen);</span>
+<span class="nc" id="L75">        Token closeParen = parser.peek();</span>
         
-<span class="nc bnc" id="L75" title="All 2 branches missed.">        if (closeParen.getTextContent().equals(&quot;)&quot;))</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">        if (closeParen.getTextContent().equals(&quot;)&quot;))</span>
         {
-<span class="nc bnc" id="L77" title="All 2 branches missed.">            if (doesIfOrElseIfHaveEmptyBody())</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">            if (doesIfOrElseIfHaveEmptyBody())</span>
             {
                 //consume )
-<span class="nc" id="L80">                parser.nextToken();</span>
+<span class="nc" id="L82">                parser.nextToken();</span>
                 
                 //consume {
-<span class="nc" id="L83">                parser.nextToken();</span>
+<span class="nc" id="L85">                parser.nextToken();</span>
                 
                 //} is consumed by handleStatement
             }
             else
             {
-<span class="nc" id="L89">                handleBody(statement, getOpenBrace());</span>
+<span class="nc" id="L91">                handleBody(statement, getOpenBrace());</span>
             }
         }
         else
         {
-<span class="nc" id="L94">            Logger.err(closeParen, &quot;Expected \&quot;)\&quot; to close &quot; +</span>
+<span class="nc" id="L96">            Logger.err(closeParen, &quot;Expected \&quot;)\&quot; to close &quot; +</span>
                 &quot;condition of if statement at line &quot; + 
-<span class="nc" id="L96">                (potentialIf.getLineIndex() + 1));</span>
+<span class="nc" id="L98">                (potentialIf.getLineIndex() + 1));</span>
         }
         
-<span class="nc" id="L99">        handleElseIfs(statement);</span>
+<span class="nc" id="L101">        handleElseIfs(statement);</span>
         
-<span class="nc" id="L101">        return statement;</span>
+<span class="nc" id="L103">        return statement;</span>
     }
     
     private boolean doesIfOrElseIfHaveEmptyBody()
     {
-<span class="nc" id="L106">        return parser.peekMatches(3, &quot;}&quot;);</span>
+<span class="nc" id="L108">        return parser.peekMatches(3, &quot;}&quot;);</span>
     }
     
-    private Statement.If newIfWithCondition(Token openParen)
+    private If newIfWithCondition(Token openParen)
     {
         Expression condition;
         
         //consume &quot;(&quot;        
-<span class="nc" id="L114">        parser.nextToken();</span>
-<span class="nc" id="L115">        condition = expressionHandler.handleExpression();</span>
+<span class="nc" id="L116">        parser.nextToken();</span>
+<span class="nc" id="L117">        condition = expressionHandler.handleExpression();</span>
         
-<span class="nc" id="L117">        return new Statement.If(condition, openParen.getLineIndex());</span>
+<span class="nc" id="L119">        return new If(condition, openParen.getLineIndex());</span>
     }
     
-    private void handleBody(Statement.Block statement, Token openBrace)
+    private void handleBody(Block statement, Token openBrace)
     {
         //consume &quot;)&quot; and set curToken == &quot;{&quot;
-<span class="nc" id="L123">        parser.nextToken();</span>
+<span class="nc" id="L125">        parser.nextToken();</span>
 
-<span class="nc" id="L125">        parser.pushScope(new Scope(parser.getCurrentScope(), statement));</span>
-<span class="nc" id="L126">        blockHandler.addStatementsToBlock(openBrace, statement);</span>
-<span class="nc" id="L127">        parser.popScope(parser.peek());</span>
-<span class="nc" id="L128">    }</span>
+<span class="nc" id="L127">        parser.pushScope(new Scope(parser.getCurrentScope(), statement));</span>
+<span class="nc" id="L128">        blockHandler.addStatementsToBlock(openBrace, statement);</span>
+<span class="nc" id="L129">        parser.popScope(parser.peek());</span>
+<span class="nc" id="L130">    }</span>
     
     private Token getOpenBrace()
     {
         Token openBrace;
             
-<span class="nc" id="L134">        parser.nextToken();</span>
-<span class="nc" id="L135">        openBrace = parser.peek();</span>
+<span class="nc" id="L136">        parser.nextToken();</span>
+<span class="nc" id="L137">        openBrace = parser.peek();</span>
         
-<span class="nc" id="L137">        return openBrace;</span>
+<span class="nc" id="L139">        return openBrace;</span>
     }
     
     private Statement handleInvalidIfCondition(Token openParen, 
@@ -142,168 +144,168 @@ public class IfHandler
     {
         Token fakeOpenParen;
         
-<span class="nc" id="L145">        Logger.err(openParen, &quot;Expected \&quot;(\&quot; to open condition of &quot; + </span>
-<span class="nc" id="L146">                &quot;if statement at line &quot; + (potentialIf.getLineIndex() + 1));</span>
+<span class="nc" id="L147">        Logger.err(openParen, &quot;Expected \&quot;(\&quot; to open condition of &quot; + </span>
+<span class="nc" id="L148">                &quot;if statement at line &quot; + (potentialIf.getLineIndex() + 1));</span>
         
-<span class="nc" id="L148">        fakeOpenParen = new Token(</span>
+<span class="nc" id="L150">        fakeOpenParen = new Token(</span>
             new TokenInfo(&quot;(&quot;, true),
                 
-<span class="nc" id="L151">            new TokenFileInfo(openParen.getFilepath(), </span>
-<span class="nc" id="L152">                openParen.getLineIndex()));</span>
+<span class="nc" id="L153">            new TokenFileInfo(openParen.getFilepath(), </span>
+<span class="nc" id="L154">                openParen.getLineIndex()));</span>
         
-<span class="nc" id="L154">        parser.addToken(fakeOpenParen, parser.indexOf(openParen));</span>
+<span class="nc" id="L156">        parser.addToken(fakeOpenParen, parser.indexOf(openParen));</span>
         
-<span class="nc" id="L156">        return handleOpenParenthesisAndCondition(fakeOpenParen, </span>
+<span class="nc" id="L158">        return handleOpenParenthesisAndCondition(fakeOpenParen, </span>
             potentialIf);
     }
     
-    private void handleElseIfs(Statement.If statement)
+    private void handleElseIfs(If statement)
     {
         Token else_;
         
-<span class="nc bnc" id="L164" title="All 2 branches missed.">        while (!parser.atEOF())</span>
+<span class="nc bnc" id="L166" title="All 2 branches missed.">        while (!parser.atEOF())</span>
         {
-<span class="nc" id="L166">            parser.nextToken();</span>
-<span class="nc" id="L167">            else_ = parser.peek();</span>
+<span class="nc" id="L168">            parser.nextToken();</span>
+<span class="nc" id="L169">            else_ = parser.peek();</span>
 
-<span class="nc bnc" id="L169" title="All 2 branches missed.">            if (else_.getTextContent().equals(&quot;else&quot;))</span>
+<span class="nc bnc" id="L171" title="All 2 branches missed.">            if (else_.getTextContent().equals(&quot;else&quot;))</span>
             {
-<span class="nc" id="L171">                handleElseIfCheck(statement, else_);</span>
+<span class="nc" id="L173">                handleElseIfCheck(statement, else_);</span>
             }
             else
             {
-<span class="nc" id="L175">                parser.prevToken();</span>
-<span class="nc" id="L176">                break;</span>
+<span class="nc" id="L177">                parser.prevToken();</span>
+<span class="nc" id="L178">                break;</span>
             }
         }
-<span class="nc" id="L179">    }</span>
+<span class="nc" id="L181">    }</span>
     
-    private void handleElseIfCheck(Statement.If statement, Token else_)
+    private void handleElseIfCheck(If statement, Token else_)
     {
         Token ifOrOpenBrace;
         String ifOrOpenBraceText;
 
-<span class="nc" id="L186">        parser.nextToken();</span>
-<span class="nc" id="L187">        ifOrOpenBrace = parser.peek();</span>
-<span class="nc" id="L188">        ifOrOpenBraceText = ifOrOpenBrace.getTextContent();</span>
+<span class="nc" id="L188">        parser.nextToken();</span>
+<span class="nc" id="L189">        ifOrOpenBrace = parser.peek();</span>
+<span class="nc" id="L190">        ifOrOpenBraceText = ifOrOpenBrace.getTextContent();</span>
 
-<span class="nc bnc" id="L190" title="All 2 branches missed.">        if (ifOrOpenBraceText.equals(&quot;if&quot;))</span>
+<span class="nc bnc" id="L192" title="All 2 branches missed.">        if (ifOrOpenBraceText.equals(&quot;if&quot;))</span>
         {
-<span class="nc" id="L192">            parser.nextToken();</span>
-<span class="nc" id="L193">            handleElseIf(statement, ifOrOpenBrace);</span>
+<span class="nc" id="L194">            parser.nextToken();</span>
+<span class="nc" id="L195">            handleElseIf(statement, ifOrOpenBrace);</span>
         }
-<span class="nc bnc" id="L195" title="All 2 branches missed.">        else if (ifOrOpenBraceText.equals(&quot;{&quot;))</span>
+<span class="nc bnc" id="L197" title="All 2 branches missed.">        else if (ifOrOpenBraceText.equals(&quot;{&quot;))</span>
         {
-<span class="nc" id="L197">            handleElse(statement, ifOrOpenBrace);</span>
+<span class="nc" id="L199">            handleElse(statement, ifOrOpenBrace);</span>
         }
         else
         {
-<span class="nc" id="L201">            Logger.err(ifOrOpenBrace, &quot;Expected \&quot;if\&quot; or \&quot;{\&quot; to &quot; +</span>
-<span class="nc" id="L202">                &quot;follow \&quot;&quot; + else_.getTextContent() + &quot; on line &quot; + </span>
-<span class="nc" id="L203">                 (else_.getLineIndex() + 1));</span>
+<span class="nc" id="L203">            Logger.err(ifOrOpenBrace, &quot;Expected \&quot;if\&quot; or \&quot;{\&quot; to &quot; +</span>
+<span class="nc" id="L204">                &quot;follow \&quot;&quot; + else_.getTextContent() + &quot; on line &quot; + </span>
+<span class="nc" id="L205">                 (else_.getLineIndex() + 1));</span>
         }
-<span class="nc" id="L205">    }</span>
+<span class="nc" id="L207">    }</span>
     
-    private void handleElseIf(Statement.If statement, Token ifOfTheElse)
+    private void handleElseIf(If statement, Token ifOfTheElse)
     {
-<span class="nc" id="L209">        Token openParen = parser.peek();</span>
-<span class="nc" id="L210">        String openParenText = openParen.getTextContent();</span>
+<span class="nc" id="L211">        Token openParen = parser.peek();</span>
+<span class="nc" id="L212">        String openParenText = openParen.getTextContent();</span>
         
-<span class="nc bnc" id="L212" title="All 2 branches missed.">        if (openParenText.equals(&quot;(&quot;))</span>
+<span class="nc bnc" id="L214" title="All 2 branches missed.">        if (openParenText.equals(&quot;(&quot;))</span>
         {
-<span class="nc" id="L214">            handleValidatedElseIf(statement, ifOfTheElse, openParen);</span>
+<span class="nc" id="L216">            handleValidatedElseIf(statement, ifOfTheElse, openParen);</span>
         }
         else
         {
-<span class="nc" id="L218">            handleElseIfNoOpenParenthesis(statement, ifOfTheElse, openParen);</span>
+<span class="nc" id="L220">            handleElseIfNoOpenParenthesis(statement, ifOfTheElse, openParen);</span>
         }
-<span class="nc" id="L220">    }</span>
+<span class="nc" id="L222">    }</span>
     
-    private void handleValidatedElseIf(Statement.If statement, 
+    private void handleValidatedElseIf(If statement, 
         Token ifOfTheElse, Token openParen)
     {
         Expression condition;
         Token closeParen;
         String closeParenText;
         
-<span class="nc" id="L229">        parser.nextToken();</span>
-<span class="nc" id="L230">        condition = expressionHandler.handleExpression();</span>
+<span class="nc" id="L231">        parser.nextToken();</span>
+<span class="nc" id="L232">        condition = expressionHandler.handleExpression();</span>
         
-<span class="nc" id="L232">        closeParen = parser.peek();</span>
-<span class="nc" id="L233">        closeParenText = closeParen.getTextContent();</span>
+<span class="nc" id="L234">        closeParen = parser.peek();</span>
+<span class="nc" id="L235">        closeParenText = closeParen.getTextContent();</span>
         
-<span class="nc bnc" id="L235" title="All 2 branches missed.">        if (closeParenText.equals(&quot;)&quot;))</span>
+<span class="nc bnc" id="L237" title="All 2 branches missed.">        if (closeParenText.equals(&quot;)&quot;))</span>
         {
-<span class="nc" id="L237">            ElseIf elseIf = new ElseIf(condition, openParen.getLineIndex());</span>
+<span class="nc" id="L239">            ElseIf elseIf = new ElseIf(condition, openParen.getLineIndex());</span>
             
-<span class="nc bnc" id="L239" title="All 2 branches missed.">            if (doesIfOrElseIfHaveEmptyBody())</span>
+<span class="nc bnc" id="L241" title="All 2 branches missed.">            if (doesIfOrElseIfHaveEmptyBody())</span>
             {
                 //consume )
-<span class="nc" id="L242">                parser.nextToken();</span>
+<span class="nc" id="L244">                parser.nextToken();</span>
                 
                 //consume {
-<span class="nc" id="L245">                parser.nextToken();</span>
+<span class="nc" id="L247">                parser.nextToken();</span>
                 
                 //} is consumed by handleStatement
             }
             else
             {
-<span class="nc" id="L251">                handleBody(elseIf, getOpenBrace());</span>
+<span class="nc" id="L253">                handleBody(elseIf, getOpenBrace());</span>
             }
             
-<span class="nc" id="L254">            statement.addElseIf(elseIf);</span>
-<span class="nc" id="L255">        }</span>
+<span class="nc" id="L256">            statement.addElseIf(elseIf);</span>
+<span class="nc" id="L257">        }</span>
         else
         {
-<span class="nc" id="L258">            Logger.err(closeParen, &quot;Expected \&quot;)\&quot; to close &quot; +</span>
+<span class="nc" id="L260">            Logger.err(closeParen, &quot;Expected \&quot;)\&quot; to close &quot; +</span>
                 &quot;condition of else-if statement at line &quot; + 
-<span class="nc" id="L260">                (ifOfTheElse.getLineIndex() + 1));</span>
+<span class="nc" id="L262">                (ifOfTheElse.getLineIndex() + 1));</span>
         }
-<span class="nc" id="L262">    }</span>
+<span class="nc" id="L264">    }</span>
     
     
-    private void handleElseIfNoOpenParenthesis(Statement.If statement,
+    private void handleElseIfNoOpenParenthesis(If statement,
         Token ifOfTheElse, Token expectedOpenParen)
     {
         Token fakeOpenParen;
         
-<span class="nc" id="L270">        Logger.err(expectedOpenParen, &quot;Expected \&quot;(\&quot; to open condition of &quot; + </span>
+<span class="nc" id="L272">        Logger.err(expectedOpenParen, &quot;Expected \&quot;(\&quot; to open condition of &quot; + </span>
             &quot;else-if statement at line &quot; + 
-<span class="nc" id="L272">            (ifOfTheElse.getLineIndex() + 1));</span>
+<span class="nc" id="L274">            (ifOfTheElse.getLineIndex() + 1));</span>
         
-<span class="nc" id="L274">        fakeOpenParen = new Token(</span>
+<span class="nc" id="L276">        fakeOpenParen = new Token(</span>
             new TokenInfo(&quot;(&quot;, true), 
                 
-<span class="nc" id="L277">            new TokenFileInfo(expectedOpenParen.getFilepath(), </span>
-<span class="nc" id="L278">                expectedOpenParen.getLineIndex()));</span>
+<span class="nc" id="L279">            new TokenFileInfo(expectedOpenParen.getFilepath(), </span>
+<span class="nc" id="L280">                expectedOpenParen.getLineIndex()));</span>
         
-<span class="nc" id="L280">        parser.addToken(fakeOpenParen, parser.indexOf(expectedOpenParen));</span>
+<span class="nc" id="L282">        parser.addToken(fakeOpenParen, parser.indexOf(expectedOpenParen));</span>
         
-<span class="nc" id="L282">        handleValidatedElseIf(statement, ifOfTheElse, expectedOpenParen);</span>
-<span class="nc" id="L283">    }</span>
+<span class="nc" id="L284">        handleValidatedElseIf(statement, ifOfTheElse, expectedOpenParen);</span>
+<span class="nc" id="L285">    }</span>
     
-    private void handleElse(Statement.If statement, Token openBrace)
+    private void handleElse(If statement, Token openBrace)
     {
-<span class="nc" id="L287">        Else elseStatement = new Else(openBrace.getLineIndex());</span>
+<span class="nc" id="L289">        Else elseStatement = new Else(openBrace.getLineIndex());</span>
         
-<span class="nc bnc" id="L289" title="All 2 branches missed.">        if (doesElseHaveEmptyBody())</span>
+<span class="nc bnc" id="L291" title="All 2 branches missed.">        if (doesElseHaveEmptyBody())</span>
         {
             //consume {
-<span class="nc" id="L292">            parser.nextToken();</span>
+<span class="nc" id="L294">            parser.nextToken();</span>
             
             //} is consumed by handleStatement
         }
         else
         {
-<span class="nc" id="L298">            handleBody(elseStatement, openBrace);</span>
+<span class="nc" id="L300">            handleBody(elseStatement, openBrace);</span>
         }
         
-<span class="nc" id="L301">        statement.setElse(elseStatement);</span>
-<span class="nc" id="L302">    }</span>
+<span class="nc" id="L303">        statement.setElse(elseStatement);</span>
+<span class="nc" id="L304">    }</span>
     
     private boolean doesElseHaveEmptyBody()
     {
-<span class="nc" id="L306">        return parser.peekMatches(2, &quot;}&quot;);</span>
+<span class="nc" id="L308">        return parser.peekMatches(2, &quot;}&quot;);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

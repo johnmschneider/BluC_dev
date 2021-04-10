@@ -16,6 +16,7 @@
 
 package bluC.transpiler;
 
+import bluC.transpiler.statements.vars.VarDeclaration;
 import java.util.Objects;
 
 /**
@@ -41,13 +42,13 @@ public abstract class Expression
     {
         public Assignment(Token operator, Expression target, Expression value)
         {
-<span class="nc" id="L44">            super(operator, target, value);</span>
-<span class="nc" id="L45">        }</span>
+<span class="nc" id="L45">            super(operator, target, value);</span>
+<span class="nc" id="L46">        }</span>
 
         @Override
         public &lt;T&gt; T accept(Visitor&lt;T&gt; visitor)
         {
-<span class="nc" id="L50">            return visitor.visitAssignment(this);</span>
+<span class="nc" id="L51">            return visitor.visitAssignment(this);</span>
         }
     }
     
@@ -55,13 +56,13 @@ public abstract class Expression
     {
         public Binary(Token operator, Expression operand1, Expression operand2)
         {
-<span class="nc" id="L58">            super(operator, operand1, operand2);</span>
-<span class="nc" id="L59">        }</span>
+<span class="nc" id="L59">            super(operator, operand1, operand2);</span>
+<span class="nc" id="L60">        }</span>
 
         @Override
         public &lt;T&gt; T accept(Visitor&lt;T&gt; visitor)
         {
-<span class="nc" id="L64">            return visitor.visitBinary(this);</span>
+<span class="nc" id="L65">            return visitor.visitBinary(this);</span>
         }
     }
     
@@ -69,13 +70,13 @@ public abstract class Expression
     {
         public Grouping(Token operator, Expression operand1)
         {
-<span class="nc" id="L72">            super(operator, operand1, null);</span>
-<span class="nc" id="L73">        }</span>
+<span class="nc" id="L73">            super(operator, operand1, null);</span>
+<span class="nc" id="L74">        }</span>
         
         @Override
         public &lt;T&gt; T accept(Visitor&lt;T&gt; visitor)
         {
-<span class="nc" id="L78">            return visitor.visitGrouping(this);</span>
+<span class="nc" id="L79">            return visitor.visitGrouping(this);</span>
         }
     }
     
@@ -85,64 +86,73 @@ public abstract class Expression
             
         public Literal(Token value)
         {
-<span class="fc" id="L88">            super(null, null, null);</span>
+<span class="fc" id="L89">            super(null, null, null);</span>
             
-<span class="fc" id="L90">            this.value = value;</span>
-<span class="fc" id="L91">        }</span>
-
+<span class="fc" id="L91">            this.value = value;</span>
+<span class="fc" id="L92">        }</span>
+        
+        
+        @Override
+        public boolean isNullLiteral()
+        {
+<span class="nc" id="L98">            return </span>
+<span class="nc" id="L99">                value.getTextContent().</span>
+<span class="nc" id="L100">                equals(&quot;null&quot;);</span>
+        }
+        
         public Token getValue()
         {
-<span class="nc" id="L95">            return value;</span>
+<span class="nc" id="L105">            return value;</span>
         }
 
         public String getTextContent()
         {
-<span class="nc" id="L100">            return getValue().getTextContent();</span>
+<span class="nc" id="L110">            return getValue().getTextContent();</span>
         }
         
         @Override
         public &lt;T&gt; T accept(Visitor&lt;T&gt; visitor)
         {
-<span class="nc" id="L106">            return visitor.visitLiteral(this);</span>
+<span class="nc" id="L116">            return visitor.visitLiteral(this);</span>
         }
 
         @Override
         public int hashCode()
         {
-<span class="nc" id="L112">            int hash = 7;</span>
-<span class="nc" id="L113">            hash = 89 * hash + Objects.hashCode(this.value);</span>
-<span class="nc" id="L114">            hash = 89 * hash + Objects.hashCode(this.getOperator());</span>
-<span class="nc" id="L115">            hash = 89 * hash + Objects.hashCode(this.getOperand1());</span>
-<span class="nc" id="L116">            hash = 89 * hash + Objects.hashCode(this.getOperand2());</span>
-<span class="nc" id="L117">            return hash;</span>
+<span class="nc" id="L122">            int hash = 7;</span>
+<span class="nc" id="L123">            hash = 89 * hash + Objects.hashCode(this.value);</span>
+<span class="nc" id="L124">            hash = 89 * hash + Objects.hashCode(this.getOperator());</span>
+<span class="nc" id="L125">            hash = 89 * hash + Objects.hashCode(this.getOperand1());</span>
+<span class="nc" id="L126">            hash = 89 * hash + Objects.hashCode(this.getOperand2());</span>
+<span class="nc" id="L127">            return hash;</span>
         }
 
         @Override
         public boolean equals(Object obj)
         {
-<span class="fc bfc" id="L123" title="All 2 branches covered.">            if (this == obj)</span>
+<span class="fc bfc" id="L133" title="All 2 branches covered.">            if (this == obj)</span>
             {
-<span class="fc" id="L125">                return true;</span>
+<span class="fc" id="L135">                return true;</span>
             }
-<span class="pc bpc" id="L127" title="1 of 2 branches missed.">            if (obj == null)</span>
+<span class="pc bpc" id="L137" title="1 of 2 branches missed.">            if (obj == null)</span>
             {
-<span class="nc" id="L129">                return false;</span>
+<span class="nc" id="L139">                return false;</span>
             }
-<span class="pc bpc" id="L131" title="1 of 2 branches missed.">            if (getClass() != obj.getClass())</span>
-            {
-<span class="nc" id="L133">                return false;</span>
-            }
-<span class="pc bpc" id="L135" title="1 of 2 branches missed.">            if (!super.equals(obj))</span>
-            {
-<span class="nc" id="L137">                return false;</span>
-            }
-            
-<span class="fc" id="L140">            final Literal other = (Literal) obj;</span>
-<span class="pc bpc" id="L141" title="1 of 2 branches missed.">            if (!Objects.equals(this.value, other.value))</span>
+<span class="pc bpc" id="L141" title="1 of 2 branches missed.">            if (getClass() != obj.getClass())</span>
             {
 <span class="nc" id="L143">                return false;</span>
             }
-<span class="fc" id="L145">            return true;</span>
+<span class="pc bpc" id="L145" title="1 of 2 branches missed.">            if (!super.equals(obj))</span>
+            {
+<span class="nc" id="L147">                return false;</span>
+            }
+            
+<span class="fc" id="L150">            final Literal other = (Literal) obj;</span>
+<span class="pc bpc" id="L151" title="1 of 2 branches missed.">            if (!Objects.equals(this.value, other.value))</span>
+            {
+<span class="nc" id="L153">                return false;</span>
+            }
+<span class="fc" id="L155">            return true;</span>
         }
     }
     
@@ -151,62 +161,62 @@ public abstract class Expression
      */
     public static class Variable extends Expression
     {
-        private Statement.VarDeclaration variableInfo;
-            
-        public Variable(Statement.VarDeclaration variableInfo)
+        private VarDeclaration variableInfo;
+
+        public Variable(VarDeclaration variableInfo)
         {
-<span class="fc" id="L158">            super(variableInfo.getName(), null, null);</span>
-<span class="fc" id="L159">            this.variableInfo = variableInfo;</span>
-<span class="fc" id="L160">        }</span>
+<span class="fc" id="L168">            super(variableInfo.getName(), null, null);</span>
+<span class="fc" id="L169">            this.variableInfo   = variableInfo;</span>
+<span class="fc" id="L170">        }</span>
         
-        public Statement.VarDeclaration getVariableInfo()
+        public VarDeclaration getVariableInfo()
         {
-<span class="nc" id="L164">            return variableInfo;</span>
+<span class="nc" id="L174">            return variableInfo;</span>
         }
         
         @Override
         public &lt;T&gt; T accept(Visitor&lt;T&gt; visitor)
         {
-<span class="nc" id="L170">            return visitor.visitVar(this);</span>
+<span class="nc" id="L180">            return visitor.visitVar(this);</span>
         }
 
         @Override
         public int hashCode()
         {
-<span class="nc" id="L176">            int hash = 3;</span>
-<span class="nc" id="L177">            hash = 67 * hash + Objects.hashCode(this.variableInfo);</span>
-<span class="nc" id="L178">            hash = 67 * hash + Objects.hashCode(this.getOperator());</span>
-<span class="nc" id="L179">            hash = 67 * hash + Objects.hashCode(this.getOperand1());</span>
-<span class="nc" id="L180">            hash = 67 * hash + Objects.hashCode(this.getOperand2());</span>
-<span class="nc" id="L181">            return hash;</span>
+<span class="nc" id="L186">            int hash = 3;</span>
+<span class="nc" id="L187">            hash = 67 * hash + Objects.hashCode(this.variableInfo);</span>
+<span class="nc" id="L188">            hash = 67 * hash + Objects.hashCode(this.getOperator());</span>
+<span class="nc" id="L189">            hash = 67 * hash + Objects.hashCode(this.getOperand1());</span>
+<span class="nc" id="L190">            hash = 67 * hash + Objects.hashCode(this.getOperand2());</span>
+<span class="nc" id="L191">            return hash;</span>
         }
 
         @Override
         public boolean equals(Object obj)
         {
-<span class="nc bnc" id="L187" title="All 2 branches missed.">            if (this == obj)</span>
+<span class="nc bnc" id="L197" title="All 2 branches missed.">            if (this == obj)</span>
             {
-<span class="nc" id="L189">                return true;</span>
+<span class="nc" id="L199">                return true;</span>
             }
-<span class="nc bnc" id="L191" title="All 2 branches missed.">            if (obj == null)</span>
+<span class="nc bnc" id="L201" title="All 2 branches missed.">            if (obj == null)</span>
             {
-<span class="nc" id="L193">                return false;</span>
+<span class="nc" id="L203">                return false;</span>
             }
-<span class="nc bnc" id="L195" title="All 2 branches missed.">            if (getClass() != obj.getClass())</span>
-            {
-<span class="nc" id="L197">                return false;</span>
-            }
-<span class="nc bnc" id="L199" title="All 2 branches missed.">            if (!super.equals(obj))</span>
-            {
-<span class="nc" id="L201">                return false;</span>
-            }
-            
-<span class="nc" id="L204">            final Variable other = (Variable) obj;</span>
-<span class="nc bnc" id="L205" title="All 2 branches missed.">            if (!Objects.equals(this.variableInfo, other.variableInfo))</span>
+<span class="nc bnc" id="L205" title="All 2 branches missed.">            if (getClass() != obj.getClass())</span>
             {
 <span class="nc" id="L207">                return false;</span>
             }
-<span class="nc" id="L209">            return true;</span>
+<span class="nc bnc" id="L209" title="All 2 branches missed.">            if (!super.equals(obj))</span>
+            {
+<span class="nc" id="L211">                return false;</span>
+            }
+            
+<span class="nc" id="L214">            final Variable other = (Variable) obj;</span>
+<span class="nc bnc" id="L215" title="All 2 branches missed.">            if (!Objects.equals(this.variableInfo, other.variableInfo))</span>
+            {
+<span class="nc" id="L217">                return false;</span>
+            }
+<span class="nc" id="L219">            return true;</span>
         }
     }
     
@@ -216,65 +226,65 @@ public abstract class Expression
             
         public Unary(Token operator, Expression operand1)
         {
-<span class="nc" id="L219">            super(operator, operand1, null);</span>
-<span class="nc" id="L220">            operatorIsOnRight = false;</span>
-<span class="nc" id="L221">        }</span>
+<span class="nc" id="L229">            super(operator, operand1, null);</span>
+<span class="nc" id="L230">            operatorIsOnRight = false;</span>
+<span class="nc" id="L231">        }</span>
         
         public Unary(Token operator, Expression operand1,
             boolean operatorIsOnRight)
         {
-<span class="fc" id="L226">            super(operator, operand1, null);</span>
-<span class="fc" id="L227">            this.operatorIsOnRight = operatorIsOnRight;</span>
-<span class="fc" id="L228">        }</span>
+<span class="fc" id="L236">            super(operator, operand1, null);</span>
+<span class="fc" id="L237">            this.operatorIsOnRight = operatorIsOnRight;</span>
+<span class="fc" id="L238">        }</span>
         
         public boolean isOperatorOnRight()
         {
-<span class="nc" id="L232">            return operatorIsOnRight;</span>
+<span class="nc" id="L242">            return operatorIsOnRight;</span>
         }
         
         @Override
         public &lt;T&gt; T accept(Visitor&lt;T&gt; visitor)
         {
-<span class="nc" id="L238">            return visitor.visitUnary(this);</span>
+<span class="nc" id="L248">            return visitor.visitUnary(this);</span>
         }
 
         @Override
         public int hashCode()
         {
-<span class="nc" id="L244">            int hash = 7;</span>
-<span class="nc bnc" id="L245" title="All 2 branches missed.">            hash = 47 * hash + (this.operatorIsOnRight ? 1 : 0);</span>
-<span class="nc" id="L246">            hash = 47 * hash + Objects.hashCode(this.getOperator());</span>
-<span class="nc" id="L247">            hash = 47 * hash + Objects.hashCode(this.getOperand1());</span>
-<span class="nc" id="L248">            hash = 47 * hash + Objects.hashCode(this.getOperand2());</span>
-<span class="nc" id="L249">            return hash;</span>
+<span class="nc" id="L254">            int hash = 7;</span>
+<span class="nc bnc" id="L255" title="All 2 branches missed.">            hash = 47 * hash + (this.operatorIsOnRight ? 1 : 0);</span>
+<span class="nc" id="L256">            hash = 47 * hash + Objects.hashCode(this.getOperator());</span>
+<span class="nc" id="L257">            hash = 47 * hash + Objects.hashCode(this.getOperand1());</span>
+<span class="nc" id="L258">            hash = 47 * hash + Objects.hashCode(this.getOperand2());</span>
+<span class="nc" id="L259">            return hash;</span>
         }
 
         @Override
         public boolean equals(Object obj)
         {
-<span class="nc bnc" id="L255" title="All 2 branches missed.">            if (this == obj)</span>
+<span class="nc bnc" id="L265" title="All 2 branches missed.">            if (this == obj)</span>
             {
-<span class="nc" id="L257">                return true;</span>
+<span class="nc" id="L267">                return true;</span>
             }
-<span class="nc bnc" id="L259" title="All 2 branches missed.">            if (obj == null)</span>
+<span class="nc bnc" id="L269" title="All 2 branches missed.">            if (obj == null)</span>
             {
-<span class="nc" id="L261">                return false;</span>
+<span class="nc" id="L271">                return false;</span>
             }
-<span class="nc bnc" id="L263" title="All 2 branches missed.">            if (getClass() != obj.getClass())</span>
-            {
-<span class="nc" id="L265">                return false;</span>
-            }
-<span class="nc bnc" id="L267" title="All 2 branches missed.">            if (!super.equals(obj))</span>
-            {
-<span class="nc" id="L269">                return false;</span>
-            }
-            
-<span class="nc" id="L272">            final Unary other = (Unary) obj;</span>
-<span class="nc bnc" id="L273" title="All 2 branches missed.">            if (this.operatorIsOnRight != other.operatorIsOnRight)</span>
+<span class="nc bnc" id="L273" title="All 2 branches missed.">            if (getClass() != obj.getClass())</span>
             {
 <span class="nc" id="L275">                return false;</span>
             }
-<span class="nc" id="L277">            return true;</span>
+<span class="nc bnc" id="L277" title="All 2 branches missed.">            if (!super.equals(obj))</span>
+            {
+<span class="nc" id="L279">                return false;</span>
+            }
+            
+<span class="nc" id="L282">            final Unary other = (Unary) obj;</span>
+<span class="nc bnc" id="L283" title="All 2 branches missed.">            if (this.operatorIsOnRight != other.operatorIsOnRight)</span>
+            {
+<span class="nc" id="L285">                return false;</span>
+            }
+<span class="nc" id="L287">            return true;</span>
         }
         
         
@@ -282,86 +292,89 @@ public abstract class Expression
     
     public Expression(Token operator, Expression operand1, 
         Expression operand2)
-<span class="fc" id="L285">    {</span>
-<span class="fc" id="L286">        this.operator = operator;</span>
-<span class="fc" id="L287">        this.operand1 = operand1;</span>
-<span class="fc" id="L288">        this.operand2 = operand2;</span>
-<span class="fc" id="L289">    }</span>
+<span class="fc" id="L295">    {</span>
+<span class="fc" id="L296">        this.operator = operator;</span>
+<span class="fc" id="L297">        this.operand1 = operand1;</span>
+<span class="fc" id="L298">        this.operand2 = operand2;</span>
+<span class="fc" id="L299">    }</span>
     
     
     public Token getOperator()
     {
-<span class="nc" id="L294">        return operator;</span>
+<span class="nc" id="L304">        return operator;</span>
     }
 
     public void setOperator(Token operator)
     {
-<span class="nc" id="L299">        this.operator = operator;</span>
-<span class="nc" id="L300">    }</span>
+<span class="nc" id="L309">        this.operator = operator;</span>
+<span class="nc" id="L310">    }</span>
 
     public Expression getOperand1()
     {
-<span class="nc" id="L304">        return operand1;</span>
+<span class="nc" id="L314">        return operand1;</span>
     }
 
     public void setOperand1(Expression operand1)
     {
-<span class="nc" id="L309">        this.operand1 = operand1;</span>
-<span class="nc" id="L310">    }</span>
+<span class="nc" id="L319">        this.operand1 = operand1;</span>
+<span class="nc" id="L320">    }</span>
 
     public Expression getOperand2()
     {
-<span class="nc" id="L314">        return operand2;</span>
+<span class="nc" id="L324">        return operand2;</span>
     }
 
     public void setOperand2(Expression operand2)
     {
-<span class="nc" id="L319">        this.operand2 = operand2;</span>
-<span class="nc" id="L320">    }</span>
+<span class="nc" id="L329">        this.operand2 = operand2;</span>
+<span class="nc" id="L330">    }</span>
     
     public abstract &lt;T&gt; T accept(Visitor&lt;T&gt; visitor);
 
     @Override
     public int hashCode()
     {
-<span class="nc" id="L327">        int hash = 5;</span>
-<span class="nc" id="L328">        hash = 11 * hash + Objects.hashCode(this.operator);</span>
-<span class="nc" id="L329">        hash = 11 * hash + Objects.hashCode(this.operand1);</span>
-<span class="nc" id="L330">        hash = 11 * hash + Objects.hashCode(this.operand2);</span>
-<span class="nc" id="L331">        return hash;</span>
+<span class="nc" id="L337">        int hash = 5;</span>
+<span class="nc" id="L338">        hash = 11 * hash + Objects.hashCode(this.operator);</span>
+<span class="nc" id="L339">        hash = 11 * hash + Objects.hashCode(this.operand1);</span>
+<span class="nc" id="L340">        hash = 11 * hash + Objects.hashCode(this.operand2);</span>
+<span class="nc" id="L341">        return hash;</span>
     }
 
     @Override
     public boolean equals(Object obj)
     {
-<span class="pc bpc" id="L337" title="1 of 2 branches missed.">        if (this == obj)</span>
+<span class="pc bpc" id="L347" title="1 of 2 branches missed.">        if (this == obj)</span>
         {
-<span class="nc" id="L339">            return true;</span>
+<span class="nc" id="L349">            return true;</span>
         }
-<span class="pc bpc" id="L341" title="1 of 2 branches missed.">        if (obj == null)</span>
+<span class="pc bpc" id="L351" title="1 of 2 branches missed.">        if (obj == null)</span>
         {
-<span class="nc" id="L343">            return false;</span>
+<span class="nc" id="L353">            return false;</span>
         }
-<span class="pc bpc" id="L345" title="1 of 2 branches missed.">        if (getClass() != obj.getClass())</span>
+<span class="pc bpc" id="L355" title="1 of 2 branches missed.">        if (getClass() != obj.getClass())</span>
         {
-<span class="nc" id="L347">            return false;</span>
+<span class="nc" id="L357">            return false;</span>
         }
-<span class="fc" id="L349">        final Expression other = (Expression) obj;</span>
-<span class="pc bpc" id="L350" title="1 of 2 branches missed.">        if (!Objects.equals(this.operator, other.operator))</span>
+<span class="fc" id="L359">        final Expression other = (Expression) obj;</span>
+<span class="pc bpc" id="L360" title="1 of 2 branches missed.">        if (!Objects.equals(this.operator, other.operator))</span>
         {
-<span class="nc" id="L352">            return false;</span>
+<span class="nc" id="L362">            return false;</span>
         }
-<span class="pc bpc" id="L354" title="1 of 2 branches missed.">        if (!Objects.equals(this.operand1, other.operand1))</span>
+<span class="pc bpc" id="L364" title="1 of 2 branches missed.">        if (!Objects.equals(this.operand1, other.operand1))</span>
         {
-<span class="nc" id="L356">            return false;</span>
+<span class="nc" id="L366">            return false;</span>
         }
-<span class="pc bpc" id="L358" title="1 of 2 branches missed.">        if (!Objects.equals(this.operand2, other.operand2))</span>
+<span class="pc bpc" id="L368" title="1 of 2 branches missed.">        if (!Objects.equals(this.operand2, other.operand2))</span>
         {
-<span class="nc" id="L360">            return false;</span>
+<span class="nc" id="L370">            return false;</span>
         }
-<span class="fc" id="L362">        return true;</span>
+<span class="fc" id="L372">        return true;</span>
     }
     
-    
+    public boolean isNullLiteral()
+    {
+<span class="nc" id="L377">        return false;</span>
+    }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

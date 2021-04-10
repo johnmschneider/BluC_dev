@@ -1,11 +1,10 @@
+int doIntsStillWork;
 char realCharTest = 'x';
 long int x = 0;
 long long b;
-int main ( int argc , char * * argv ) { while ( x < 70000 ) { long int y = x;
-x = x + 1;
-} int iForgotAParen;
-while ( iForgotAParen == 0 ) { } int iForgotAnotherParen;
-while ( iForgotAnotherParen == 0 ) { } int iForgotBothParens;
-while ( iForgotBothParens == 0 ) { } int iForgotABrace;
-while ( iForgotABrace == 0 ) { } int iForgotAnotherBrace;
-while ( iForgotAnotherBrace == 0 ) { } } ___bluC_eof
+void okLetsFixThisNow ( ) { } int afterBadFunc;
+class Test { int hi;
+void hello ( int a ) { } } int main ( int plsCompile ) { Test test ( );
+test . hello ( );
+return 0;
+} ___bluC_eof

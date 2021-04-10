@@ -18,14 +18,20 @@ package bluC.parser.handlers.statement;
 
 import bluC.parser.handlers.expression.ExpressionHandler;
 import bluC.Logger;
+import bluC.ResultType;
 import bluC.transpiler.Expression;
-import bluC.transpiler.Statement;
-import bluC.transpiler.Statement.VarDeclaration.Sign;
-import bluC.transpiler.Statement.VarDeclaration.SimplifiedType;
+import bluC.transpiler.statements.Statement;
+import bluC.transpiler.statements.vars.Sign;
+import bluC.transpiler.statements.vars.SimplifiedType;
 import bluC.transpiler.Token;
 import bluC.transpiler.TokenFileInfo;
 import bluC.transpiler.TokenInfo;
 import bluC.parser.Parser;
+import bluC.transpiler.statements.ExpressionStatement;
+import bluC.transpiler.statements.Package;
+import bluC.transpiler.statements.Return;
+import bluC.transpiler.statements.vars.VarDeclaration;
+import bluC.transpiler.statements.blocks.Block;
 
 /**
  *
@@ -42,242 +48,297 @@ public class StatementHandler
     private final ClassHandler      classHandler;
     private final LoopHandler       loopHandler;
     
-    public StatementHandler(Parser parser)
-<span class="fc" id="L46">    {</span>
-<span class="fc" id="L47">        this.parser = parser;</span>
+<span class="nc" id="L51">    public static enum JustParseExprErrCode</span>
+    {
+<span class="nc" id="L53">        UNEXPECTED_END_OF_STATEMENT,</span>
+<span class="nc" id="L54">        MALFORMED_EXPRESSION;</span>
+    }
         
-<span class="fc" id="L49">        varHandler          = new VariableHandler(parser, this);</span>
-<span class="fc" id="L50">        expressionHandler   = new ExpressionHandler(parser, this);</span>
-<span class="fc" id="L51">        blockHandler        = new BlockHandler(parser, this);</span>
-<span class="fc" id="L52">        funcHandler         = new FunctionHandler(parser, this, blockHandler);</span>
-<span class="fc" id="L53">        ifHandler           = new IfHandler(parser, blockHandler, </span>
+    public static class JustParseExprResult extends 
+        ResultType&lt;Expression, JustParseExprErrCode&gt; 
+    {
+        public JustParseExprResult(JustParseExprErrCode errCode)
+        {
+<span class="nc" id="L62">            super(errCode);</span>
+<span class="nc" id="L63">        }</span>
+    }
+    
+    public StatementHandler(Parser parser)
+<span class="fc" id="L67">    {</span>
+<span class="fc" id="L68">        this.parser = parser;</span>
+        
+<span class="fc" id="L70">        varHandler          = new VariableHandler(parser, this);</span>
+<span class="fc" id="L71">        expressionHandler   = new ExpressionHandler(parser, this);</span>
+<span class="fc" id="L72">        blockHandler        = new BlockHandler(parser, this);</span>
+<span class="fc" id="L73">        funcHandler         = new FunctionHandler(parser, this, blockHandler);</span>
+<span class="fc" id="L74">        ifHandler           = new IfHandler(parser, blockHandler, </span>
             expressionHandler);
-<span class="fc" id="L55">        classHandler        = new ClassHandler(parser, varHandler, blockHandler,</span>
+<span class="fc" id="L76">        classHandler        = new ClassHandler(parser, varHandler, blockHandler,</span>
             funcHandler);
-<span class="fc" id="L57">        loopHandler         = new LoopHandler(parser, this);</span>
+<span class="fc" id="L78">        loopHandler         = new LoopHandler(parser, this, blockHandler);</span>
         
         //due to circular references to varHandler we had to create a 
         //  reference to varHandler and THEN retrieve references to the other 
         //  handlers
-<span class="fc" id="L62">        varHandler.initHandlers();</span>
-<span class="fc" id="L63">    }</span>
+<span class="fc" id="L83">        varHandler.initHandlers();</span>
+<span class="fc" id="L84">    }</span>
     
     
     public FunctionHandler getFuncHandler()
     {
-<span class="fc" id="L68">        return funcHandler;</span>
+<span class="fc" id="L89">        return funcHandler;</span>
     }
     
     public ExpressionHandler getExpressionHandler()
     {
-<span class="fc" id="L73">        return expressionHandler;</span>
+<span class="fc" id="L94">        return expressionHandler;</span>
     }
     
     public VariableHandler getVarHandler()
     {
-<span class="fc" id="L78">        return varHandler;</span>
+<span class="fc" id="L99">        return varHandler;</span>
     }
     
     public Statement handleStatement(boolean checkForSemicolon)
     {
-<span class="fc" id="L83">        Statement returnee = varHandler.handleVarDeclarationOrHigher();</span>
+<span class="fc" id="L104">        Statement returnee = varHandler.handleVarDeclarationOrHigher();</span>
         
-<span class="pc bpc" id="L85" title="2 of 4 branches missed.">        if (checkForSemicolon &amp;&amp;</span>
-<span class="pc bpc" id="L86" title="1 of 2 branches missed.">            !(returnee instanceof Statement.Block) &amp;&amp; !parser.peekMatches(&quot;;&quot;))</span>
+<span class="pc bpc" id="L106" title="1 of 2 branches missed.">        if (checkForSemicolon &amp;&amp;</span>
+<span class="pc bpc" id="L107" title="2 of 4 branches missed.">            returnee.needsSemicolon() &amp;&amp; !parser.peekMatches(&quot;;&quot;))</span>
         {
-<span class="nc" id="L88">            Token curToken = parser.getCurToken();</span>
-<span class="nc" id="L89">            Logger.err(curToken, &quot;Expected \&quot;;\&quot; to end statement&quot;);</span>
+<span class="nc" id="L109">            Token curToken = parser.getCurToken();</span>
+<span class="nc" id="L110">            Logger.err(curToken, &quot;Expected \&quot;;\&quot; to end statement&quot;);</span>
         }
         
-<span class="fc" id="L92">        parser.nextToken();</span>
-<span class="fc" id="L93">        return returnee;</span>
+<span class="fc" id="L113">        parser.nextToken();</span>
+<span class="fc" id="L114">        return returnee;</span>
     }
     
     public Statement handleBlockStatementOrHigher()
     {
-<span class="nc" id="L98">        Token openBrace = parser.peek();</span>
+<span class="nc" id="L119">        Token openBrace = parser.peek();</span>
         
-<span class="nc bnc" id="L100" title="All 2 branches missed.">        if (openBrace.getTextContent().equals(&quot;{&quot;))</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">        if (openBrace.getTextContent().equals(&quot;{&quot;))</span>
         {
-<span class="nc" id="L102">            Statement.Block block = blockHandler.handleBlock(openBrace);</span>
-<span class="nc" id="L103">            return block;</span>
+<span class="nc" id="L123">            Block block = blockHandler.handleBlock(openBrace);</span>
+<span class="nc" id="L124">            return block;</span>
         }
-        else 
+        else
         {
-<span class="nc" id="L107">            return handleIfStatementOrHigher();</span>
+<span class="nc" id="L128">            return handleIfStatementOrHigher();</span>
         }
     }
     
     private Statement handleIfStatementOrHigher()
     {
-<span class="nc" id="L113">        Token potentialIf = parser.peek();</span>
+<span class="nc" id="L134">        Token potentialIf = parser.peek();</span>
         
-<span class="nc bnc" id="L115" title="All 2 branches missed.">        if (potentialIf.getTextContent().equals(&quot;if&quot;))</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">        if (potentialIf.getTextContent().equals(&quot;if&quot;))</span>
         {
-<span class="nc" id="L117">            return ifHandler.handleIfStatement(potentialIf);</span>
+<span class="nc" id="L138">            return ifHandler.handleIfStatement(potentialIf);</span>
         }
         else
         {
-<span class="nc" id="L121">            return handleExpressionStatementOrHigher();</span>
+<span class="nc" id="L142">            return handleExpressionStatementOrHigher();</span>
         }
     }
     
     private Statement handleExpressionStatementOrHigher()
     {
-<span class="nc" id="L127">        Token next = parser.peek();</span>
+<span class="nc" id="L148">        Token next = parser.peek();</span>
         
         //&quot;this&quot; can be used in an expression (class member access) [or 
         //  constructor declaration, but in this case it's to parse the &quot;this&quot; 
         //  expression]
-<span class="nc bnc" id="L132" title="All 4 branches missed.">        if (!next.isReservedWord() || next.getTextContent().equals(&quot;this&quot;)) </span>
+<span class="nc bnc" id="L153" title="All 4 branches missed.">        if (!next.isReservedWord() || next.getTextContent().equals(&quot;this&quot;)) </span>
         {
-<span class="nc" id="L134">            Expression expression = expressionHandler.handleExpression();</span>
+<span class="nc" id="L155">            Expression expression = expressionHandler.handleExpression();</span>
 
-<span class="nc" id="L136">            return new Statement.ExpressionStatement(expression, </span>
-<span class="nc" id="L137">                next.getLineIndex());</span>
+<span class="nc" id="L157">            return new ExpressionStatement(expression, </span>
+<span class="nc" id="L158">                next.getLineIndex());</span>
         }
         else
         {
-<span class="nc" id="L141">            return handleClassDefinitionOrHigher();</span>
+<span class="nc" id="L162">            return handleClassDefinitionOrHigher();</span>
         }
     }
     
     private Statement handleClassDefinitionOrHigher() 
     {
-<span class="nc" id="L147">        Token next = parser.peek();</span>
+<span class="nc" id="L168">        Token next = parser.peek();</span>
         
-<span class="nc bnc" id="L149" title="All 2 branches missed.">        if (next.getTextContent().equals(&quot;class&quot;))</span>
+<span class="nc bnc" id="L170" title="All 2 branches missed.">        if (next.getTextContent().equals(&quot;class&quot;))</span>
         {
-<span class="nc" id="L151">            return classHandler.handleClass(parser.peek());</span>
+<span class="nc" id="L172">            return classHandler.handleClass(parser.peek());</span>
         }
         else 
         {
-<span class="nc" id="L155">            return handleReturnOrHigher();</span>
+<span class="nc" id="L176">            return handleReturnOrHigher();</span>
         }
     }
     
     private Statement handleReturnOrHigher()
     {
-<span class="nc" id="L161">        Token next = parser.peek();</span>
+<span class="nc" id="L182">        Token next = parser.peek();</span>
         
-<span class="nc bnc" id="L163" title="All 2 branches missed.">        if (next.getTextContent().equals(&quot;return&quot;))</span>
+<span class="nc bnc" id="L184" title="All 2 branches missed.">        if (next.getTextContent().equals(&quot;return&quot;))</span>
         {
             Statement returnedExpression;
-            Statement.Return return_;
+            Return return_;
             
-<span class="nc" id="L168">            parser.nextToken();</span>
-<span class="nc" id="L169">            returnedExpression = handleExpressionStatementOrHigher();</span>
+<span class="nc" id="L189">            parser.nextToken();</span>
+<span class="nc" id="L190">            returnedExpression = handleExpressionStatementOrHigher();</span>
             
-<span class="nc" id="L171">            return_ = new Statement.Return(returnedExpression,</span>
-<span class="nc" id="L172">                parser.getCurTokLineIndex());</span>
+<span class="nc" id="L192">            return_ = new Return(returnedExpression,</span>
+<span class="nc" id="L193">                parser.getCurTokLineIndex());</span>
             
-<span class="nc" id="L174">            return return_;</span>
+<span class="nc" id="L195">            return return_;</span>
         }
         else
         {
-<span class="nc" id="L178">            return loopHandler.handleLoopOrHigher();</span>
+            //return handlePackage();
+<span class="nc" id="L200">            return loopHandler.handleLoopOrHigher();</span>
         }
     }
     
     public Statement handlePackage()
     {
-<span class="nc" id="L184">        Token next = parser.peek();</span>
+<span class="nc" id="L206">        Token next = parser.peek();</span>
         
-<span class="nc bnc" id="L186" title="All 2 branches missed.">        if (next.getTextContent().equals(&quot;package&quot;))</span>
+<span class="nc bnc" id="L208" title="All 2 branches missed.">        if (next.getTextContent().equals(&quot;package&quot;))</span>
         {
-<span class="nc" id="L188">            return getPackage();</span>
+<span class="nc" id="L210">            return getPackage();</span>
         }
         else
         {
-<span class="nc" id="L192">            return handleInvalidStartOfStatement();</span>
+<span class="nc" id="L214">            return handleInvalidStartOfStatement();</span>
         }
     }
     
     private Statement getPackage()
     {
-<span class="nc" id="L198">        int     startTokenIndex = parser.getCurTokIndex();</span>
-<span class="nc" id="L199">        Token   packageToken    = parser.peek();</span>
-<span class="nc" id="L200">        int     startLineIndex  = packageToken.getLineIndex();</span>
+<span class="nc" id="L220">        int     startTokenIndex = parser.getCurTokIndex();</span>
+<span class="nc" id="L221">        Token   packageToken    = parser.peek();</span>
+<span class="nc" id="L222">        int     startLineIndex  = packageToken.getLineIndex();</span>
         
-<span class="nc" id="L202">        String fullyQualifiedPackage = &quot;&quot;;</span>
+<span class="nc" id="L224">        String fullyQualifiedPackage = &quot;&quot;;</span>
         
         while (true)
         {
-<span class="nc" id="L206">            parser.nextToken();</span>
+<span class="nc" id="L228">            parser.nextToken();</span>
 
-<span class="nc bnc" id="L208" title="All 2 branches missed.">            if (parser.atEOF())</span>
+<span class="nc bnc" id="L230" title="All 2 branches missed.">            if (parser.atEOF())</span>
             {
-<span class="nc" id="L210">                int qualifiedNameStartLineIndex = packageToken.getLineIndex();</span>
+<span class="nc" id="L232">                int qualifiedNameStartLineIndex = packageToken.getLineIndex();</span>
                 
-<span class="nc" id="L212">                Logger.err(parser.peek(-1), &quot;Expected \&quot;;\&quot; to end &quot; + </span>
+<span class="nc" id="L234">                Logger.err(parser.peek(-1), &quot;Expected \&quot;;\&quot; to end &quot; + </span>
                     &quot;package declaration on line &quot; + (packageToken.
-<span class="nc" id="L214">                    getLineIndex() + 1));</span>
+<span class="nc" id="L236">                    getLineIndex() + 1));</span>
 
                 //  synchronize parser
                 
-<span class="nc" id="L218">                parser.setToken(startTokenIndex);</span>
-<span class="nc" id="L219">                fullyQualifiedPackage = &quot;&quot;;</span>
+<span class="nc" id="L240">                parser.setToken(startTokenIndex);</span>
+<span class="nc" id="L241">                fullyQualifiedPackage = &quot;&quot;;</span>
                 
                 while (true)
                 {
-<span class="nc" id="L223">                    parser.nextToken();</span>
+<span class="nc" id="L245">                    parser.nextToken();</span>
                     
-<span class="nc bnc" id="L225" title="All 2 branches missed.">                    if (parser.getCurTokLineIndex() != </span>
+<span class="nc bnc" id="L247" title="All 2 branches missed.">                    if (parser.getCurTokLineIndex() != </span>
                         qualifiedNameStartLineIndex)
                     {
-<span class="nc" id="L228">                        return new Statement.Package(fullyQualifiedPackage,</span>
+<span class="nc" id="L250">                        return new Package(fullyQualifiedPackage,</span>
                             startLineIndex);
                     }
                     
-<span class="nc" id="L232">                    fullyQualifiedPackage += parser.peek().getTextContent();</span>
+<span class="nc" id="L254">                    fullyQualifiedPackage += parser.peek().getTextContent();</span>
                 }
             }
-<span class="nc bnc" id="L235" title="All 2 branches missed.">            else if (parser.peekMatches(&quot;;&quot;))</span>
+<span class="nc bnc" id="L257" title="All 2 branches missed.">            else if (parser.peekMatches(&quot;;&quot;))</span>
             {
-<span class="nc" id="L237">                return new Statement.Package(fullyQualifiedPackage,</span>
+<span class="nc" id="L259">                return new Package(fullyQualifiedPackage,</span>
                     startLineIndex);
             }
 
-<span class="nc" id="L241">            fullyQualifiedPackage += parser.peek().getTextContent();</span>
+<span class="nc" id="L263">            fullyQualifiedPackage += parser.peek().getTextContent();</span>
         }
     }
     
     private Statement handleInvalidStartOfStatement()
     {
-<span class="nc" id="L247">        Token next = parser.peek();</span>
-<span class="nc" id="L248">        Logger.err(next, &quot;\&quot;&quot; + next.getTextContent() + &quot;\&quot; cannot be the &quot; +</span>
+<span class="nc" id="L269">        Token next = parser.peek();</span>
+<span class="nc" id="L270">        Logger.err(next, &quot;\&quot;&quot; + next.getTextContent() + &quot;\&quot; cannot be the &quot; +</span>
             &quot;start of a new statement&quot;);
         
-<span class="nc" id="L251">        parser.gotoEndOfStatement();</span>
+<span class="nc" id="L273">        parser.gotoEndOfStatement();</span>
         
-<span class="nc bnc" id="L253" title="All 2 branches missed.">        if (parser.atEOF())</span>
+<span class="nc bnc" id="L275" title="All 2 branches missed.">        if (parser.atEOF())</span>
         {
             //this should never happen so dump ast and stack trace
-<span class="nc" id="L256">            parser.dumpAstToStdout();</span>
+<span class="nc" id="L278">            parser.dumpAstToStdout();</span>
             try
             { 
-<span class="nc" id="L259">                throw new Exception(&quot;Fatal parse error: prematurely reached &quot; +</span>
+<span class="nc" id="L281">                throw new Exception(&quot;Fatal parse error: prematurely reached &quot; +</span>
                     &quot;end of file&quot;);
             }
-<span class="nc" id="L262">            catch (Exception ex)</span>
+<span class="nc" id="L284">            catch (Exception ex)</span>
             {
-<span class="nc" id="L264">                ex.printStackTrace();</span>
+<span class="nc" id="L286">                ex.printStackTrace();</span>
             }
             
             //exit because otherwise our parser goes into an infinite loop
-<span class="nc" id="L268">            System.exit(1);</span>
+<span class="nc" id="L290">            System.exit(1);</span>
         }
         
         //try to synchronize parser
-<span class="nc" id="L272">        return new Statement.VarDeclaration(Sign.UNSPECIFIED, </span>
+<span class="nc" id="L294">        return new VarDeclaration(Sign.UNSPECIFIED, </span>
             SimplifiedType.VOID, 0, 
                 
             new Token(
                 new TokenInfo(&quot;null&quot;, true),
 
-<span class="nc" id="L278">                new TokenFileInfo(next.getFilepath(), next.getLineIndex())),</span>
+<span class="nc" id="L300">                new TokenFileInfo(next.getFilepath(), next.getLineIndex())),</span>
                 
-<span class="nc" id="L280">            null, null, parser.getCurTokLineIndex());</span>
+<span class="nc" id="L302">            null, null, parser.getCurTokLineIndex());</span>
+    }
+
+    public JustParseExprResult justParseExpression()
+    {
+        int         startIndex;
+        Expression  rawResult;
+        JustParseExprResult
+                    result;
+        
+<span class="nc" id="L312">        startIndex  = parser.getCurTokIndex();</span>
+<span class="nc" id="L313">        rawResult   = expressionHandler.handleExpression();</span>
+<span class="nc" id="L314">        result      = new JustParseExprResult(</span>
+            JustParseExprErrCode.MALFORMED_EXPRESSION);
+        
+<span class="nc bnc" id="L317" title="All 2 branches missed.">        if (rawResult.isNullLiteral())</span>
+        {
+            // try to determine what went wrong with parsing the expression
+            
+<span class="nc" id="L321">            parser.setToken(startIndex);</span>
+            
+<span class="nc bnc" id="L323" title="All 2 branches missed.">            while (!parser.atEOF())</span>
+            {
+<span class="nc bnc" id="L325" title="All 2 branches missed.">                if (parser.peekMatches(&quot;;&quot;, &quot;{&quot;, &quot;}&quot;))</span>
+                {
+<span class="nc" id="L327">                    result.setErrCode(</span>
+                        JustParseExprErrCode.UNEXPECTED_END_OF_STATEMENT);
+<span class="nc" id="L329">                    break;</span>
+                }
+                
+<span class="nc" id="L332">                parser.nextToken();</span>
+            }
+            // else it's already set to malformed expression
+        }
+        else
+        {
+<span class="nc" id="L338">            result.setData(rawResult);</span>
+        }
+        
+<span class="nc" id="L341">        return result;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

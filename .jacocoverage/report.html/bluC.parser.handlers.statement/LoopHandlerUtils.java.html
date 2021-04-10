@@ -64,52 +64,89 @@ public class LoopHandlerUtils
     
     /**
      * Synchronizes the parser, assuming that the condition section
-     *  of the loop was malformed
+     *  of the loop was malformed.
+     * 
+     * Automatically jumps to the first token of the loop (e.g. &quot;while&quot; or
+     *  &quot;for&quot;, etc).
+     * 
+     * Ends on the &quot;best guess&quot; of the last token of the loop (e.g. for a
+     *  multi-statement loop this will be a &quot;}&quot; or for a single-statement, &quot;;&quot;)
      */
-    public void synchronizeParserFromBadCondition()
+    public void synchronizeParserFromBadCondition(int startingTokenIndex)
     {
         Token   errorLocation;
         GotoStartResults
                 findBlockStartResult;
-        int     startIndex;
         
-<span class="nc" id="L76">        startIndex              = parser.getCurTokIndex();</span>
-<span class="nc" id="L77">        errorLocation           = parser.getCurToken();</span>
-<span class="nc" id="L78">        findBlockStartResult    = gotoBlockStart();</span>
+<span class="nc" id="L81">        parser.setToken(startingTokenIndex);</span>
+<span class="nc" id="L82">        errorLocation           = parser.getCurToken();</span>
+<span class="nc" id="L83">        findBlockStartResult    = gotoBlockStart();</span>
         
-<span class="nc bnc" id="L80" title="All 2 branches missed.">        if (findBlockStartResult.getWasSuccessful())</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">        if (findBlockStartResult.getWasSuccessful())</span>
         {
-<span class="nc" id="L82">            handleMalformedStartCondition(</span>
-                startIndex, errorLocation, findBlockStartResult);
+<span class="nc" id="L87">            handleMalformedStartCondition(</span>
+                startingTokenIndex, errorLocation, findBlockStartResult);
         }
         else
         {
-<span class="nc" id="L87">            gotoBlockEnd(startIndex, errorLocation);</span>
+<span class="nc" id="L92">            gotoBlockEnd(startingTokenIndex, errorLocation);</span>
         }
-<span class="nc" id="L89">    }</span>
+<span class="nc" id="L94">    }</span>
+    
+    /**
+     * Synchronizes the parser from a bad block. Jumps to the token
+     *  conditionalEndIndex, so starting token isn't necessary.
+     * 
+     * Ends on the token that is the &quot;best guess&quot; for the what is the last token
+     *  of the loop.
+     */
+    public void synchronizeParserFromBadBlock(int conditionalEndIndex)
+    {
+<span class="nc" id="L105">        Logger.err(parser.peek(), &quot;encountered unexpected closing brace &quot; +</span>
+            &quot;(\&quot;}\&quot;) while trying to desugar single-statement &quot; +
+            nameOfLoopType + &quot;-loop (did you forget to add an opening brace &quot; +
+            &quot;\&quot;{\&quot;?&quot;);
+        
+        // synchronize parser by guessing that this is a multi-statement
+        //  loop
+        TokenBuilder    tokBuilder;
+        Token           openBrace;
+
+        // grab line data from this token
+<span class="nc" id="L116">        parser.setToken(conditionalEndIndex);</span>
+
+<span class="nc" id="L118">        tokBuilder = new TokenBuilder();</span>
+<span class="nc" id="L119">        openBrace = tokBuilder.</span>
+<span class="nc" id="L120">            setFileName     (parser.getCurToken().getFilepath()). </span>
+<span class="nc" id="L121">            setLineIndex    ((int) parser.getCurTokLineIndex()).</span>
+<span class="nc" id="L122">            setTextContent  (&quot;{&quot;).</span>
+<span class="nc" id="L123">            setWasEmittedByCompiler(true).</span>
+<span class="nc" id="L124">            build();</span>
+<span class="nc" id="L125">        parser.addToken(openBrace, conditionalEndIndex + 1);</span>
+<span class="nc" id="L126">    }</span>
     
     private void handleMalformedStartCondition(
         int startIndex, Token errorLocation, GotoStartResults blockStartResult)
     {
-<span class="nc" id="L94">        GotoStartErrCodes errCode        = blockStartResult.getErrCode();</span>
+<span class="nc" id="L131">        GotoStartErrCodes errCode        = blockStartResult.getErrCode();</span>
         
-<span class="nc bnc" id="L96" title="All 4 branches missed.">        switch (errCode)</span>
+<span class="nc bnc" id="L133" title="All 4 branches missed.">        switch (errCode)</span>
         {
             case NO_OPENING_PAREN:
-<span class="nc" id="L99">                Logger.err(errorLocation, </span>
+<span class="nc" id="L136">                Logger.err(errorLocation, </span>
                     &quot;Malformed &quot; + nameOfLoopType + 
                     &quot;-loop, expected \&quot;(\&quot; to open the conditional&quot; + 
                     &quot;section of the loop&quot;);
                 // try to synchronize parser by properly starting the condition
-<span class="nc" id="L104">                injectFakeConditionOpenParen(startIndex, errorLocation);</span>
+<span class="nc" id="L141">                injectFakeConditionOpenParen(startIndex, errorLocation);</span>
                 
                 // try rehandling this again, to see if it's also missing an
                 //  ending parenthesis
-<span class="nc" id="L108">                handleMalformedStartCondition(</span>
-<span class="nc" id="L109">                    startIndex, errorLocation, gotoBlockStart());</span>
+<span class="nc" id="L145">                handleMalformedStartCondition(</span>
+<span class="nc" id="L146">                    startIndex, errorLocation, gotoBlockStart());</span>
                 
             case MALFORMED_SINGLE_STATEMENT_LOOP:
-<span class="nc" id="L112">                Logger.err(errorLocation, </span>
+<span class="nc" id="L149">                Logger.err(errorLocation, </span>
                     &quot;Malformed single-statement &quot; + nameOfLoopType + 
                     &quot;-loop, expected \&quot;)\&quot; to close the conditional &quot; + 
                     &quot;section of the loop&quot;);
@@ -121,11 +158,11 @@ public class LoopHandlerUtils
                  *      statement, which we then try to synchronize as a
                  *      single-statement loop)
                  */
-<span class="nc" id="L124">                injectFakeConditionCloseParen(startIndex, errorLocation);</span>
+<span class="nc" id="L161">                injectFakeConditionCloseParen(startIndex, errorLocation);</span>
                 
-<span class="nc" id="L126">                break;</span>
+<span class="nc" id="L163">                break;</span>
             case MALFORMED_MULTI_STATEMENT_LOOP:
-<span class="nc" id="L128">                Logger.err(errorLocation, </span>
+<span class="nc" id="L165">                Logger.err(errorLocation, </span>
                     &quot;Malformed multi-statement &quot; + nameOfLoopType + 
                     &quot;-loop, expected \&quot;}\&quot; to close the opening brace of &quot; +
                     &quot;the loop&quot;);
@@ -137,9 +174,9 @@ public class LoopHandlerUtils
                  *      next statement, which we then try to synchronize as a
                  *      multi-statement loop)
                  */
-<span class="nc" id="L140">                injectFakeConditionCloseParen(startIndex, errorLocation);</span>
+<span class="nc" id="L177">                injectFakeConditionCloseParen(startIndex, errorLocation);</span>
                 
-<span class="nc" id="L142">                break;</span>
+<span class="nc" id="L179">                break;</span>
             default:
                 /**
                  * I don't see any way for this branch to be reached unless 
@@ -148,15 +185,15 @@ public class LoopHandlerUtils
                  * 
                  * It's only here because java complains otherwise.
                  */
-<span class="nc" id="L151">                Logger.err(errorLocation,</span>
+<span class="nc" id="L188">                Logger.err(errorLocation,</span>
                    &quot;(FATAL error in compiler): encountered an unexpected &quot; +
                     &quot;way that a loop was malformed, one that the &quot; +
                     &quot;compiler didn't anticipate&quot;);
                 break;
         }
         
-<span class="nc" id="L158">        gotoBlockEnd(startIndex, errorLocation);</span>
-<span class="nc" id="L159">    }</span>
+<span class="nc" id="L195">        gotoBlockEnd(startIndex, errorLocation);</span>
+<span class="nc" id="L196">    }</span>
     
     /**
      * Injects a compiler-generated &quot;(&quot; token and sets the current token index
@@ -165,18 +202,18 @@ public class LoopHandlerUtils
     private void injectFakeConditionOpenParen(
         int startIndex, Token errorLocation)
     {
-<span class="nc" id="L168">        TokenBuilder    parenBuilder = new TokenBuilder();</span>
-<span class="nc" id="L169">        Token           openParen = parenBuilder.</span>
-<span class="nc" id="L170">            setFileName             (errorLocation.getFilepath()). </span>
-<span class="nc" id="L171">            setLineIndex            (errorLocation.getLineIndex()).</span>
-<span class="nc" id="L172">            setTextContent          (&quot;(&quot;).</span>
-<span class="nc" id="L173">            setWasEmittedByCompiler (true).</span>
-<span class="nc" id="L174">            build();</span>
+<span class="nc" id="L205">        TokenBuilder    parenBuilder = new TokenBuilder();</span>
+<span class="nc" id="L206">        Token           openParen = parenBuilder.</span>
+<span class="nc" id="L207">            setFileName             (errorLocation.getFilepath()). </span>
+<span class="nc" id="L208">            setLineIndex            (errorLocation.getLineIndex()).</span>
+<span class="nc" id="L209">            setTextContent          (&quot;(&quot;).</span>
+<span class="nc" id="L210">            setWasEmittedByCompiler (true).</span>
+<span class="nc" id="L211">            build();</span>
         
         // the actual startIndex will be the loop keyword token
-<span class="nc" id="L177">        parser.addToken(openParen, startIndex + 1);</span>
-<span class="nc" id="L178">        parser.setToken(startIndex + 1);</span>
-<span class="nc" id="L179">    }</span>
+<span class="nc" id="L214">        parser.addToken(openParen, startIndex + 1);</span>
+<span class="nc" id="L215">        parser.setToken(startIndex + 1);</span>
+<span class="nc" id="L216">    }</span>
     
     /**
      * Injects a compiler-generated &quot;)&quot; token and sets the current token index
@@ -185,21 +222,21 @@ public class LoopHandlerUtils
     private void injectFakeConditionCloseParen(
         int startIndex, Token errorLocation)
     {
-<span class="nc" id="L188">        TokenBuilder    parenBuilder = new TokenBuilder();</span>
-<span class="nc" id="L189">        Token           openParen = parenBuilder.</span>
-<span class="nc" id="L190">            setFileName             (errorLocation.getFilepath()). </span>
-<span class="nc" id="L191">            setLineIndex            (errorLocation.getLineIndex()).</span>
-<span class="nc" id="L192">            setTextContent          (&quot;)&quot;).</span>
-<span class="nc" id="L193">            setWasEmittedByCompiler (true).</span>
-<span class="nc" id="L194">            build();</span>
+<span class="nc" id="L225">        TokenBuilder    parenBuilder = new TokenBuilder();</span>
+<span class="nc" id="L226">        Token           openParen = parenBuilder.</span>
+<span class="nc" id="L227">            setFileName             (errorLocation.getFilepath()). </span>
+<span class="nc" id="L228">            setLineIndex            (errorLocation.getLineIndex()).</span>
+<span class="nc" id="L229">            setTextContent          (&quot;)&quot;).</span>
+<span class="nc" id="L230">            setWasEmittedByCompiler (true).</span>
+<span class="nc" id="L231">            build();</span>
         
         // startIndex + 1 will be opening paren &quot;(&quot;
         //
         //  (there's no easy way to guess what the actual condition might be,
         //  and at any rate it's erroneous, so just leave the condition blank).
-<span class="nc" id="L200">        parser.addToken(openParen, startIndex + 2);</span>
-<span class="nc" id="L201">        parser.setToken(startIndex + 2);</span>
-<span class="nc" id="L202">    }</span>
+<span class="nc" id="L237">        parser.addToken(openParen, startIndex + 2);</span>
+<span class="nc" id="L238">        parser.setToken(startIndex + 2);</span>
+<span class="nc" id="L239">    }</span>
     
     /**
      * Leaves the parser on the opening token of the loop block (either 
@@ -211,16 +248,16 @@ public class LoopHandlerUtils
     {
         GotoStartResults result;
         
-<span class="nc bnc" id="L214" title="All 2 branches missed.">        if (parser.peekMatches(&quot;(&quot;))</span>
+<span class="nc bnc" id="L251" title="All 2 branches missed.">        if (parser.peekMatches(&quot;(&quot;))</span>
         {
-<span class="nc" id="L216">            result = keepGoingToBlockStart();</span>
+<span class="nc" id="L253">            result = keepGoingToBlockStart();</span>
         }
         else
         {
-<span class="nc" id="L220">            result = new GotoStartResults(GotoStartErrCodes.NO_OPENING_PAREN);</span>
+<span class="nc" id="L257">            result = new GotoStartResults(GotoStartErrCodes.NO_OPENING_PAREN);</span>
         }
         
-<span class="nc" id="L223">        return result;</span>
+<span class="nc" id="L260">        return result;</span>
     }
     
     /**
@@ -232,80 +269,92 @@ public class LoopHandlerUtils
                 result;
         boolean foundClosingParen;
         
-<span class="nc" id="L235">        result              = new GotoStartResults(</span>
+<span class="nc" id="L272">        result              = new GotoStartResults(</span>
             GotoStartErrCodes.MALFORMED_SINGLE_STATEMENT_LOOP);
-<span class="nc" id="L237">        foundClosingParen   = false;</span>
+<span class="nc" id="L274">        foundClosingParen   = false;</span>
         
-<span class="nc bnc" id="L239" title="All 2 branches missed.">        while (!parser.atEOF())</span>
+<span class="nc bnc" id="L276" title="All 2 branches missed.">        while (!parser.atEOF())</span>
         {
-<span class="nc bnc" id="L241" title="All 2 branches missed.">            if (parser.peekMatches(&quot;)&quot;))</span>
+<span class="nc bnc" id="L278" title="All 2 branches missed.">            if (parser.peekMatches(&quot;)&quot;))</span>
             {
-<span class="nc" id="L243">                parser.nextToken();</span>
-<span class="nc" id="L244">                foundClosingParen = true;</span>
-<span class="nc" id="L245">                break;</span>
+<span class="nc" id="L280">                parser.nextToken();</span>
+<span class="nc" id="L281">                foundClosingParen = true;</span>
+<span class="nc" id="L282">                break;</span>
             }
         }
         
-<span class="nc bnc" id="L249" title="All 2 branches missed.">        if (foundClosingParen)</span>
+<span class="nc bnc" id="L286" title="All 2 branches missed.">        if (foundClosingParen)</span>
         {
             //check if it's a multi-statement loop
-<span class="nc bnc" id="L252" title="All 2 branches missed.">            if (parser.peekMatches(&quot;{&quot;))</span>
+<span class="nc bnc" id="L289" title="All 2 branches missed.">            if (parser.peekMatches(&quot;{&quot;))</span>
             {
-<span class="nc" id="L254">                result = new GotoStartResults(</span>
+<span class="nc" id="L291">                result = new GotoStartResults(</span>
                     GotoStartErrCodes.MALFORMED_MULTI_STATEMENT_LOOP);
             }
         }
         
-<span class="nc" id="L259">        return result;</span>
+<span class="nc" id="L296">        return result;</span>
     }
     
-    
+    /**
+     * Goes to the block end.
+     * 
+     * Expects to either be after an opening brace &quot;{&quot;, or after the closing of
+     *  the conditional &quot;)&quot;.
+     * 
+     * Ends on the block end (or the best guess of the block end if the *actual*
+     *  end can't be found).
+     */
     private void gotoBlockEnd(int startIndex, Token errorLocation)
     {
         boolean didLoopEnd;
-<span class="nc" id="L266">        boolean isLoopMultiStatement = false;</span>
+<span class="nc" id="L311">        boolean isLoopMultiStatement = false;</span>
         
-<span class="nc bnc" id="L268" title="All 2 branches missed.">        if (parser.curTextMatches(&quot;)&quot;))</span>
+<span class="nc bnc" id="L313" title="All 2 branches missed.">        if (parser.curTextMatches(&quot;)&quot;))</span>
         {
-<span class="nc" id="L270">            didLoopEnd = parser.gotoEndOfStatement();</span>
+<span class="nc" id="L315">            didLoopEnd = parser.gotoEndOfStatement();</span>
         }
-<span class="nc bnc" id="L272" title="All 2 branches missed.">        else if (parser.curTextMatches(&quot;{&quot;))</span>
+<span class="nc bnc" id="L317" title="All 2 branches missed.">        else if (parser.curTextMatches(&quot;{&quot;))</span>
         {
-<span class="nc" id="L274">            didLoopEnd              = parser.gotoEndOfBlock();</span>
-<span class="nc" id="L275">            isLoopMultiStatement    = true;</span>
+<span class="nc" id="L319">            didLoopEnd              = parser.gotoEndOfBlock();</span>
+<span class="nc" id="L320">            isLoopMultiStatement    = true;</span>
+        }
+<span class="nc bnc" id="L322" title="All 2 branches missed.">        else if (parser.curTextMatches(&quot;;&quot;))</span>
+        {
+<span class="nc" id="L324">            didLoopEnd = true;</span>
         }
         else
         {
-<span class="nc" id="L279">            Logger.err(parser.getCurToken(), &quot;(FATAL error in compiler): &quot; +</span>
+<span class="nc" id="L328">            Logger.err(parser.getCurToken(), &quot;(FATAL error in compiler): &quot; +</span>
                 &quot;could not synchronize parser on this \&quot;&quot; + nameOfLoopType +
-                &quot;\&quot;loop with a malformed starting condition; unexpected &quot; +
+                &quot;\&quot; loop with a malformed starting condition; unexpected &quot; +
                 &quot;result from findBlockStart&quot;);
 
             /** 
              * try to synchronize the parser. I suppose synchronizing on a
              *  statement will do? This parser state shouldn't be possible.
              */
-<span class="nc" id="L288">            didLoopEnd = parser.gotoEndOfStatement();</span>
+<span class="nc" id="L337">            didLoopEnd = parser.gotoEndOfStatement();</span>
         }
         
-<span class="nc bnc" id="L291" title="All 2 branches missed.">        if (!didLoopEnd)</span>
+<span class="nc bnc" id="L340" title="All 2 branches missed.">        if (!didLoopEnd)</span>
         {
-<span class="nc" id="L293">            handleNoLoopEnding(startIndex, errorLocation, isLoopMultiStatement);</span>
+<span class="nc" id="L342">            handleNoLoopEnding(startIndex, errorLocation, isLoopMultiStatement);</span>
         }
-<span class="nc" id="L295">    }</span>
+<span class="nc" id="L344">    }</span>
     
     private void handleNoLoopEnding(
         int startIndex, Token errorLocation, boolean isLoopMultiStatement)
     {
-<span class="nc bnc" id="L300" title="All 2 branches missed.">        if (!isLoopMultiStatement)</span>
+<span class="nc bnc" id="L349" title="All 2 branches missed.">        if (!isLoopMultiStatement)</span>
         {
-<span class="nc" id="L302">            Logger.err(errorLocation,</span>
+<span class="nc" id="L351">            Logger.err(errorLocation,</span>
                 &quot;Expected \&quot;;\&quot; to end single-statement &quot; + nameOfLoopType +
                     &quot;-loop&quot;);
         }
         else
         {
-<span class="nc" id="L308">            Logger.err(errorLocation,</span>
+<span class="nc" id="L357">            Logger.err(errorLocation,</span>
                 &quot;Expected \&quot;}\&quot; to end multi-statement &quot; + nameOfLoopType +
                     &quot;-loop&quot;);
         }
@@ -317,7 +366,7 @@ public class LoopHandlerUtils
          *  this stream of tokens might be, so set the index to this token and
          *  try to reinterpret the AST after this location.
          */
-<span class="nc" id="L320">        parser.setToken(startIndex + 2);</span>
-<span class="nc" id="L321">    }</span>
+<span class="nc" id="L369">        parser.setToken(startIndex + 2);</span>
+<span class="nc" id="L370">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

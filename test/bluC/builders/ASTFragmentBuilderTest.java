@@ -20,8 +20,10 @@ import bluC.builders.VarDeclarationBuilder;
 import bluC.parser.Parser;
 import bluC.transpiler.Expression.Literal;
 import bluC.transpiler.Lexer;
-import bluC.transpiler.Statement;
+import bluC.transpiler.statements.Statement;
 import bluC.transpiler.Token;
+import bluC.transpiler.statements.vars.SimplifiedType;
+import bluC.transpiler.statements.vars.VarDeclaration;
 import java.util.ArrayList;
 import static org.junit.Assert.assertEquals;
 import org.junit.Before;
@@ -123,7 +125,7 @@ public class ASTFragmentBuilderTest
                     ast;
         VarDeclarationBuilder 
                     varBuilder;
-        Statement.VarDeclaration 
+        VarDeclaration 
                     expectedAstNode0;
         TokenBuilder
                     tokenBuilder;
@@ -149,7 +151,7 @@ public class ASTFragmentBuilderTest
             setFileName         (testFilePath).
             setStartingLineIndex(0).
             setVarName          ("charTest").
-            setSimplifiedType   (Statement.VarDeclaration.SimplifiedType.CHAR).
+            setSimplifiedType   (SimplifiedType.CHAR).
             setInitialValue     (charValueLit).
             build();
         

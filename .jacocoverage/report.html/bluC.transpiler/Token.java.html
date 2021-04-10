@@ -16,9 +16,11 @@
 
 package bluC.transpiler;
 
+import bluC.transpiler.statements.Statement;
 import bluC.parser.exceptions.MalformedNumber;
 import bluC.parser.exceptions.MalformedFloat;
 import bluC.parser.exceptions.MalformedInt;
+import bluC.transpiler.statements.Package;
 import java.util.Objects;
 
 /**
@@ -35,137 +37,137 @@ public class Token
     private final String          package_;
     
     public Token(TokenInfo tokenInfo, TokenFileInfo fileInfo, String package_)
-<span class="nc" id="L38">    {</span>
-<span class="nc" id="L39">        this.tokenInfo  = tokenInfo;</span>
-<span class="nc" id="L40">        this.fileInfo   = fileInfo;</span>
-<span class="nc" id="L41">        this.package_   = package_;</span>
-<span class="nc" id="L42">    }</span>
+<span class="nc" id="L40">    {</span>
+<span class="nc" id="L41">        this.tokenInfo  = tokenInfo;</span>
+<span class="nc" id="L42">        this.fileInfo   = fileInfo;</span>
+<span class="nc" id="L43">        this.package_   = package_;</span>
+<span class="nc" id="L44">    }</span>
     
     /**
      * Temporary constructor until packages are implemented, then all tokens
      *  will have an associated package.
      */
     public Token(TokenInfo tokenInfo, TokenFileInfo fileInfo)
-<span class="fc" id="L49">    {</span>
-<span class="fc" id="L50">        this.tokenInfo  = tokenInfo;</span>
-<span class="fc" id="L51">        this.fileInfo   = fileInfo;</span>
-<span class="fc" id="L52">        this.package_   = Statement.Package.NO_PACKAGE;</span>
-<span class="fc" id="L53">    }</span>
+<span class="fc" id="L51">    {</span>
+<span class="fc" id="L52">        this.tokenInfo  = tokenInfo;</span>
+<span class="fc" id="L53">        this.fileInfo   = fileInfo;</span>
+<span class="fc" id="L54">        this.package_   = Package.NO_PACKAGE;</span>
+<span class="fc" id="L55">    }</span>
     
     
     public String getTextContent()
     {
-<span class="fc" id="L58">        return tokenInfo.getTextContent();</span>
+<span class="fc" id="L60">        return tokenInfo.getTextContent();</span>
     }
 
     public void setTextContent(String textContent)
     {
-<span class="nc" id="L63">        tokenInfo.setTextContent(textContent);</span>
-<span class="nc" id="L64">    }</span>
+<span class="nc" id="L65">        tokenInfo.setTextContent(textContent);</span>
+<span class="nc" id="L66">    }</span>
     
     public String getFilepath()
     {
-<span class="nc" id="L68">        return fileInfo.getFilePath();</span>
+<span class="nc" id="L70">        return fileInfo.getFilePath();</span>
     }
 
     public void setFilepath(String filepath)
     {
-<span class="nc" id="L73">        fileInfo.setFilePath(filepath);</span>
-<span class="nc" id="L74">    }</span>
+<span class="nc" id="L75">        fileInfo.setFilePath(filepath);</span>
+<span class="nc" id="L76">    }</span>
 
     public int getLineIndex()
     {
-<span class="fc" id="L78">        return fileInfo.getLineIndex();</span>
+<span class="fc" id="L80">        return fileInfo.getLineIndex();</span>
     }
 
     public void setLineIndex(int lineIndex)
     {
-<span class="nc" id="L83">        fileInfo.setLineIndex(lineIndex);</span>
-<span class="nc" id="L84">    }</span>
+<span class="nc" id="L85">        fileInfo.setLineIndex(lineIndex);</span>
+<span class="nc" id="L86">    }</span>
     
     public boolean isNumber() throws MalformedNumber
     {
-<span class="fc" id="L88">        boolean dotFound = false;</span>
-<span class="fc" id="L89">        char[] textContentArray = getTextContent().toCharArray();</span>
-<span class="fc" id="L90">        boolean startsWithDigit = Character.isDigit(textContentArray[0]);</span>
+<span class="fc" id="L90">        boolean dotFound = false;</span>
+<span class="fc" id="L91">        char[] textContentArray = getTextContent().toCharArray();</span>
+<span class="fc" id="L92">        boolean startsWithDigit = Character.isDigit(textContentArray[0]);</span>
         
-<span class="fc bfc" id="L92" title="All 2 branches covered.">        if (!startsWithDigit)</span>
+<span class="fc bfc" id="L94" title="All 2 branches covered.">        if (!startsWithDigit)</span>
         {
-<span class="fc" id="L94">            return false;</span>
+<span class="fc" id="L96">            return false;</span>
         }
         
-<span class="fc bfc" id="L97" title="All 2 branches covered.">        for (int i = 1; i &lt; textContentArray.length; i++)</span>
+<span class="fc bfc" id="L99" title="All 2 branches covered.">        for (int i = 1; i &lt; textContentArray.length; i++)</span>
         {
-<span class="fc" id="L99">            char c = textContentArray[i];</span>
+<span class="fc" id="L101">            char c = textContentArray[i];</span>
             
-<span class="pc bpc" id="L101" title="1 of 2 branches missed.">            if (c == '.')</span>
+<span class="pc bpc" id="L103" title="1 of 2 branches missed.">            if (c == '.')</span>
             {
-<span class="nc bnc" id="L103" title="All 2 branches missed.">                if (i == textContentArray.length - 1)</span>
+<span class="nc bnc" id="L105" title="All 2 branches missed.">                if (i == textContentArray.length - 1)</span>
                 {
-<span class="nc" id="L105">                    throw new MalformedFloat(i);</span>
+<span class="nc" id="L107">                    throw new MalformedFloat(i);</span>
                 }
                 
                 //if there are multiple dots in a malformed float, the lexer
                 //  will have lexed the dots as separate tokens
-<span class="nc" id="L110">                dotFound = true;</span>
+<span class="nc" id="L112">                dotFound = true;</span>
             }
-<span class="pc bpc" id="L112" title="1 of 2 branches missed.">            else if (!Character.isDigit(c))</span>
+<span class="pc bpc" id="L114" title="1 of 2 branches missed.">            else if (!Character.isDigit(c))</span>
             {
-<span class="nc bnc" id="L114" title="All 2 branches missed.">                if (i == textContentArray.length - 1)</span>
+<span class="nc bnc" id="L116" title="All 2 branches missed.">                if (i == textContentArray.length - 1)</span>
                 {
-<span class="nc bnc" id="L116" title="All 2 branches missed.">                    if (c != 'f')</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">                    if (c != 'f')</span>
                     {
-<span class="nc bnc" id="L118" title="All 2 branches missed.">                        if (dotFound)</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">                        if (dotFound)</span>
                         {
-<span class="nc" id="L120">                            throw new MalformedFloat(i);</span>
+<span class="nc" id="L122">                            throw new MalformedFloat(i);</span>
                         }
                         else
                         {
-<span class="nc" id="L124">                            throw new MalformedInt(i);</span>
+<span class="nc" id="L126">                            throw new MalformedInt(i);</span>
                         }
                     }
                 }
                 else
                 {
-<span class="nc bnc" id="L130" title="All 2 branches missed.">                    if (dotFound)</span>
+<span class="nc bnc" id="L132" title="All 2 branches missed.">                    if (dotFound)</span>
                     {
-<span class="nc" id="L132">                        throw new MalformedFloat(i);</span>
+<span class="nc" id="L134">                        throw new MalformedFloat(i);</span>
                     }
                     else
                     {
-<span class="nc" id="L136">                        throw new MalformedInt(i);</span>
+<span class="nc" id="L138">                        throw new MalformedInt(i);</span>
                     }
                 }
             }
         }
         
-<span class="fc" id="L142">        return true;</span>
+<span class="fc" id="L144">        return true;</span>
     }
     
     public boolean isStringLiteral()
     {
-<span class="fc" id="L147">        String textContent = getTextContent();</span>
-<span class="pc bpc" id="L148" title="1 of 2 branches missed.">        boolean startsWithQuote = textContent.charAt(0) == '&quot;';</span>
+<span class="fc" id="L149">        String textContent = getTextContent();</span>
+<span class="pc bpc" id="L150" title="1 of 2 branches missed.">        boolean startsWithQuote = textContent.charAt(0) == '&quot;';</span>
         
-<span class="pc bpc" id="L150" title="1 of 2 branches missed.">        if (!startsWithQuote)</span>
+<span class="pc bpc" id="L152" title="1 of 2 branches missed.">        if (!startsWithQuote)</span>
         {
-<span class="fc" id="L152">            return false;</span>
+<span class="fc" id="L154">            return false;</span>
         }
         
-<span class="nc bnc" id="L155" title="All 2 branches missed.">        return textContent.charAt(textContent.length() - 1) == '&quot;';</span>
+<span class="nc bnc" id="L157" title="All 2 branches missed.">        return textContent.charAt(textContent.length() - 1) == '&quot;';</span>
     }
     
     public boolean isCharLiteral()
     {
-<span class="fc" id="L160">        String  textContent = getTextContent();</span>
-<span class="pc bpc" id="L161" title="1 of 2 branches missed.">        boolean startsWithQuote = textContent.charAt(0) == '\'';</span>
+<span class="fc" id="L162">        String  textContent = getTextContent();</span>
+<span class="pc bpc" id="L163" title="1 of 2 branches missed.">        boolean startsWithQuote = textContent.charAt(0) == '\'';</span>
         
-<span class="pc bpc" id="L163" title="1 of 2 branches missed.">        if (!startsWithQuote)</span>
+<span class="pc bpc" id="L165" title="1 of 2 branches missed.">        if (!startsWithQuote)</span>
         {
-<span class="nc" id="L165">            return false;</span>
+<span class="nc" id="L167">            return false;</span>
         }
         
-<span class="pc bpc" id="L168" title="1 of 2 branches missed.">        return textContent.charAt(textContent.length() - 1) == '\'';</span>
+<span class="pc bpc" id="L170" title="1 of 2 branches missed.">        return textContent.charAt(textContent.length() - 1) == '\'';</span>
     }
     
     /**
@@ -174,49 +176,49 @@ public class Token
      */
     public boolean isReservedDataTypeBase() 
     {
-<span class="fc" id="L177">        String textContent = getTextContent();</span>
+<span class="fc" id="L179">        String textContent = getTextContent();</span>
         
-<span class="fc" id="L179">        return</span>
-<span class="pc bpc" id="L180" title="2 of 4 branches missed.">            textContent.equals(&quot;char&quot;) || textContent.equals(&quot;int&quot;) ||</span>
-<span class="pc bpc" id="L181" title="2 of 4 branches missed.">            textContent.equals(&quot;float&quot;) || textContent.equals(&quot;double&quot;) ||</span>
-<span class="pc bpc" id="L182" title="1 of 2 branches missed.">            textContent.equals(&quot;bool&quot;);</span>
+<span class="fc" id="L181">        return</span>
+<span class="pc bpc" id="L182" title="2 of 4 branches missed.">            textContent.equals(&quot;char&quot;) || textContent.equals(&quot;int&quot;) ||</span>
+<span class="pc bpc" id="L183" title="2 of 4 branches missed.">            textContent.equals(&quot;float&quot;) || textContent.equals(&quot;double&quot;) ||</span>
+<span class="pc bpc" id="L184" title="1 of 2 branches missed.">            textContent.equals(&quot;bool&quot;);</span>
     }
     
     public boolean isReservedWord()
     {
-<span class="fc" id="L187">        String textContent = getTextContent();</span>
+<span class="fc" id="L189">        String textContent = getTextContent();</span>
         
-<span class="fc" id="L189">        return</span>
+<span class="fc" id="L191">        return</span>
             //BluC terms
-<span class="pc bpc" id="L191" title="2 of 4 branches missed.">            textContent.equals(&quot;class&quot;) || textContent.equals(&quot;extends&quot;) ||</span>
-<span class="pc bpc" id="L192" title="2 of 4 branches missed.">            textContent.equals(&quot;instanceOf&quot;) || textContent.equals(&quot;package&quot;) ||</span>
+<span class="pc bpc" id="L193" title="2 of 4 branches missed.">            textContent.equals(&quot;class&quot;) || textContent.equals(&quot;extends&quot;) ||</span>
+<span class="pc bpc" id="L194" title="2 of 4 branches missed.">            textContent.equals(&quot;instanceOf&quot;) || textContent.equals(&quot;package&quot;) ||</span>
                 
             //c terms
-<span class="pc bpc" id="L195" title="2 of 4 branches missed.">            textContent.equals(&quot;auto&quot;) || textContent.equals(&quot;break&quot;) || </span>
-<span class="pc bpc" id="L196" title="2 of 4 branches missed.">            textContent.equals(&quot;case&quot;) || textContent.equals(&quot;const&quot;) || </span>
-<span class="pc bpc" id="L197" title="2 of 4 branches missed.">            textContent.equals(&quot;continue&quot;) || textContent.equals(&quot;default&quot;) || </span>
-<span class="pc bpc" id="L198" title="2 of 4 branches missed.">            textContent.equals(&quot;do&quot;) || textContent.equals(&quot;else&quot;) || </span>
-<span class="pc bpc" id="L199" title="2 of 4 branches missed.">            textContent.equals(&quot;enum&quot;) || textContent.equals(&quot;extern&quot;) ||</span>
-<span class="pc bpc" id="L200" title="2 of 4 branches missed.">            textContent.equals(&quot;for&quot;) || textContent.equals(&quot;goto&quot;) || </span>
-<span class="pc bpc" id="L201" title="2 of 4 branches missed.">            textContent.equals(&quot;if&quot;) || textContent.equals(&quot;inline&quot;) ||</span>
-<span class="pc bpc" id="L202" title="2 of 4 branches missed.">            textContent.equals(&quot;long&quot;) || textContent.equals(&quot;register&quot;) || </span>
-<span class="pc bpc" id="L203" title="2 of 4 branches missed.">            textContent.equals(&quot;restrict&quot;) || textContent.equals(&quot;return&quot;) || </span>
-<span class="pc bpc" id="L204" title="2 of 4 branches missed.">            textContent.equals(&quot;short&quot;) || textContent.equals(&quot;signed&quot;) || </span>
-<span class="pc bpc" id="L205" title="2 of 4 branches missed.">            textContent.equals(&quot;sizeof&quot;) || textContent.equals(&quot;static&quot;) || </span>
-<span class="pc bpc" id="L206" title="2 of 4 branches missed.">            textContent.equals(&quot;struct&quot;) || textContent.equals(&quot;switch&quot;) || </span>
-<span class="pc bpc" id="L207" title="2 of 4 branches missed.">            textContent.equals(&quot;typedef&quot;) || textContent.equals(&quot;union&quot;) || </span>
-<span class="pc bpc" id="L208" title="2 of 4 branches missed.">            textContent.equals(&quot;unsigned&quot;) || textContent.equals(&quot;void&quot;) || </span>
-<span class="pc bpc" id="L209" title="2 of 4 branches missed.">            textContent.equals(&quot;volatile&quot;) || textContent.equals(&quot;while&quot;) ||</span>
+<span class="pc bpc" id="L197" title="2 of 4 branches missed.">            textContent.equals(&quot;auto&quot;) || textContent.equals(&quot;break&quot;) || </span>
+<span class="pc bpc" id="L198" title="2 of 4 branches missed.">            textContent.equals(&quot;case&quot;) || textContent.equals(&quot;const&quot;) || </span>
+<span class="pc bpc" id="L199" title="2 of 4 branches missed.">            textContent.equals(&quot;continue&quot;) || textContent.equals(&quot;default&quot;) || </span>
+<span class="pc bpc" id="L200" title="2 of 4 branches missed.">            textContent.equals(&quot;do&quot;) || textContent.equals(&quot;else&quot;) || </span>
+<span class="pc bpc" id="L201" title="2 of 4 branches missed.">            textContent.equals(&quot;enum&quot;) || textContent.equals(&quot;extern&quot;) ||</span>
+<span class="pc bpc" id="L202" title="2 of 4 branches missed.">            textContent.equals(&quot;for&quot;) || textContent.equals(&quot;goto&quot;) || </span>
+<span class="pc bpc" id="L203" title="2 of 4 branches missed.">            textContent.equals(&quot;if&quot;) || textContent.equals(&quot;inline&quot;) ||</span>
+<span class="pc bpc" id="L204" title="2 of 4 branches missed.">            textContent.equals(&quot;long&quot;) || textContent.equals(&quot;register&quot;) || </span>
+<span class="pc bpc" id="L205" title="2 of 4 branches missed.">            textContent.equals(&quot;restrict&quot;) || textContent.equals(&quot;return&quot;) || </span>
+<span class="pc bpc" id="L206" title="2 of 4 branches missed.">            textContent.equals(&quot;short&quot;) || textContent.equals(&quot;signed&quot;) || </span>
+<span class="pc bpc" id="L207" title="2 of 4 branches missed.">            textContent.equals(&quot;sizeof&quot;) || textContent.equals(&quot;static&quot;) || </span>
+<span class="pc bpc" id="L208" title="2 of 4 branches missed.">            textContent.equals(&quot;struct&quot;) || textContent.equals(&quot;switch&quot;) || </span>
+<span class="pc bpc" id="L209" title="2 of 4 branches missed.">            textContent.equals(&quot;typedef&quot;) || textContent.equals(&quot;union&quot;) || </span>
+<span class="pc bpc" id="L210" title="2 of 4 branches missed.">            textContent.equals(&quot;unsigned&quot;) || textContent.equals(&quot;void&quot;) || </span>
+<span class="pc bpc" id="L211" title="2 of 4 branches missed.">            textContent.equals(&quot;volatile&quot;) || textContent.equals(&quot;while&quot;) ||</span>
             
-<span class="pc bpc" id="L211" title="1 of 2 branches missed.">            isReservedDataTypeBase()</span>
+<span class="pc bpc" id="L213" title="1 of 2 branches missed.">            isReservedDataTypeBase()</span>
             ;
     }
     
     public boolean isReservedLexeme()
     {
-<span class="fc" id="L217">        char at0 = getTextContent().charAt(0);</span>
+<span class="fc" id="L219">        char at0 = getTextContent().charAt(0);</span>
         
-<span class="pc bpc" id="L219" title="20 of 40 branches missed.">        return at0 == '(' || at0 == ')' || at0 == '[' || at0 == ']' ||</span>
+<span class="pc bpc" id="L221" title="20 of 40 branches missed.">        return at0 == '(' || at0 == ')' || at0 == '[' || at0 == ']' ||</span>
             at0 == '{' || at0 == '}' || at0 == '=' || at0 == ';' ||
             at0 == '+' || at0 == '-' || at0 == '/' || at0 == '*' ||
             at0 == '%' || at0 == '#' || at0 == ',' || at0 == '&lt;' ||
@@ -225,30 +227,30 @@ public class Token
     
     public boolean isValidName()
     {
-<span class="fc" id="L228">        char startingChar = getTextContent().charAt(0);</span>
+<span class="fc" id="L230">        char startingChar = getTextContent().charAt(0);</span>
         
-<span class="pc bpc" id="L230" title="2 of 4 branches missed.">        return !(Character.isDigit(startingChar) || isReservedWord() || </span>
-<span class="pc bpc" id="L231" title="1 of 2 branches missed.">            isReservedLexeme());</span>
+<span class="pc bpc" id="L232" title="2 of 4 branches missed.">        return !(Character.isDigit(startingChar) || isReservedWord() || </span>
+<span class="pc bpc" id="L233" title="1 of 2 branches missed.">            isReservedLexeme());</span>
     }
     
     @Override
     public String toString()
     {
-<span class="nc" id="L237">        return &quot;[textContent == \&quot;&quot; + getTextContent() + &quot;\&quot;]\n&quot; +</span>
-<span class="nc" id="L238">               &quot;[line == \&quot;&quot; + (getLineIndex() + 1) + &quot;\&quot;]\n&quot; +</span>
-<span class="nc" id="L239">               &quot;[file == \&quot;&quot; + getFilepath() + &quot;\&quot;]&quot;;</span>
+<span class="nc" id="L239">        return &quot;[textContent == \&quot;&quot; + getTextContent() + &quot;\&quot;]\n&quot; +</span>
+<span class="nc" id="L240">               &quot;[line == \&quot;&quot; + (getLineIndex() + 1) + &quot;\&quot;]\n&quot; +</span>
+<span class="nc" id="L241">               &quot;[file == \&quot;&quot; + getFilepath() + &quot;\&quot;]&quot;;</span>
     }
     
     @Override
     public boolean equals(Object other)
     {
-<span class="pc bpc" id="L245" title="1 of 2 branches missed.">        if (other instanceof Token)</span>
+<span class="pc bpc" id="L247" title="1 of 2 branches missed.">        if (other instanceof Token)</span>
         {
-<span class="fc" id="L247">            Token otherToken = (Token) other;</span>
+<span class="fc" id="L249">            Token otherToken = (Token) other;</span>
             
-<span class="fc" id="L249">            return</span>
-<span class="pc bpc" id="L250" title="1 of 2 branches missed.">                fileInfo.equals(otherToken.fileInfo) &amp;&amp;</span>
-<span class="pc bpc" id="L251" title="3 of 6 branches missed.">                tokenInfo.equals(otherToken.tokenInfo) &amp;&amp;</span>
+<span class="fc" id="L251">            return</span>
+<span class="pc bpc" id="L252" title="1 of 2 branches missed.">                fileInfo.equals(otherToken.fileInfo) &amp;&amp;</span>
+<span class="pc bpc" id="L253" title="3 of 6 branches missed.">                tokenInfo.equals(otherToken.tokenInfo) &amp;&amp;</span>
                 
                 /**
                  * This is *supposed* to be comparing null to null so please
@@ -256,24 +258,24 @@ public class Token
                  * 
                  * (They didn't add a SupressWarnings for each type of hint)
                  */
-                (package_ == Statement.Package.NO_PACKAGE ? 
-                    otherToken.package_ == Statement.Package.NO_PACKAGE :
-<span class="pc bnc" id="L261" title="All 2 branches missed.">                    package_.equals(otherToken.package_));</span>
+                (package_ == Package.NO_PACKAGE ? 
+                    otherToken.package_ == Package.NO_PACKAGE :
+<span class="pc bnc" id="L263" title="All 2 branches missed.">                    package_.equals(otherToken.package_));</span>
         }
         else
         {
-<span class="nc" id="L265">            return false;</span>
+<span class="nc" id="L267">            return false;</span>
         }
     }
 
     @Override
     public int hashCode()
     {
-<span class="nc" id="L272">        int hash = 7;</span>
-<span class="nc" id="L273">        hash = 89 * hash + Objects.hashCode(this.tokenInfo);</span>
-<span class="nc" id="L274">        hash = 89 * hash + Objects.hashCode(this.fileInfo);</span>
-<span class="nc" id="L275">        hash = 89 * hash + Objects.hashCode(this.package_);</span>
-<span class="nc" id="L276">        return hash;</span>
+<span class="nc" id="L274">        int hash = 7;</span>
+<span class="nc" id="L275">        hash = 89 * hash + Objects.hashCode(this.tokenInfo);</span>
+<span class="nc" id="L276">        hash = 89 * hash + Objects.hashCode(this.fileInfo);</span>
+<span class="nc" id="L277">        hash = 89 * hash + Objects.hashCode(this.package_);</span>
+<span class="nc" id="L278">        return hash;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

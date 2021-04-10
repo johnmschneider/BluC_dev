@@ -16,10 +16,10 @@
 
 package bluC.builders;
 
-import bluC.transpiler.Statement.Function;
-import bluC.transpiler.Statement.VarDeclaration;
-import bluC.transpiler.Statement.ParameterList;
-import bluC.transpiler.Statement.VarDeclaration.SimplifiedType;
+import bluC.transpiler.statements.blocks.Function;
+import bluC.transpiler.statements.vars.VarDeclaration;
+import bluC.transpiler.statements.ParameterList;
+import bluC.transpiler.statements.vars.SimplifiedType;
 import bluC.transpiler.Token;
 
 /**

@@ -18,9 +18,9 @@ package bluC.parser.handlers.statement;
 
 import bluC.Logger;
 import bluC.transpiler.Scope;
-import bluC.transpiler.Statement;
 import bluC.transpiler.Token;
 import bluC.parser.Parser;
+import bluC.transpiler.statements.blocks.Block;
 
 /**
  *
@@ -37,21 +37,33 @@ public class BlockHandler
 <span class="fc" id="L37">        this.statementHandler = statementHandler;</span>
 <span class="fc" id="L38">    }</span>
     
-    public Statement.Block handleBlock(Token openBrace)
+    /**
+     * Handles a block.
+     * 
+     * Expects to be on the token immediately before the opening brace &quot;{&quot;.
+     * 
+     * Ends on token immediately before the closing brace &quot;}&quot; of the block. 
+     *  
+     * This differs from most other handlers because most blocks' last token
+     *  is in fact the closing brace, and StatementHandler automatically moves
+     *  to the next token after a statement end, and the parser operates on the
+     *  *peeked* token.
+     */
+    public Block handleBlock(Token openBrace)
     {
-<span class="nc" id="L42">        Statement.Block newBlock = new Statement.Block(</span>
-<span class="nc" id="L43">            openBrace.getLineIndex());</span>
+<span class="nc" id="L54">        Block newBlock = new Block(</span>
+<span class="nc" id="L55">            openBrace.getLineIndex());</span>
         
         //set cur token to &quot;{&quot;
-<span class="nc" id="L46">        parser.nextToken();</span>
-<span class="nc" id="L47">        parser.pushScope(new Scope(parser.getCurrentScope(), newBlock));</span>
+<span class="nc" id="L58">        parser.nextToken();</span>
+<span class="nc" id="L59">        parser.pushScope(new Scope(parser.getCurrentScope(), newBlock));</span>
         
-<span class="nc" id="L49">        addStatementsToBlock(openBrace, newBlock);</span>
-<span class="nc" id="L50">        newBlock.setEndingLineIndex(parser.getCurTokLineIndex());</span>
+<span class="nc" id="L61">        addStatementsToBlock(openBrace, newBlock);</span>
+<span class="nc" id="L62">        newBlock.setEndingLineIndex(parser.getCurTokLineIndex());</span>
         
-<span class="nc" id="L52">        parser.popScope(parser.peek());</span>
+<span class="nc" id="L64">        parser.popScope(parser.peek());</span>
         
-<span class="nc" id="L54">        return newBlock;</span>
+<span class="nc" id="L66">        return newBlock;</span>
     }
     
     /**
@@ -60,30 +72,45 @@ public class BlockHandler
      * 
      * Expects the parser's current token to be the opening brace of the block
      *  (&quot;{&quot;).
+     * 
+     * Ends on token immediately before the closing brace &quot;}&quot; of the block, or 
+     *  the best guess for said token when there is a parsing error.
      */
     public void addStatementsToBlock(
-        Token openBrace, Statement.Block block)
+        Token openBrace, Block block)
     {
-<span class="nc" id="L67">        boolean isSuccessful = false;</span>
+<span class="nc" id="L82">        boolean isSuccessful = false;</span>
         
-<span class="nc bnc" id="L69" title="All 2 branches missed.">        while (!parser.atEOF())</span>
+<span class="nc bnc" id="L84" title="All 2 branches missed.">        if (parser.peekMatches(&quot;}&quot;))</span>
         {
-<span class="nc" id="L71">            block.addStatement(statementHandler.handleStatement(true));</span>
-
-<span class="nc bnc" id="L73" title="All 2 branches missed.">            if (parser.peekMatches(&quot;}&quot;))</span>
+<span class="nc" id="L86">            Logger.warn(openBrace, &quot;Empty block&quot;);</span>
+        }
+        else
+        {
+            // add each token until end of brace
+<span class="nc bnc" id="L91" title="All 2 branches missed.">            while (!parser.atEOF())</span>
             {
-<span class="nc" id="L75">                isSuccessful = true;</span>
-<span class="nc" id="L76">                break;</span>
+                // since block is also a statement type, this should handle any 
+                //  nested blocks, ergo we don't have to worry about brace 
+                //  matching here
+<span class="nc" id="L96">                block.addStatement(statementHandler.handleStatement(true));</span>
+
+<span class="nc bnc" id="L98" title="All 2 branches missed.">                if (parser.peekMatches(&quot;}&quot;))</span>
+                {
+<span class="nc" id="L100">                    isSuccessful = true;</span>
+<span class="nc" id="L101">                    break;</span>
+                }
+            }
+
+<span class="nc bnc" id="L105" title="All 2 branches missed.">            if (!isSuccessful)</span>
+            {
+<span class="nc" id="L107">                Token next = parser.peek();</span>
+<span class="nc" id="L108">                Logger.err(next, &quot;Expected \&quot;}\&quot; to close block opening &quot; +</span>
+<span class="nc" id="L109">                    &quot;\&quot;&quot; + openBrace.getTextContent() + &quot;\&quot; on line &quot; + </span>
+<span class="nc" id="L110">                    (openBrace.getLineIndex() + 1));</span>
             }
         }
-        
-<span class="nc bnc" id="L80" title="All 2 branches missed.">        if (!isSuccessful)</span>
-        {
-<span class="nc" id="L82">            Token next = parser.peek();</span>
-<span class="nc" id="L83">            Logger.err(next, &quot;Expected \&quot;}\&quot; to close \&quot;&quot; + openBrace.</span>
-<span class="nc" id="L84">                getTextContent() + &quot;\&quot; on line &quot; + </span>
-<span class="nc" id="L85">                (openBrace.getLineIndex() + 1));</span>
-        }
-<span class="nc" id="L87">    }</span>
+<span class="nc" id="L113">    } // end function</span>
+    
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

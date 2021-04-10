@@ -21,8 +21,8 @@ import bluC.builders.TokenBuilder;
 import bluC.parser.Parser;
 import bluC.parser.handlers.statement.StatementHandler.JustParseExprResult;
 import bluC.transpiler.Scope;
-import bluC.transpiler.Statement;
-import bluC.transpiler.Statement.While;
+import bluC.transpiler.statements.Statement;
+import bluC.transpiler.statements.blocks.While;
 import bluC.transpiler.Token;
 import java.util.ArrayList;
 
