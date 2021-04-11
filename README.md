@@ -5,7 +5,7 @@ Until version 1 of the language is completed (and not an alpha/beta version 1), 
 
 ### Notice
 <b><ins>YOU ARE IN THE DEVELOPMENT REPO OF BLU C.</ins></b> There is the potential that the parser is not even in a valid state yet, this repo is simply the most up to date code -- <ins><b>even if said code doesn't yet compile or function properly</ins></b>.
-
+<br><br>
 
 The current build, while compilable, is minimally functional and is only uploaded to keep track of changes.
 
