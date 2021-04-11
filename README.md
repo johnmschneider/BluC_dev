@@ -4,7 +4,7 @@ A programming language that's essentially C with classes. The intent is to be a 
 Until version 1 of the language is completed (and not an alpha/beta version 1), anything is subject to change. After version 1, backwards compatability will be heavily considered.
 
 ### Notice
-<b><u>YOU ARE IN THE DEVELOPMENT REPO OF BLU C. There is the potential that the parser is not even in a valid state yet, it's basically the most up to date code (even if said code doesn't yet compile or function properly).</u></b>
+<b><ins>YOU ARE IN THE DEVELOPMENT REPO OF BLU C. There is the potential that the parser is not even in a valid state yet, it's basically the most up to date code (even if said code doesn't yet compile or function properly).</ins></b>
 
 The current build, while compilable, is minimally functional and is only uploaded to keep track of changes.
 
