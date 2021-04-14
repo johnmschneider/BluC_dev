@@ -61,7 +61,7 @@ public class WhileHandler
         this.parser             = parser;
         this.statementHandler   = statementHandler;
         this.blockHandler       = blockHandler;
-        loopUtils               = new LoopHandlerUtils(parser);
+        loopUtils               = new LoopHandlerUtils(parser, blockHandler);
         loopUtils.setNameOfLoopType(nameOfLoopType);
     }
     
@@ -90,6 +90,10 @@ public class WhileHandler
      */
     private Statement handleWhileLoop()
     {
+        int startIndex;
+        
+        startIndex = parser.getCurTokIndex();
+        
         // move to "while" token
         parser.nextToken();
         
@@ -97,7 +101,7 @@ public class WhileHandler
         {
             // consume "while" token
             parser.nextToken();
-            return handleValidConditionStart();
+            return handleValidConditionStart(startIndex);
         }
         else
         {
@@ -110,31 +114,36 @@ public class WhileHandler
      */
     private Statement handleMalformedConditionStart()
     {
-        While result;
+        While synchronizedLoop;
         
-        result = new While(parser.getCurTokLineIndex());
+        synchronizedLoop = new While(parser.getCurTokLineIndex());
         
         Logger.err(parser.peek(), "Expected \"(\" to open condition for " +
             "while loop");
-        loopUtils.synchronizeParserFromBadCondition(parser.getCurTokIndex());
+        loopUtils.synchronizeParserFromBadCondition(
+            parser.getCurTokIndex(), synchronizedLoop);
         
-        return result;
+        return synchronizedLoop;
     }
     
     /**
      * Expects to be on "while" token.  Ends on the last token of the loop.
      */
-    private Statement handleValidConditionStart()
+    private Statement handleValidConditionStart(int startTokenIndex)
     {
         ArrayList<Token> 
                 tokensInCondition;
         boolean conditionalEndFound;
-        int     startingIndex;
         long    startingLineIndex;
+        
+        /**
+         * Conditional Start Index
+         */
+        int     condStartIndex;
         int     openParenCount;
         
         conditionalEndFound = false;
-        startingIndex       = parser.getCurTokIndex();
+        condStartIndex      = startTokenIndex + 2;
         startingLineIndex   = parser.getCurTokLineIndex();
         tokensInCondition   = new ArrayList<>();
         openParenCount      = 1;
@@ -164,11 +173,11 @@ public class WhileHandler
             parser.nextToken();
         }
         
-        parser.setToken(startingIndex);
+        parser.setToken(condStartIndex);
         if (conditionalEndFound)
         {
             return handleProperlyEnclosedConditional(startingLineIndex,
-                startingIndex);
+                startTokenIndex);
         }
         else
         {
@@ -238,8 +247,7 @@ public class WhileHandler
                         "expression where the conditonal should have been");
                 break;
             case UNEXPECTED_END_OF_STATEMENT:
-                Logger.err(parser.getCurToken(), "while loop has a statement " +
-                    "in the conditional, which only accepts expressions");
+                handleUnexpectedEOS(startingTokenIndex);
                 break;
             default:
                 /**
@@ -254,8 +262,64 @@ public class WhileHandler
                 break;
         }
         
-        loopUtils.synchronizeParserFromBadCondition((int) startingTokenIndex);
-        return new While(parser.getCurTokLineIndex());
+        While synchronizedLoop = new While(parser.getCurTokLineIndex());
+        loopUtils.synchronizeParserFromBadCondition(
+            (int) startingTokenIndex, synchronizedLoop);
+        
+        return synchronizedLoop;
+    }
+    
+    /**
+     * Handle Unexpected End Of Statement.
+     * 
+     * Jumps to startingTokenIndex + 1.
+     * 
+     * Ends on the token before the opening parenthesis "(" of the conditional.
+     */
+    private void handleUnexpectedEOS(long startingTokenIndex)
+    {
+        boolean isBadExpression = false;
+        
+        parser.setToken((int) startingTokenIndex + 1);
+        
+        int openParens = 1;
+        while (!parser.atEOF())
+        {
+            if (parser.peekMatches("("))
+            {
+                openParens++;
+            }
+            else if (parser.peekMatches(")"))
+            {
+                openParens--;
+                
+                if (openParens == 0)
+                {
+                    isBadExpression = true;
+                    break;
+                }
+            }
+            else if (parser.peekMatches(";", "{", "}"))
+            {
+                break;
+            }
+            
+            parser.nextToken();
+        }
+        
+        if (isBadExpression)
+        {
+            Logger.err(parser.getCurToken(), "while loop has an " + 
+                "erroneous expression in the conditional");
+        }
+        else
+        {
+            Logger.err(parser.getCurToken(), "while loop has an " + 
+                "unexpected end-of-statement in the conditional, which " + 
+                "only accepts expressions");
+        }
+        
+        parser.setToken((int) startingTokenIndex);
     }
     
     /**

@@ -1,70 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project-private xmlns="http://www.netbeans.org/ns/project-private/1">
-    <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="16">
+    <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="1">
         <file>
-            <url>src/bluC/parser/Parser.java</url>
-            <bookmark id="16">
-                <name>gotoEndOfStatement</name>
-                <line>343</line>
-                <key/>
-            </bookmark>
-        </file>
-        <file>
-            <url>src/bluC/transpiler/parser/handlers/statement/VariableHandler.java</url>
-            <bookmark id="13">
-                <name>varDeclOrHigher breakpoint</name>
-                <line>71</line>
-                <key/>
-            </bookmark>
-            <bookmark id="10">
-                <name>get size modifier</name>
-                <line>420</line>
-                <key/>
-            </bookmark>
-        </file>
-        <file>
-            <url>src/bluC/transpiler/Statement.java</url>
-            <bookmark id="15">
-                <name>function statement</name>
-                <line>0</line>
-                <key/>
-            </bookmark>
-        </file>
-        <file>
-            <url>src/bluC/parser/handlers/statement/ClassHandler.java</url>
-            <bookmark id="14">
-                <name>handleClass call to getSuper</name>
-                <line>96</line>
-                <key/>
-            </bookmark>
-        </file>
-        <file>
-            <url>src/bluC/transpiler/parser/handlers/statement/FunctionHandler.java</url>
-            <bookmark id="9">
-                <name>func handler start</name>
-                <line>151</line>
+            <url>src/bluC/parser/handlers/statement/VariableHandler.java</url>
+            <bookmark id="1">
+                <name>bad var synchronize</name>
+                <line>219</line>
                 <key/>
             </bookmark>
         </file>
     </editor-bookmarks>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/D:/non%20college%20related/java/workspace/BluC/src/bluC/lang/StackFrame.bluc</file>
             <file>file:/D:/non%20college%20related/java/workspace/BluC/src/bluC/parser/handlers/statement/VariableHandler.java</file>
-            <file>file:/D:/non%20college%20related/java/workspace/BluC/src/bluC/transpiler/Transpiler.java</file>
-            <file>file:/D:/non%20college%20related/java/workspace/BluC/src/bluC/parser/handlers/expression/ExpressionHandler.java</file>
-            <file>file:/D:/non%20college%20related/java/workspace/BluC/src/bluC/parser/handlers/statement/LoopHandler.java</file>
-            <file>file:/D:/non%20college%20related/java/workspace/BluC/src/bluC/parser/handlers/statement/ClassHandler.java</file>
-            <file>file:/D:/non%20college%20related/java/workspace/BluC/src/_notes/debugging%20notes.txt</file>
-            <file>file:/D:/non%20college%20related/java/workspace/BluC/src/bluC/transpiler/AstPrinter.java</file>
-            <file>file:/D:/non%20college%20related/java/workspace/BluC/src/bluC/transpiler/Token.java</file>
-            <file>file:/D:/non%20college%20related/java/workspace/BluC/src/bluC/transpiler/statements/blocks/Method.java</file>
-            <file>file:/D:/non%20college%20related/java/workspace/BluC/src/bluC/parser/handlers/statement/IfHandler.java</file>
             <file>file:/D:/non%20college%20related/java/workspace/BluC/src/bluC/parser/handlers/statement/StatementHandler.java</file>
             <file>file:/D:/non%20college%20related/java/workspace/BluC/src/basicTest3.bluc</file>
-            <file>file:/D:/non%20college%20related/java/workspace/BluC/src/bluC/parser/handlers/statement/FunctionHandler.java</file>
+            <file>file:/D:/non%20college%20related/java/workspace/BluC/src/bluC/parser/TokenListener.java</file>
+            <file>file:/D:/non%20college%20related/java/workspace/BluC/src/bluC/parser/handlers/statement/ClassHandler.java</file>
+            <file>file:/D:/non%20college%20related/java/workspace/BluC/src/bluC/parser/Parser.java</file>
             <file>file:/D:/non%20college%20related/java/workspace/BluC/src/bluC/parser/handlers/statement/WhileHandler.java</file>
             <file>file:/D:/non%20college%20related/java/workspace/BluC/src/bluC/parser/handlers/statement/BlockHandler.java</file>
+            <file>file:/D:/non%20college%20related/java/workspace/BluC/src/bluC/parser/handlers/statement/LoopHandlerUtils.java</file>
         </group>
     </open-files>
 </project-private>

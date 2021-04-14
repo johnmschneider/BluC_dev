@@ -346,7 +346,9 @@ public class Parser
     }
     
     /**
-     * Goes to the end of the statement and returns which tokens were found.
+     * Attempts to advance to the end of the statement.
+     * 
+     * Returns true if an end was actually found, false otherwise.
      */
     public boolean gotoEndOfStatement(TokenListener listener)
     {
@@ -376,6 +378,12 @@ public class Parser
             public void onNextToken(Token nextToken)
             {
                 //no listener needed
+            }
+
+            @Override
+            public boolean continueGoto(Token nextToken)
+            {
+                return true;
             }
         });
     }

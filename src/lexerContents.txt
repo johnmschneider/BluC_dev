@@ -1,10 +1,2 @@
-int doIntsStillWork;
-char realCharTest = 'x';
-long int x = 0;
-long long b;
-void okLetsFixThisNow ( ) { } int afterBadFunc;
-class Test { int hi;
-void hello ( int a ) { } } int main ( int plsCompile ) { Test test ( );
-test . hello ( );
-return 0;
-} ___bluC_eof
+void badThing ( ) { int a while ( a ) { } } int afterBadFunc;
+___bluC_eof

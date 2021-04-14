@@ -27,6 +27,8 @@ import bluC.transpiler.statements.vars.VarDeclaration;
 import bluC.transpiler.TokenFileInfo;
 import bluC.transpiler.TokenInfo;
 import bluC.parser.handlers.expression.ExpressionHandler;
+import bluC.transpiler.Expression;
+import bluC.transpiler.statements.ExpressionStatement;
 import bluC.transpiler.statements.blocks.ClassDef;
 import bluC.transpiler.statements.vars.Sign;
 import bluC.transpiler.statements.vars.SimplifiedType;
@@ -194,11 +196,29 @@ public class VariableHandler
             
             Logger.err(curToken, "Expected assignment operator or semicolon " +
                 "after variable declaration");
-
-            parser.gotoEndOfStatement();
-
-            return handleVarDeclarationWithoutAssignment(sign, type, 
-                pointerLevel, varName, classID);
+            
+            //  synchronize parser
+            
+            Expression nullExpr;
+            
+            /*
+             * parser assumes we meant to have a VarDeclarationWithoutAssignment
+             *  but forgot semicolon, so we're already on the correct token for
+             *  synchronization.
+             */
+            nullExpr = ExpressionHandler.createNullLiteral(
+                parser.getCurTokText(), (int) parser.getCurTokLineIndex());
+            
+            return new ExpressionStatement(
+                nullExpr, parser.getCurTokLineIndex());
+            
+            // TODO - this synchronized the parser incorrectly. Leaving it 
+            //  for a bit just in case the new synchronizer breaks things.
+            //
+            //parser.gotoEndOfStatement();
+            //
+            //return handleVarDeclarationWithoutAssignment(sign, type, 
+            //    pointerLevel, varName, classID);
         }
     }
     
@@ -576,7 +596,8 @@ public class VariableHandler
     /**
      * Parses a variable type without regards to the modifier used.
      */
-    private TypeAndClassID getUnmodifiedType() {
+    private TypeAndClassID getUnmodifiedType()
+    {
         parser.nextToken();
         String type = parser.getCurTokText();
 

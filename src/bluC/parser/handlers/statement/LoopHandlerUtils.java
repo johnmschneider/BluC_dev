@@ -20,6 +20,7 @@ import bluC.ResultType;
 import bluC.builders.TokenBuilder;
 import bluC.parser.Parser;
 import bluC.transpiler.Token;
+import bluC.transpiler.statements.blocks.Block;
 
 /**
  *
@@ -27,7 +28,9 @@ import bluC.transpiler.Token;
  */
 public class LoopHandlerUtils
 {
-    private final Parser parser;
+    private final Parser        parser;
+    private final BlockHandler  blockHandler;
+    
     private String       nameOfLoopType;
     
     private enum GotoStartErrCodes
@@ -46,9 +49,10 @@ public class LoopHandlerUtils
         }
     }
     
-    public LoopHandlerUtils(Parser parser)
+    public LoopHandlerUtils(Parser parser, BlockHandler blockHandler)
     {
-        this.parser = parser;
+        this.parser         = parser;
+        this.blockHandler   = blockHandler;
     }
 
     
@@ -72,7 +76,8 @@ public class LoopHandlerUtils
      * Ends on the "best guess" of the last token of the loop (e.g. for a
      *  multi-statement loop this will be a "}" or for a single-statement, ";")
      */
-    public void synchronizeParserFromBadCondition(int startingTokenIndex)
+    public void synchronizeParserFromBadCondition(
+        int startingTokenIndex, Block loop)
     {
         Token   errorLocation;
         GotoStartResults
@@ -85,11 +90,11 @@ public class LoopHandlerUtils
         if (findBlockStartResult.getWasSuccessful())
         {
             handleMalformedStartCondition(
-                startingTokenIndex, errorLocation, findBlockStartResult);
+                startingTokenIndex, errorLocation, findBlockStartResult, loop);
         }
         else
         {
-            gotoBlockEnd(startingTokenIndex, errorLocation);
+            gotoBlockEnd(startingTokenIndex, errorLocation, loop);
         }
     }
     
@@ -126,7 +131,8 @@ public class LoopHandlerUtils
     }
     
     private void handleMalformedStartCondition(
-        int startIndex, Token errorLocation, GotoStartResults blockStartResult)
+        int startIndex, Token errorLocation, GotoStartResults blockStartResult,
+        Block loop)
     {
         GotoStartErrCodes errCode        = blockStartResult.getErrCode();
         
@@ -143,7 +149,7 @@ public class LoopHandlerUtils
                 // try rehandling this again, to see if it's also missing an
                 //  ending parenthesis
                 handleMalformedStartCondition(
-                    startIndex, errorLocation, gotoBlockStart());
+                    startIndex, errorLocation, gotoBlockStart(), loop);
                 
             case MALFORMED_SINGLE_STATEMENT_LOOP:
                 Logger.err(errorLocation, 
@@ -192,7 +198,7 @@ public class LoopHandlerUtils
                 break;
         }
         
-        gotoBlockEnd(startIndex, errorLocation);
+        gotoBlockEnd(startIndex, errorLocation, loop);
     }
     
     /**
@@ -268,19 +274,30 @@ public class LoopHandlerUtils
         GotoStartResults 
                 result;
         boolean foundClosingParen;
+        int     openParens;
         
         result              = new GotoStartResults(
             GotoStartErrCodes.MALFORMED_SINGLE_STATEMENT_LOOP);
         foundClosingParen   = false;
+        openParens          = 1;
         
         while (!parser.atEOF())
         {
-            if (parser.peekMatches(")"))
+            if (parser.peekMatches("("))
             {
-                parser.nextToken();
-                foundClosingParen = true;
-                break;
+                openParens++;
             }
+            else if (parser.peekMatches(")"))
+            {
+                openParens--;
+                if (openParens == 0)
+                {
+                    foundClosingParen = true;
+                    break;
+                }
+            }
+            
+            parser.nextToken();
         }
         
         if (foundClosingParen)
@@ -305,14 +322,18 @@ public class LoopHandlerUtils
      * Ends on the block end (or the best guess of the block end if the *actual*
      *  end can't be found).
      */
-    private void gotoBlockEnd(int startIndex, Token errorLocation)
+    private void gotoBlockEnd(int startIndex, Token errorLocation, Block loop)
     {
         boolean didLoopEnd;
-        boolean isLoopMultiStatement = false;
+        boolean isLoopMultiStatement    = false;
+        
+        // might not not actually be an opening brace but it's good enough
+        //  for synchronization
+        Token   openingBrace            = parser.getCurToken();
         
         if (parser.curTextMatches(")"))
         {
-            didLoopEnd = parser.gotoEndOfStatement();
+            didLoopEnd              = parser.gotoEndOfStatement();
         }
         else if (parser.curTextMatches("{"))
         {
@@ -321,14 +342,14 @@ public class LoopHandlerUtils
         }
         else if (parser.curTextMatches(";"))
         {
-            didLoopEnd = true;
+            didLoopEnd      = true;
         }
         else
         {
             Logger.err(parser.getCurToken(), "(FATAL error in compiler): " +
                 "could not synchronize parser on this \"" + nameOfLoopType +
                 "\" loop with a malformed starting condition; unexpected " +
-                "result from findBlockStart");
+                "result from gotoBlockStart");
 
             /** 
              * try to synchronize the parser. I suppose synchronizing on a
@@ -340,6 +361,10 @@ public class LoopHandlerUtils
         if (!didLoopEnd)
         {
             handleNoLoopEnding(startIndex, errorLocation, isLoopMultiStatement);
+        }
+        else
+        {
+            blockHandler.addStatementsToBlock(openingBrace, loop);
         }
     }
     

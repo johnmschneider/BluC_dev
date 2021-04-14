@@ -24,4 +24,6 @@ import bluC.transpiler.Token;
 public interface TokenListener
 {
     public void onNextToken(Token nextToken);
+    
+    public boolean continueGoto(Token nextToken);
 }

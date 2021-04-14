@@ -108,9 +108,15 @@ public class StatementHandler
         {
             Token curToken = parser.getCurToken();
             Logger.err(curToken, "Expected \";\" to end statement");
+            
+            // don't move ahead if we're missing a semicolon; the parser is
+            //  already on the right token to resume parsing.
+        }
+        else
+        {
+            parser.nextToken();
         }
         
-        parser.nextToken();
         return returnee;
     }
     

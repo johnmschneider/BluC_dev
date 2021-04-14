@@ -3,10 +3,10 @@
 int a = 2;
 a = a + 3;
 a = ex;*/
-int doIntsStillWork; // yes
+/*int doIntsStillWork; // yes
 char realCharTest = 'x';
 long int x = 0;
-long long b;
+long long b;//*/
 
 /*
 // test parse time for VALID while loops
@@ -76,14 +76,18 @@ int main(int argc, char** argv) {
     return 0;
 }//*/
 
-void okLetsFixThisNow()
+void badThing()
 {
-    
+    int a
+
+    while (a)
+    {
+    }
 }
 
 int afterBadFunc;
 
-///*
+/*
 class Test {
     int hi;
     

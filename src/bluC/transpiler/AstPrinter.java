@@ -174,7 +174,7 @@ public class AstPrinter implements Expression.Visitor<String>,
     @Override
     public String visitFunction(Function statement)
     {
-        String output = "";
+        String output = "\n";
         
         for (int i = 0; i < indentationLevel; i++)
         {
@@ -187,7 +187,7 @@ public class AstPrinter implements Expression.Visitor<String>,
             statement.getReturnType().accept(this) + " " +
             statement.getNameText() + " " +
             statement.getParameters().accept(this) + 
-            statement.acceptBlock(this) + ")";
+            statement.acceptBlock(this) + ")\n";
         
         indentationLevel--;
         return output;
@@ -335,20 +335,20 @@ public class AstPrinter implements Expression.Visitor<String>,
     public String visitClassDef(ClassDef statement)
     {
         Token className = statement.getClassName();
-        String output = "";
+        String output = "\n";
         
         for (int i = 0; i < indentationLevel; i++)
         {
             output += "    ";
         }
         
-        output += "(class-def " + className.getTextContent() + "\n";
+        output += "(class-def " + className.getTextContent();
         
         indentationLevel++;
         output += statement.acceptBlock(this);
         indentationLevel--;
         
-        output += ")";
+        output += ")\n";
         
         return output;
     }
